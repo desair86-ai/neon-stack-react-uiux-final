@@ -74,8 +74,7 @@ body{font-size:var(--body-size);-webkit-font-smoothing:antialiased;text-renderin
   place-items:center;
   width:86px;
   height:86px;
-  color:#ff42ac;
-  filter:drop-shadow(0 0 12px color-mix(in srgb,var(--tile-color,#ff42ac) 90%,transparent));
+  color:var(--tile-color,#ff2a6d);
 }
 .spaceTile .spaceIcon svg{
   width:72px;
