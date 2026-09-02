@@ -74,7 +74,8 @@ body{font-size:var(--body-size);-webkit-font-smoothing:antialiased;text-renderin
   place-items:center;
   width:86px;
   height:86px;
-  color:var(--tile-color,#ff2a6d);
+  color:var(--tile-color);
+  filter:drop-shadow(0 0 12px color-mix(in srgb,var(--tile-color) 90%,transparent));
 }
 .spaceTile .spaceIcon svg{
   width:72px;
@@ -90,13 +91,13 @@ body{font-size:var(--body-size);-webkit-font-smoothing:antialiased;text-renderin
   text-align:center;
   color:#f3f4f8;
 }
-.spaceTile:nth-child(1){--tile-color:#ff2a6d}
-.spaceTile:nth-child(2){--tile-color:#05d9e8}
-.spaceTile:nth-child(3){--tile-color:#b052ff}
-.spaceTile:nth-child(4){--tile-color:#ff8a00}
-.spaceTile:nth-child(5){--tile-color:#ff2a6d}
-.spaceTile:nth-child(6){--tile-color:#ffc107}
-.spaceTile:nth-child(7){--tile-color:#01ffff}
+.spaceTile:nth-child(1){--tile-color:#ff2a6d} /* Home: Pink */
+.spaceTile:nth-child(2){--tile-color:#1e90ff} /* Gaming: Dodger Blue */
+.spaceTile:nth-child(3){--tile-color:#9d00ff} /* Business: Purple */
+.spaceTile:nth-child(4){--tile-color:#ff8c00} /* Cafe: Dark Orange */
+.spaceTile:nth-child(5){--tile-color:#ff00ff} /* Bar: Magenta */
+.spaceTile:nth-child(6){--tile-color:#ffc107} /* Events: Yellow */
+.spaceTile:nth-child(7){--tile-color:#00e5ff} /* Fitness: Cyan/Light Blue */
 .spaceTile:hover{
   transform:translateY(-4px);
   border-color:color-mix(in srgb,var(--tile-color,#ff42ac) 60%,rgba(255,255,255,0.4));
