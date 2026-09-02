@@ -28,12 +28,12 @@ const categories = [
   ['Bar & Nightlife','Martini'],['Events & Weddings','Heart'],['Fitness & Sports','Dumbbell']
 ];
 const defaultProducts = [
-  ['Gaming Controller','Gaming',rooms.gaming,'BESTSELLER','1,499'],['Astronaut On Moon','Astronaut & Space',rooms.studio,'MOJO MIX','1,999'],
-  ['Good Vibes Only','Quotes',rooms.living,'','1,199'],['Coffee Time','Café & Restaurant',rooms.cafe,'','1,399'],
-  ['Rahul','Custom Neon',rooms.bedroom,'','1,599'],['Love You','Love & Romance',rooms.party,'','1,199'],
-  ['Buddha','Gods & Spiritual',rooms.studio,'','1,799'],['Google Logo','Business',rooms.office,'','2,499'],
-  ['Game Room','Gaming',rooms.gaming,'MOJO MIX','1,899'],['Motorcycle','Motorbikes',rooms.gaming,'','1,999'],
-  ['Hakuna Matata','Quotes',rooms.living,'','1,399'],['Cocktail','Bars',rooms.cafe,'','1,599']
+  ['Gaming Controller','Gaming','/neon/Gaming/01.png','BESTSELLER','1,499'],['Astronaut On Moon','Astronaut & Space','/neon/Astronaut & Space Signs/1.png','MOJO MIX','1,999'],
+  ['Good Vibes Only','Quotes','/neon/Skull & Gothic/1.png','','1,199'],['Coffee Time','Café & Restaurant','/neon/Café & Coffee Shop Signs/1.png','','1,399'],
+  ['Rahul','Custom Neon','/neon/beauty and salon/1.png','','1,599'],['Love You','Love & Romance','/neon/Bar & Pub/1.png','','1,199'],
+  ['Buddha','Gods & Spiritual','/neon/Skull & Gothic/2.png','','1,799'],['Google Logo','Business','/neon/beauty and salon/2.png','','2,499'],
+  ['Game Room','Gaming','/neon/Gaming/02.png','MOJO MIX','1,899'],['Motorcycle','Motorbikes','/neon/Gaming/03.png','','1,999'],
+  ['Hakuna Matata','Quotes','/neon/Kids Room/1.png','','1,399'],['Cocktail','Bars','/neon/Bar & Pub/4.png','','1,599']
 ];
 
 function useProducts() {
