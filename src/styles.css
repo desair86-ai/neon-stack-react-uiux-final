@@ -74,14 +74,14 @@ body{font-size:var(--body-size);-webkit-font-smoothing:antialiased;text-renderin
   place-items:center;
   width:86px;
   height:86px;
-  color:var(--tile-color);
-  filter:drop-shadow(0 0 6px color-mix(in srgb,var(--tile-color) 40%,transparent));
+  color:var(--tile-color) !important;
+  filter:drop-shadow(0 0 6px color-mix(in srgb,var(--tile-color) 40%,transparent)) !important;
 }
 .spaceTile .spaceIcon svg{
   width:72px;
   height:72px;
-  stroke-width:1.8;
-  fill:none;
+  stroke-width:1.8 !important;
+  fill:none !important;
   stroke: var(--tile-color) !important;
 }
 .spaceTile b{
