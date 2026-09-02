@@ -27,7 +27,7 @@ const categories = [
   ['Home Decor','HomeIcon'],['Gaming','Gamepad2'],['Business','Building2'],['Café & Restaurant','Coffee'],
   ['Bar & Nightlife','Martini'],['Events & Weddings','Heart'],['Fitness & Sports','Dumbbell']
 ];
-const products = [
+const defaultProducts = [
   ['Gaming Controller','Gaming',rooms.gaming,'BESTSELLER','1,499'],['Astronaut On Moon','Astronaut & Space',rooms.studio,'MOJO MIX','1,999'],
   ['Good Vibes Only','Quotes',rooms.living,'','1,199'],['Coffee Time','Café & Restaurant',rooms.cafe,'','1,399'],
   ['Rahul','Custom Neon',rooms.bedroom,'','1,599'],['Love You','Love & Romance',rooms.party,'','1,199'],
@@ -35,6 +35,24 @@ const products = [
   ['Game Room','Gaming',rooms.gaming,'MOJO MIX','1,899'],['Motorcycle','Motorbikes',rooms.gaming,'','1,999'],
   ['Hakuna Matata','Quotes',rooms.living,'','1,399'],['Cocktail','Bars',rooms.cafe,'','1,599']
 ];
+
+function useProducts() {
+  const [products, setProducts] = useState(defaultProducts);
+  /* 
+  // Uncomment and adjust this when WordPress API is fully connected!
+  useEffect(() => {
+    fetch('/api/products')
+      .then(res => res.json())
+      .then(data => {
+        // Map WordPress data schema to our local tuple format: 
+        // ['Name', 'Category', 'Image URL', 'Tag', 'Price']
+        // setProducts(mappedData);
+      })
+      .catch(console.error);
+  }, []);
+  */
+  return products;
+}
 const allCategories = ['All Neon Signs','Astronaut & Space','Bars','Beauty & Salon','Bollywood','Business','Café & Restaurant','Cricket','Gaming','Gods & Spiritual','Home Decor','Kids','Love & Romance','Music & Studio','Sports & Fitness','Quotes & Words'];
 
 function Logo(){ return <Link className="logo" to="/"><span>NEON</span><b>STACK</b></Link> }
@@ -80,7 +98,9 @@ function Footer(){return <footer><div className="footerBenefits container"><Bene
 function FooterCol({title,links}){return <div className="footerCol"><h4>{title}</h4>{links.map(x=><Link key={x} to={x==='All Neon Signs'?'/collections':x==='About Us'?'/about':x==='Contact Us'?'/contact':'/collections'}>{x}</Link>)}</div>}
 function Social(){return <div className="social"><span className="socialBrand" aria-label="Instagram">◎</span><span className="socialFacebook" aria-label="Facebook">f</span><span className="socialBrand" aria-label="YouTube">▶</span><span className="socialBrand" aria-label="WhatsApp">◔</span></div>}
 
-function Home(){return <><Header/><main>
+function Home(){
+  const products = useProducts();
+  return <><Header/><main>
   <section className="homeHero" style={{'--bg':`url(${rooms.hero})`}}><div className="heroCopy"><small>PREMIUM LED NEON • MADE IN INDIA</small><h1>TURN YOUR<br/>IDEA INTO<br/><em>LIGHT.</em></h1><p>Premium LED neon signs, custom made for homes, businesses & every moment that matters.</p><div className="heroBtns"><Link className="btn primary" to="/custom-neon">CREATE YOUR NEON <ArrowRight/></Link><Link className="btn ghost" to="/collections">SHOP NEON SIGNS</Link></div><div className="heroProof"><Benefit icon={<Sparkles/>} title="Made in India" text="Proudly handcrafted"/><Benefit icon={<Gem/>} title="Premium Quality" text="Built to last"/><Benefit icon={<ShieldCheck/>} title="Safe & Efficient" text="Low voltage LED"/><Benefit icon={<Truck/>} title="7–10 Day Delivery*" text="Pan India Shipping"/></div></div><div className="heroNeon"><NeonText lines={['Good','Vibes','Only']} colors={['pink','blue','pink']}/></div></section>
   <section className="section container"><SectionHead eyebrow="SHOP BY SPACE" title="Find the perfect neon for every space & occasion." link="VIEW ALL COLLECTIONS"/><div className="spaceTiles">{categories.map(([n,ic],i)=>{const I=iconByName(ic); return <Link key={n} to={`/category/${slug(n)}`} className="spaceTile" style={{"--tile-delay":`${i * 40}ms`}}><span className="spaceIcon"><I/></span><b>{n}</b></Link>})}</div></section>
   <section className="section darkSection"><div className="container"><SectionHead eyebrow="OUR SPECIAL NEON SIGNS" title="Signature neon technologies." sub="Explore the ways Neon Stack can make your space glow."/><div className="specialGrid"><Special title="CUSTOM NEON SIGN" text="Design your own text, logo or idea." action="CUSTOMIZE NOW" art={<NeonText lines={['Better','Together']} colors={['pink','blue']}/>} /><Special title="MOJO MIX NEON SIGN" text="Next-gen RGB neon with 200+ effects." action="EXPLORE MOJO" art={<div className="mojoMark">∞</div>} /><Special title="UV PRINTED NEON" text="Intricate designs with UV print backing." action="EXPLORE UV" art={<div className="uvMark">◉</div>} /></div></div></section>
@@ -100,7 +120,10 @@ function ProductCard({p}){return <Link className="productCard" to="/collections"
 
 function Collections(){return <><Header/><main className="catalogPage"><section className="catalogHero container" style={{'--bg':`url(${rooms.hero})`}}><div><div className="crumb">Home <ChevronRight/> All Collections</div><h1>ALL <em>NEON</em> SIGNS</h1><p>Discover our complete collection of premium LED neon signs for every space, mood and occasion.</p><div className="heroIcons"><Benefit icon={<Gem/>} title="Made in India" text=""/><Benefit icon={<Heart/>} title="Premium Quality" text=""/><Benefit icon={<WandSparkles/>} title="Custom Made" text=""/><Benefit icon={<ShieldCheck/>} title="Safe & Durable" text=""/></div></div></section><div className="container collectionFeature"><Feature title="Custom Neon Signs" text="Make it yours." icon={<WandSparkles/>}/><Feature title="Mojo Mix Signs" text="Dynamic. Colorful. Alive." icon={<Sparkles/>}/><Feature title="UV Printed Neon" text="Detailed. Vibrant. Stunning." icon={<Palette/>}/><Feature title="Business Logo Signs" text="Stand out. Get noticed." icon={<BriefcaseBusiness/>}/></div><CatalogGrid/></main><Footer/></>}
 function Feature({title,text,icon}){return <div><span>{icon}</span><div><b>{title}</b><small>{text}</small></div></div>}
-function CatalogGrid(){const [filter,setFilter]=useState(false);return <section className="catalogGrid container"><button className="mobileFilter" onClick={()=>setFilter(v=>!v)}><SlidersHorizontal/> FILTER BY <ChevronDown/></button><aside className={filter?'show':''}><div className="filterHead"><b>FILTER BY</b><button>CLEAR ALL</button></div><Filter title="CATEGORIES" items={allCategories.slice(0,12)}/><Filter title="PRICE RANGE" items={['₹499','₹24,999+']}/><Filter title="SIZE" items={['Up to 12 inch (52)','12 – 24 inch (97)','24 – 36 inch (63)','36 inch & above (36)']}/><Filter title="COLOR" items={['●','●','●','●','●','●','●','●']}/><Filter title="TYPE" items={['Standard LED (168)','Mojo Mix (42)','UV Printed (28)','Custom Neon (10)']}/><Filter title="OCCASION" items={['Birthday (31)','Wedding (16)','Anniversary (17)','Festive (26)']}/><button className="clearBtn">CLEAR FILTERS</button></aside><div className="catalogResults"><div className="resultTools"><span>Showing 1–24 of 248 products</span><select><option>Sort by: Featured</option><option>Price: Low to High</option></select><button><GridIcon/></button><button><Menu/></button></div><div className="catalogProducts">{products.map(p=><ProductCard key={p[0]} p={p}/>)}</div><div className="pagination"><button><ArrowLeft/></button><b>1</b><span>2</span><span>3</span><span>…</span><span>11</span><button><ArrowRight/></button></div></div></section>}
+function CatalogGrid(){
+  const [filter,setFilter]=useState(false);
+  const products = useProducts();
+  return <section className="catalogGrid container"><button className="mobileFilter" onClick={()=>setFilter(v=>!v)}><SlidersHorizontal/> FILTER BY <ChevronDown/></button><aside className={filter?'show':''}><div className="filterHead"><b>FILTER BY</b><button>CLEAR ALL</button></div><Filter title="CATEGORIES" items={allCategories.slice(0,12)}/><Filter title="PRICE RANGE" items={['₹499','₹24,999+']}/><Filter title="SIZE" items={['Up to 12 inch (52)','12 – 24 inch (97)','24 – 36 inch (63)','36 inch & above (36)']}/><Filter title="COLOR" items={['●','●','●','●','●','●','●','●']}/><Filter title="TYPE" items={['Standard LED (168)','Mojo Mix (42)','UV Printed (28)','Custom Neon (10)']}/><Filter title="OCCASION" items={['Birthday (31)','Wedding (16)','Anniversary (17)','Festive (26)']}/><button className="clearBtn">CLEAR FILTERS</button></aside><div className="catalogResults"><div className="resultTools"><span>Showing 1–24 of 248 products</span><select><option>Sort by: Featured</option><option>Price: Low to High</option></select><button><GridIcon/></button><button><Menu/></button></div><div className="catalogProducts">{products.map(p=><ProductCard key={p[0]} p={p}/>)}</div><div className="pagination"><button><ArrowLeft/></button><b>1</b><span>2</span><span>3</span><span>…</span><span>11</span><button><ArrowRight/></button></div></div></section>}
 function Filter({title,items}){return <div className="filter"><div><b>{title}</b><ChevronDown/></div>{title==='PRICE RANGE'?<div className="range"><i/><span>₹499</span><span>₹24,999+</span></div>:title==='COLOR'?<div className="colorDots">{items.map((_,i)=><i key={i}/>)}</div>:items.map(x=><label key={x}><input type="checkbox"/> {x}</label>)}</div>}
 function GridIcon(){return <span className="gridIcon"><i/><i/><i/><i/></span>}
 
