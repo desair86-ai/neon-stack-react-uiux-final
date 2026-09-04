@@ -3966,13 +3966,20 @@ function About() {
                                     ].map(([n, l], i)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                    children: [
-                                                        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$heart$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Heart$3e$__["Heart"],
-                                                        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$box$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Box$3e$__["Box"],
-                                                        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$star$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Star$3e$__["Star"],
-                                                        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$store$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Store$3e$__["Store"],
-                                                        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$badge$2d$check$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__BadgeCheck$3e$__["BadgeCheck"]
-                                                    ][i]({})
+                                                    children: (()=>{
+                                                        const Icon = [
+                                                            __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$heart$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Heart$3e$__["Heart"],
+                                                            __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$box$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Box$3e$__["Box"],
+                                                            __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$star$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Star$3e$__["Star"],
+                                                            __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$store$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Store$3e$__["Store"],
+                                                            __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$badge$2d$check$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__BadgeCheck$3e$__["BadgeCheck"]
+                                                        ][i];
+                                                        return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(Icon, {}, void 0, false, {
+                                                            fileName: "[project]/src/components.jsx",
+                                                            lineNumber: 253,
+                                                            columnNumber: 976
+                                                        }, this);
+                                                    })()
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components.jsx",
                                                     lineNumber: 253,
@@ -3983,14 +3990,14 @@ function About() {
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components.jsx",
                                                     lineNumber: 253,
-                                                    columnNumber: 957
+                                                    columnNumber: 997
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("b", {
                                                     children: l
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components.jsx",
                                                     lineNumber: 253,
-                                                    columnNumber: 977
+                                                    columnNumber: 1017
                                                 }, this)
                                             ]
                                         }, l, true, {
@@ -4036,12 +4043,12 @@ function About() {
                                 }, void 0, false, {
                                     fileName: "[project]/src/components.jsx",
                                     lineNumber: 253,
-                                    columnNumber: 1129
+                                    columnNumber: 1169
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components.jsx",
                                 lineNumber: 253,
-                                columnNumber: 1054
+                                columnNumber: 1094
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 children: [
@@ -4050,7 +4057,7 @@ function About() {
                                     }, void 0, false, {
                                         fileName: "[project]/src/components.jsx",
                                         lineNumber: 253,
-                                        columnNumber: 1215
+                                        columnNumber: 1255
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
                                         children: [
@@ -4058,35 +4065,35 @@ function About() {
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("br", {}, void 0, false, {
                                                 fileName: "[project]/src/components.jsx",
                                                 lineNumber: 253,
-                                                columnNumber: 1264
+                                                columnNumber: 1304
                                             }, this),
                                             "MADE TO GLOW."
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components.jsx",
                                         lineNumber: 253,
-                                        columnNumber: 1239
+                                        columnNumber: 1279
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                         children: "We started with a simple belief – every space has a story, and neon light is the perfect way to tell it."
                                     }, void 0, false, {
                                         fileName: "[project]/src/components.jsx",
                                         lineNumber: 253,
-                                        columnNumber: 1287
+                                        columnNumber: 1327
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                         children: "What began in a small studio has now grown into a team of dreamers, designers, and makers who are obsessed with quality and details."
                                     }, void 0, false, {
                                         fileName: "[project]/src/components.jsx",
                                         lineNumber: 253,
-                                        columnNumber: 1398
+                                        columnNumber: 1438
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                         children: "From custom creations to ready-to-shop designs, we put our heart into every sign we make."
                                     }, void 0, false, {
                                         fileName: "[project]/src/components.jsx",
                                         lineNumber: 253,
-                                        columnNumber: 1537
+                                        columnNumber: 1577
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
                                         className: "btn ghost",
@@ -4096,25 +4103,25 @@ function About() {
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$arrow$2d$right$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ArrowRight$3e$__["ArrowRight"], {}, void 0, false, {
                                                 fileName: "[project]/src/components.jsx",
                                                 lineNumber: 253,
-                                                columnNumber: 1687
+                                                columnNumber: 1727
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components.jsx",
                                         lineNumber: 253,
-                                        columnNumber: 1633
+                                        columnNumber: 1673
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components.jsx",
                                 lineNumber: 253,
-                                columnNumber: 1210
+                                columnNumber: 1250
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components.jsx",
                         lineNumber: 253,
-                        columnNumber: 1017
+                        columnNumber: 1057
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
                         className: "standFor",
@@ -4127,7 +4134,7 @@ function About() {
                                 }, void 0, false, {
                                     fileName: "[project]/src/components.jsx",
                                     lineNumber: 253,
-                                    columnNumber: 1780
+                                    columnNumber: 1820
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     className: "standGrid",
@@ -4162,43 +4169,43 @@ function About() {
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(I, {}, void 0, false, {
                                                     fileName: "[project]/src/components.jsx",
                                                     lineNumber: 253,
-                                                    columnNumber: 2297
+                                                    columnNumber: 2337
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("b", {
                                                     children: t
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components.jsx",
                                                     lineNumber: 253,
-                                                    columnNumber: 2301
+                                                    columnNumber: 2341
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                     children: d
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components.jsx",
                                                     lineNumber: 253,
-                                                    columnNumber: 2311
+                                                    columnNumber: 2351
                                                 }, this)
                                             ]
                                         }, t, true, {
                                             fileName: "[project]/src/components.jsx",
                                             lineNumber: 253,
-                                            columnNumber: 2284
+                                            columnNumber: 2324
                                         }, this))
                                 }, void 0, false, {
                                     fileName: "[project]/src/components.jsx",
                                     lineNumber: 253,
-                                    columnNumber: 1831
+                                    columnNumber: 1871
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components.jsx",
                             lineNumber: 253,
-                            columnNumber: 1753
+                            columnNumber: 1793
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components.jsx",
                         lineNumber: 253,
-                        columnNumber: 1723
+                        columnNumber: 1763
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
                         className: "team container",
@@ -4209,7 +4216,7 @@ function About() {
                             }, void 0, false, {
                                 fileName: "[project]/src/components.jsx",
                                 lineNumber: 253,
-                                columnNumber: 2387
+                                columnNumber: 2427
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 children: [
@@ -4223,18 +4230,18 @@ function About() {
                                     }, i, false, {
                                         fileName: "[project]/src/components.jsx",
                                         lineNumber: 253,
-                                        columnNumber: 2516
+                                        columnNumber: 2556
                                     }, this))
                             }, void 0, false, {
                                 fileName: "[project]/src/components.jsx",
                                 lineNumber: 253,
-                                columnNumber: 2445
+                                columnNumber: 2485
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components.jsx",
                         lineNumber: 253,
-                        columnNumber: 2351
+                        columnNumber: 2391
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(CTA, {
                         title: "LET’S CREATE SOMETHING AMAZING TOGETHER",
@@ -4242,7 +4249,7 @@ function About() {
                     }, void 0, false, {
                         fileName: "[project]/src/components.jsx",
                         lineNumber: 253,
-                        columnNumber: 2587
+                        columnNumber: 2627
                     }, this)
                 ]
             }, void 0, true, {
@@ -4253,7 +4260,7 @@ function About() {
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(Footer, {}, void 0, false, {
                 fileName: "[project]/src/components.jsx",
                 lineNumber: 253,
-                columnNumber: 2708
+                columnNumber: 2748
             }, this)
         ]
     }, void 0, true, {

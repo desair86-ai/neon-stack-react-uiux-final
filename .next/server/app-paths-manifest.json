@@ -1,0 +1,13 @@
+{
+  "/_global-error/page": "app/_global-error/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/about/page": "app/about/page.js",
+  "/blogs/page": "app/blogs/page.js",
+  "/category/[name]/page": "app/category/[name]/page.js",
+  "/collections/page": "app/collections/page.js",
+  "/contact/page": "app/contact/page.js",
+  "/custom-neon/page": "app/custom-neon/page.js",
+  "/mojo-mix/page": "app/mojo-mix/page.js",
+  "/page": "app/page.js",
+  "/uv-printed/page": "app/uv-printed/page.js"
+}
