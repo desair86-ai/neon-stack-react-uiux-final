@@ -22,8 +22,8 @@ export default async function handler(req, res) {
     console.error(error);
     // Fallback mock data in case WordPress isn't connected yet
     res.status(200).json([
-      { id: 1, name: 'Gaming Controller', category: 'Gaming', price: '1,499', image: '', tag: 'BESTSELLER' },
-      { id: 2, name: 'Astronaut On Moon', category: 'Astronaut & Space', price: '1,999', image: '', tag: 'MOJO MIX' }
+      { id: 1, name: 'Gaming Controller', category: 'Gaming', price: '1,499', image: '/images/1.png', tag: 'BESTSELLER' },
+      { id: 2, name: 'Astronaut On Moon', category: 'Astronaut & Space', price: '1,999', image: '/images/astro_with_full_moon.png', tag: 'MOJO MIX' }
     ]);
   }
 }
