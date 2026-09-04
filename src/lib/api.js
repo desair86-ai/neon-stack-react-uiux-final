@@ -20,18 +20,38 @@ export async function getProducts() {
   const data = await fetchGraphQL(`
     query GetProducts {
       products(first: 20) {
-        nodes { id name slug image { sourceUrl } }
+        nodes {
+          id name slug image { sourceUrl }
+          ... on SimpleProduct { regularPrice salePrice }
+          ... on VariableProduct { regularPrice salePrice }
+        }
       }
     }
   `);
   
-  return data?.products?.nodes.map((p) => [
-    p.name,
-    'Premium LED Neon',
-    p.image?.sourceUrl || '/images/products/product_01.png',
-    '',
-    '4,999'
-  ]) || [];
+  return data?.products?.nodes.map((p) => {
+    let badge = '';
+    let price = '4,999';
+    if (p.salePrice && p.regularPrice) {
+      const sale = parseFloat(p.salePrice.replace(/[^0-9.-]+/g, ''));
+      const reg = parseFloat(p.regularPrice.replace(/[^0-9.-]+/g, ''));
+      if (reg > sale && reg > 0) {
+        const discount = Math.round(((reg - sale) / reg) * 100);
+        badge = discount + '% OFF';
+      }
+      price = p.salePrice.replace(/[^0-9.,]+/g, '');
+    } else if (p.regularPrice) {
+      price = p.regularPrice.replace(/[^0-9.,]+/g, '');
+    }
+    
+    return [
+      p.name,
+      'Premium LED Neon',
+      p.image?.sourceUrl || '/images/products/product_01.png',
+      badge,
+      price
+    ];
+  }) || [];
 }
 
 export async function getCategories() {
