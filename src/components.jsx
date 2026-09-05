@@ -120,9 +120,13 @@ function MegaMenu({ close }) {
       <div className="megaGrid">
         {subCategories.length > 0 ? subCategories.map((sub) => (
           <Link href={"/category/" + sub.slug} key={sub.id} onClick={close}>
-            <div className="miniPic" style={{backgroundColor: "#111"}}>
-              <span style={{fontSize:"11px"}}>{sub.name.substring(0, 8)}</span>
-            </div>
+            {sub.image?.sourceUrl ? (
+                <img src={sub.image.sourceUrl} alt={sub.name} className="miniPic" style={{objectFit: 'cover'}} />
+              ) : (
+                <div className="miniPic" style={{backgroundColor: "#111"}}>
+                  <span style={{fontSize:"11px"}}>{sub.name.substring(0, 8)}</span>
+                </div>
+              )}
             <b>{sub.name}</b>
           </Link>
         )) : (

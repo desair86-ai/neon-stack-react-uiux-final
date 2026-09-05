@@ -83,7 +83,7 @@ export async function getCategories() {
       productCategories(where: { parent: 0 }, first: 20) {
         nodes {
           id name slug
-          children(first: 10) { nodes { id name slug } }
+          children(first: 10) { nodes { id name slug image { sourceUrl } } }
         }
       }
     }
