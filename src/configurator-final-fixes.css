@@ -105,7 +105,7 @@
 }
 
 /* Increase interface font sizes by ~2px */
-.ns-stepper button { font-size: 13px !important; }
+/* .ns-stepper button { font-size: 13px !important; } removed */
 .ns-step-num { font-size: 15px !important; }
 .ns-field label { font-size: 12px !important; }
 .ns-field p { font-size: 15px !important; }
