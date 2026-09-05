@@ -1,34 +1,249 @@
 "use client";
-import React,{useEffect,useMemo,useRef,useState}from"react";
-import{Header,Footer}from"./components";
-import{getConfiguratorOptions}from"./lib/api";
-import{AlignCenter,AlignLeft,AlignRight,ArrowLeft,ArrowRight,Check,Crown,Heart,Minus,Moon,Plus,Ruler,RotateCcw,Smile,Sparkles,Star,Sun,Sunset,Trash2,Upload,WandSparkles,Zap}from"lucide-react";
-import"./configurator.css";
-const STEPS=["text","shapes","color","backboard","hardware"],LABELS={text:"TEXT",shapes:"SHAPES",color:"COLOUR",backboard:"BACKBOARD",hardware:"HARDWARE"};
-const FALLBACK={options:{colors:[{id:"pink",name:"Pink",hex:"#ff2aa8",price:0},{id:"purple",name:"Purple",hex:"#8d3cff",price:0},{id:"blue",name:"Blue",hex:"#198cff",price:0},{id:"cyan",name:"Cyan",hex:"#12dfe5",price:0},{id:"green",name:"Green",hex:"#63df21",price:0},{id:"yellow",name:"Yellow",hex:"#ffd11a",price:0},{id:"orange",name:"Orange",hex:"#ff8618",price:0},{id:"white",name:"White",hex:"#fff",price:0}],sizes:[{id:"small",name:"Small",price:5600,description:"39.5 × 10 in"},{id:"medium",name:"Medium",price:9100,description:"51.5 × 13 in"},{id:"large",name:"Large",price:11400,description:"63.5 × 15 in"},{id:"xl",name:"Extra Large",price:14800,description:"87.5 × 17 in"}],shapes:[{id:"heart",name:"Heart",price:300},{id:"star",name:"Star",price:300},{id:"lightning",name:"Lightning",price:300},{id:"crown",name:"Crown",price:300},{id:"moon",name:"Moon",price:300},{id:"smile",name:"Smile",price:300}],backboards:[{id:"cut",name:"Cut to Shape",price:0,description:"Precision-cut backing that follows your neon"},{id:"whole",name:"Whole Board / Square",price:1200,description:"A clean rectangular acrylic backing"},{id:"none",name:"No Backing / Minimal",price:0,description:"Minimal hardware for a floating look"}],hardware:[{id:"screws",name:"Wall Screws",price:0,description:"Simple wall-mount hardware"},{id:"wire",name:"Hanging Wire",price:300,description:"For suspended installations"},{id:"dimmer",name:"Standard Dimmer",price:500,description:"Brightness control"},{id:"smart",name:"Smart WiFi / Wireless Remote",price:1000,description:"Smart control and remote"},{id:"indoor",name:"Indoor LED",price:0,description:"For indoor installations"},{id:"outdoor",name:"IP67 Waterproof Outdoor",price:900,description:"For protected outdoor use"}]},fonts:[{id:"neon-script",name:"Neon Script",class:"font-neon-script"},{id:"classic",name:"Classic",class:""}],presentation:{text_color_selection:true,effect_selection:true,shape_color_mode:"single"}};
-const BACKGROUNDS=[["Dark Room","/images/mojo_bg_clean.jpg"],["Living Room","/images/better_together.jpg"],["Gaming Room","/images/astro_with_full_moon.png"],["Bedroom","/images/astro_with_moon.png"],["Cafe","/images/wings_and_drinks.png"],["Office","/images/whats_in_the_box.png"],["Concrete Wall","/images/website_banner_01.png"]];
-const LIGHTING={night:{label:"Dark Room",filter:"brightness(.38) contrast(1.25)"},evening:{label:"Cozy Evening",filter:"brightness(.62) contrast(1.1) sepia(.12)"},day:{label:"Daytime",filter:"brightness(.95) contrast(1)"}};
-function shapeIcon(name,size=30){const p={size,strokeWidth:1.7};const n=String(name||"").toLowerCase();if(n.includes("heart"))return <Heart {...p}/>;if(n.includes("star"))return <Star {...p}/>;if(n.includes("moon"))return <Moon {...p}/>;if(n.includes("crown"))return <Crown {...p}/>;if(n.includes("smile"))return <Smile {...p}/>;if(n.includes("light")||n.includes("zap"))return <Zap {...p}/>;return <Sparkles {...p}/>}
-const money=v=>`₹${Number(v||0).toLocaleString("en-IN")}`;
-function physicalWidth(size){const m=String(size?.description||"").match(/([\d.]+)\s*[×x]/);return m?Number(m[1]):50}
-function physicalHeight(size){const m=String(size?.description||"").match(/[×x]\s*([\d.]+)/);return m?Number(m[1]):10}
-function fontFamily(f){return f?.class?undefined:(f?.fontFamily||f?.family||f?.name||"sans-serif")}
-export function ConfiguratorExperience({type="custom_neon"}){
- const isMojo=type==="mojo_mix";const[config,setConfig]=useState(null),[loading,setLoading]=useState(true),[step,setStep]=useState(0),[text,setText]=useState("Good Vibes Only"),[font,setFont]=useState(null),[align,setAlign]=useState("center"),[size,setSize]=useState(null),[color,setColor]=useState(null),[multiColor,setMultiColor]=useState(false),[selectedItem,setSelectedItem]=useState(null),[letterColors,setLetterColors]=useState({}),[shapes,setShapes]=useState([]),[backboard,setBackboard]=useState(null),[hardware,setHardware]=useState(null),[background,setBackground]=useState(BACKGROUNDS[0][1]),[wallFile,setWallFile]=useState(null),[mood,setMood]=useState("day"),[lightOn,setLightOn]=useState(true),[showRuler,setShowRuler]=useState(true),[calibrating,setCalibrating]=useState(false),[calibrationInches,setCalibrationInches]=useState("50"),[calibrationRatio,setCalibrationRatio]=useState(null),[calibrationLineWidth,setCalibrationLineWidth]=useState(300),[scale,setScale]=useState(1);
- const previewRef=useRef(null),textRef=useRef(null),dragRef=useRef(null);
- useEffect(()=>{let alive=true;setLoading(true);getConfiguratorOptions(type).then(data=>{if(!alive)return;const next=data?.options?data:FALLBACK;setConfig(next);const o=next.options||FALLBACK.options;const fs=next.fonts?.length?next.fonts:FALLBACK.fonts;setFont(fs[0]);setSize(o.sizes?.[0]||FALLBACK.options.sizes[0]);setColor(isMojo?null:(o.colors?.find(c=>String(c.name).toLowerCase().includes("aqua"))||o.colors?.[0]||FALLBACK.options.colors[0]));setBackboard(o.backboards?.[0]||FALLBACK.options.backboards[0]);setHardware(o.hardware?.[0]||FALLBACK.options.hardware[0]);setLoading(false)}).catch(()=>{if(!alive)return;setConfig(FALLBACK);setFont(FALLBACK.fonts[0]);setSize(FALLBACK.options.sizes[0]);setColor(isMojo?null:FALLBACK.options.colors[0]);setBackboard(FALLBACK.options.backboards[0]);setHardware(FALLBACK.options.hardware[0]);setLoading(false)});return()=>{alive=false}},[type,isMojo]);
- const options=config?.options||FALLBACK.options,fonts=config?.fonts?.length?config.fonts:FALLBACK.fonts,presentation=config?.presentation||{},current=STEPS[step];const valid={text:text.trim().length>0&&text.length<=50&&!!font,shapes:true,color:isMojo||!!color,backboard:!!backboard,hardware:!!hardware};const complete=STEPS.every(s=>valid[s]);const price=useMemo(()=>Number(size?.price||0)+Number(backboard?.price||0)+Number(hardware?.price||0)+shapes.reduce((n,s)=>n+Number(s.price||0),0),[size,backboard,hardware,shapes]);const dimensions=useMemo(()=>({width:physicalWidth(size),height:physicalHeight(size)}),[size]);
- useEffect(()=>{const box=previewRef.current,el=textRef.current;if(!box||!el)return;let raf=0;const measure=()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>{const width=el.scrollWidth,height=Math.max(el.scrollHeight,el.getBoundingClientRect().height),bw=box.clientWidth,bh=box.clientHeight;if(!width)return;const safeW=bw*.86,safeH=bh*.52;let base=size?.id==="small"?.62:size?.id==="medium"?.76:size?.id==="large"?.9:1.02;let fitted=Math.min(base,safeW/width,safeH/Math.max(height,1));if(calibrationRatio){const target=dimensions.width*calibrationRatio;fitted=Math.min(fitted*2.4,target/width)}setScale(Math.max(.06,Math.min(1.08,fitted)))})};measure();const ro=new ResizeObserver(measure);ro.observe(box);window.addEventListener("resize",measure);return()=>{cancelAnimationFrame(raf);ro.disconnect();window.removeEventListener("resize",measure)}},[text,font,size,align,background,wallFile,calibrationRatio,dimensions.width,multiColor]);
- function addShape(s,position="left"){setShapes(v=>[...v,{...s,uid:`${s.id}-${Date.now()}-${Math.random()}`,position,color:color||options.colors?.[0]}])}function removeShape(uid){setShapes(v=>v.filter(s=>s.uid!==uid));if(selectedItem===uid)setSelectedItem(null)}function updateShape(uid,patch){setShapes(v=>v.map(s=>s.uid===uid?{...s,...patch}:s))}function uploadWall(e){const f=e.target.files?.[0];if(!f)return;if(wallFile)URL.revokeObjectURL(wallFile);const u=URL.createObjectURL(f);setWallFile(u);setBackground(u);setCalibrationRatio(null)}function chooseBackground(src){if(wallFile){URL.revokeObjectURL(wallFile);setWallFile(null)}setBackground(src);setCalibrationRatio(null)}function reset(){if(wallFile)URL.revokeObjectURL(wallFile);setText("Good Vibes Only");setShapes([]);setMultiColor(false);setSelectedItem(null);setLetterColors({});setBackground(BACKGROUNDS[0][1]);setWallFile(null);setMood("day");setLightOn(true);setShowRuler(true);setCalibrating(false);setCalibrationRatio(null);setStep(0)}
- function beginCalibrationDrag(e){if(!calibrating)return;dragRef.current={x:e.clientX,width:calibrationLineWidth};window.addEventListener("pointermove",moveCalibration);window.addEventListener("pointerup",endCalibration,{once:true})}function moveCalibration(e){if(!dragRef.current)return;const max=previewRef.current?.clientWidth*.85||700;setCalibrationLineWidth(Math.max(80,Math.min(max,dragRef.current.width+e.clientX-dragRef.current.x)))}function endCalibration(){dragRef.current=null;window.removeEventListener("pointermove",moveCalibration)}function setCalibration(){const inches=Number(calibrationInches);if(inches>0){setCalibrationRatio(calibrationLineWidth/inches);setCalibrating(false)}}
- const light=LIGHTING[mood],base=color?.hex||"#63df21";const neonTextStyle={fontFamily:fontFamily(font),fontSize:"clamp(40px,5.8vw,96px)",lineHeight:1.02,whiteSpace:"pre",display:"inline-block",textAlign:align,color:isMojo?"transparent":base,backgroundImage:isMojo?"linear-gradient(90deg,#ffde00,#ff7b00,#ff007b,#c400ff,#00d4ff,#ffde00)":undefined,WebkitBackgroundClip:isMojo?"text":undefined,backgroundSize:isMojo?"200% auto":undefined,animation:isMojo?"nsSpectrum 3s linear infinite":undefined,opacity:lightOn?1:.55,WebkitTextStroke:lightOn?`1px ${base}`:`1px ${base}`,textShadow:lightOn?`0 0 2px ${base},0 0 7px ${base},0 0 18px ${base},0 0 42px ${base},0 0 75px ${base}`:"none",filter:lightOn?`drop-shadow(0 0 8px ${base}) drop-shadow(0 0 24px ${base}) drop-shadow(0 0 55px ${base})`:"none",transform:`scale(${scale})`,transformOrigin:"center center"};
- if(loading)return <><Header/><main className="ns-config-loading">Loading your neon builder…</main><Footer/></>;
- return <><Header/><main className={`ns-configurator ${isMojo?"ns-mojo":""}`}><section className="ns-builder-heading"><div className="ns-container"><div className="ns-breadcrumb">Home / {isMojo?"Mojo Mix":"Custom Neon"}</div><h1>CREATE YOUR <em>{isMojo?"MOJO MIX":"CUSTOM NEON"} SIGN</em></h1><p>Design it. See it. Love it. <Heart size={15}/></p><div className="ns-trust-row"><span><WandSparkles/> Live Real-time Preview</span><span><Heart/> Custom Made Just For You</span><span><Sparkles/> Premium Quality &amp; Safe</span><span><Star/> Made in India</span></div></div></section><section className="ns-container ns-builder-shell"><div className="ns-config-layout"><aside className="ns-panel ns-controls"><div className="ns-stepper">{STEPS.map((s,i)=><button key={s} className={`${step===i?"active":""} ${valid[s]?"done":""}`} onClick={()=>{if(i<=step||STEPS.slice(0,i).every(k=>valid[k]))setStep(i)}}><span className="ns-step-num">{valid[s]?<Check size={13}/>:i+1}</span><span>{LABELS[s]}</span></button>)}</div><div className="ns-control-body">
- {current==="text"&&<><div className="ns-field"><label>YOUR TEXT <small>{text.length}/50</small></label><textarea value={text} maxLength={50} rows={3} onChange={e=>setText(e.target.value)}/></div><div className="ns-field"><label>FONT STYLE <small>{fonts.length} FONTS</small></label><select value={font?.id||font?.name||""} onChange={e=>setFont(fonts.find(f=>String(f.id||f.name)===e.target.value)||fonts[0])}>{fonts.map(f=><option key={f.id||f.name} value={f.id||f.name}>{f.name}</option>)}</select></div><div className="ns-field"><label>ALIGNMENT</label><div className="ns-align"><button className={align==="left"?"selected":""} onClick={()=>setAlign("left")}><AlignLeft/></button><button className={align==="center"?"selected":""} onClick={()=>setAlign("center")}><AlignCenter/></button><button className={align==="right"?"selected":""} onClick={()=>setAlign("right")}><AlignRight/></button></div></div><div className="ns-field"><label>SIZE</label><div className="ns-option-list">{options.sizes?.map(s=><button key={s.id} className={size?.id===s.id?"selected":""} onClick={()=>setSize(s)}><span><b>{s.name}</b><small>{s.description||""}</small></span><strong>{money(s.price)}</strong></button>)}</div></div></>}
- {current==="shapes"&&<><div className="ns-section-title"><div><b>ADD NEON SHAPES</b><small>Each shape can be placed left or right and adjusted individually.</small></div></div><div className="ns-shape-list">{options.shapes?.map(s=><div className="ns-shape-row" key={s.id}><span className="ns-shape-label">{shapeIcon(s.name,24)}<b>{s.name}</b></span><button className="ns-icon-btn" onClick={()=>addShape(s,"left")}><Plus size={16}/></button><span className="ns-count">{shapes.filter(x=>x.id===s.id).length}</span><button className="ns-icon-btn" onClick={()=>{const last=[...shapes].reverse().find(x=>x.id===s.id);if(last)removeShape(last.uid)}}><Minus size={16}/></button></div>)}</div>{shapes.length>0&&<div className="ns-added"><label>POSITION YOUR SHAPES</label>{shapes.map((s,i)=><div className="ns-shape-config" key={s.uid}><div className="ns-shape-config-top"><span>{shapeIcon(s.name,20)} {s.name} {i+1}</span><button onClick={()=>removeShape(s.uid)}><Trash2 size={14}/></button></div><div className="ns-position"><button className={s.position==="left"?"selected":""} onClick={()=>updateShape(s.uid,{position:"left"})}>LEFT</button><button className={s.position==="right"?"selected":""} onClick={()=>updateShape(s.uid,{position:"right"})}>RIGHT</button></div>{multiColor&&<div className="ns-mini-color-row">{options.colors?.map(c=><button key={c.id||c.name} className={s.color?.id===c.id?"selected":""} style={{background:c.hex}} onClick={()=>updateShape(s.uid,{color:c})}/>)}</div>}</div>)}</div></>}
- {current==="color"&&(isMojo?<div className="ns-mojo-info"><div className="ns-spectrum-demo"/><h3>MOJO SPECTRUM</h3><p>Continuous moving multicolour spectrum. Mojo does not use manual text colour or effect controls.</p><div className="ns-mojo-check"><Check/> Animated multicolour text</div><div className="ns-mojo-check"><Check/> Smooth colour transition</div></div>:<><div className="ns-field"><label>CHOOSE LED NEON COLOR</label><div className="ns-color-grid">{options.colors?.map(c=><button key={c.id||c.name} className={color?.id===c.id||color?.name===c.name?"selected":""} style={{background:c.hex}} onClick={()=>setColor(c)} aria-label={c.name} title={c.name}/>)}</div></div>{presentation.text_color_selection!==false&&<label className="ns-toggle"><input type="checkbox" checked={multiColor} onChange={e=>{setMultiColor(e.target.checked);setSelectedItem(null)}}/><span/> MULTICOLOUR TEXT</label>}{multiColor&&<div className="ns-letter-picker">{Array.from(text).map((ch,i)=>ch.trim()?<button key={i} className={selectedItem===i?"selected":""} style={{background:letterColors[i]?.hex||color?.hex||"#63df21"}} onClick={()=>setSelectedItem(i)}>{ch}</button>:<span key={i}/>)}</div>}{multiColor&&selectedItem!==null&&typeof selectedItem==="number"&&<div className="ns-color-grid ns-color-subgrid">{options.colors?.map(c=><button key={c.id||c.name} style={{background:c.hex}} onClick={()=>setLetterColors(v=>({...v,[selectedItem]:c}))}/>)}</div>}</>)}
- {current==="backboard"&&<div className="ns-card-list">{options.backboards?.map(o=><button key={o.id} className={backboard?.id===o.id?"selected":""} onClick={()=>setBackboard(o)}><span><b>{o.name}</b><small>{o.description||""}</small></span><strong>{Number(o.price||0)?`+${money(o.price)}`:"FREE"}</strong></button>)}</div>}
- {current==="hardware"&&<div className="ns-card-list">{options.hardware?.map(o=><button key={o.id} className={hardware?.id===o.id?"selected":""} onClick={()=>setHardware(o)}><span><b>{o.name}</b><small>{o.description||""}</small></span><strong>{Number(o.price||0)?`+${money(o.price)}`:"FREE"}</strong></button>)}</div>}
- </div><div className="ns-nav-actions"><button className="ns-secondary" disabled={step===0} onClick={()=>setStep(v=>Math.max(0,v-1))}><ArrowLeft/> BACK</button>{step<STEPS.length-1?<button className="ns-primary" disabled={!valid[current]} onClick={()=>valid[current]&&setStep(v=>v+1)}>NEXT STEP <ArrowRight/></button>:<button className="ns-primary" disabled={!complete} onClick={()=>alert("Configuration validated. WooCommerce cart integration is the next server-connected step.")}>ADD TO CART <ArrowRight/></button>}</div><div className="ns-mini-completion">{STEPS.map((s,i)=><span key={s} className={valid[s]?"done":i===step?"current":""}/>)}</div></aside>
- <div className="ns-preview-column"><div className="ns-panel ns-preview"><div className="ns-preview-toolbar"><div className="ns-preview-tabs"><button className="active">PREVIEW</button><button>YOUR WALL</button></div><div className="ns-preview-tools"><button onClick={reset} title="Reset"><RotateCcw size={16}/></button></div></div><div className="ns-preview-stage"><div className="ns-preview-topbar"><div className="ns-lighting-moods">{[["night",<Moon size={15}/>],["evening",<Sunset size={15}/>],["day",<Sun size={15}/>]].map(([id,icon])=><button key={id} className={mood===id?"selected":""} onClick={()=>setMood(id)}>{icon}{LIGHTING[id].label}</button>)}</div><div className="ns-preview-controls"><button className={lightOn?"selected":""} onClick={()=>setLightOn(v=>!v)}><span>{lightOn?<Zap size={15}/>:<Sparkles size={15}/>}</span>LIGHT {lightOn?"ON":"OFF"}</button><button className={showRuler?"selected":""} onClick={()=>setShowRuler(v=>!v)}><Ruler size={15}/>{showRuler?"HIDE RULER":"SHOW RULER"}</button></div></div><div ref={previewRef} className="ns-canvas"><img className="ns-canvas-image" src={background} alt="" style={{filter:light.filter}}/><div className="ns-canvas-shade" style={{opacity:mood==="night"?.62:mood==="evening"?.35:.05}}/><div className="ns-neon-art"><div ref={textRef} className="ns-neon-text" style={neonTextStyle}>{Array.from(text||"Your Neon").map((ch,i)=>{const lc=letterColors[i]?.hex;if(!isMojo&&multiColor&&lc)return <span key={i} style={{color:lc,textShadow:`0 0 2px ${lc},0 0 10px ${lc},0 0 30px ${lc}`}}>{ch}</span>;return <span key={i}>{ch}</span>})}</div><div className="ns-art-shapes">{shapes.map(s=>{const c=isMojo?undefined:s.color?.hex||base;return <span key={s.uid} className={`${s.position} ${isMojo?"spectrum":""}`} style={c?{color:c,filter:`drop-shadow(0 0 8px ${c}) drop-shadow(0 0 24px ${c})`,opacity:lightOn?1:.5}:undefined}>{shapeIcon(s.name,Math.max(42,Math.min(68,42+scale*20)))}</span>})}</div>{showRuler&&<div className="ns-ruler-overlay"><div className="ns-ruler-horizontal"><i/><b>{dimensions.width.toFixed(2)}&quot;</b><i/></div><div className="ns-ruler-vertical"><i/><b>{dimensions.height.toFixed(2)}&quot;</b><i/></div></div>}<div className="ns-neon-base-line"/></div>{calibrating&&<div className="ns-calibration-overlay"><div className="ns-calibration-card"><div className="ns-calibration-title"><span><Ruler size={18}/> Calibrate Room Scale</span><button onClick={()=>setCalibrating(false)}>×</button></div><p>Drag the line to match a real object or known wall width, then enter its actual size.</p><div className="ns-calibration-line-wrap"><div className="ns-calibration-line" style={{width:calibrationLineWidth}} onPointerDown={beginCalibrationDrag}><span>{Math.round(calibrationLineWidth)}px</span></div></div><div className="ns-calibration-input"><label>OBJECT WIDTH (INCHES)</label><input type="number" min="1" value={calibrationInches} onChange={e=>setCalibrationInches(e.target.value)}/><button onClick={setCalibration}>SET SCALE</button></div></div></div>}</div><div className="ns-preview-bottom"><button className="ns-calibrate-btn" onClick={()=>setCalibrating(true)}><Ruler size={15}/> CALIBRATE ROOM SIZE</button></div></div><div className="ns-background-picker"><div className="ns-bg-title"><b>CHOOSE A BACKGROUND</b></div><div className="ns-bg-grid">{BACKGROUNDS.map(([name,src])=><button key={name} className={background===src?"selected":""} onClick={()=>chooseBackground(src)}><img src={src} alt=""/><span>{name}</span>{background===src&&<i><Check size={11}/></i>}</button>)}<label className={`ns-bg-upload-card ${wallFile?"selected":""}`}><input type="file" accept="image/*" onChange={uploadWall}/><Upload size={22}/><b>UPLOAD YOUR WALL PHOTO</b><small>Use your own room</small></label></div></div></div><div className="ns-summary ns-panel"><div className="ns-summary-title"><Sparkles/><b>YOUR NEON SIGN SUMMARY</b></div><div className="ns-summary-details"><span>Text <b>{text||"—"}</b></span><span>Font <b>{font?.name||"—"}</b></span><span>Colour <b>{isMojo?"MOJO SPECTRUM":multiColor?"Multicolour":color?.name||"—"}</b></span><span>Size <b>{size?.name||"—"}</b></span><span>Shapes <b>{shapes.length||"None"}</b></span><span>Board <b>{backboard?.name||"—"}</b></span></div><div className="ns-price"><small>ESTIMATED PRICE</small><strong>{money(price)}</strong><span>Inclusive of all taxes</span></div><button className="ns-cart-cta" disabled={!complete} onClick={()=>alert("Configuration validated. WooCommerce cart integration is the next server-connected step.")}>ADD TO CART <ArrowRight/></button></div></div></section></main><Footer/></>;
+
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Header, Footer } from "./components";
+import { getConfiguratorOptions } from "./lib/api";
+import {
+  AlignCenter, AlignLeft, AlignRight, ArrowLeft, ArrowRight, Check,
+  Crown, Heart, Minus, Moon, Plus, Ruler, RotateCcw, Smile, Sparkles,
+  Star, Sun, Sunset, Trash2, Upload, WandSparkles, Zap
+} from "lucide-react";
+import "./configurator.css";
+
+const STEPS = ["text", "shapes", "color", "backboard", "hardware"];
+const LABELS = { text: "TEXT", shapes: "SHAPES", color: "COLOUR", backboard: "BACKBOARD", hardware: "HARDWARE" };
+
+const FALLBACK = {
+  options: {
+    colors: [
+      { id: "pink", name: "Pink", hex: "#ff2aa8", price: 0 }, { id: "purple", name: "Purple", hex: "#8d3cff", price: 0 },
+      { id: "blue", name: "Blue", hex: "#198cff", price: 0 }, { id: "cyan", name: "Cyan", hex: "#12dfe5", price: 0 },
+      { id: "green", name: "Green", hex: "#63df21", price: 0 }, { id: "yellow", name: "Yellow", hex: "#ffd11a", price: 0 },
+      { id: "orange", name: "Orange", hex: "#ff8618", price: 0 }, { id: "white", name: "White", hex: "#ffffff", price: 0 }
+    ],
+    sizes: [
+      { id: "small", name: "Small", price: 5600, description: "39.5 × 10 in" }, { id: "medium", name: "Medium", price: 9100, description: "51.5 × 13 in" },
+      { id: "large", name: "Large", price: 11400, description: "63.5 × 15 in" }, { id: "xl", name: "Extra Large", price: 14800, description: "87.5 × 17 in" }
+    ],
+    shapes: [
+      { id: "heart", name: "Heart", price: 300 }, { id: "star", name: "Star", price: 300 }, { id: "lightning", name: "Lightning", price: 300 },
+      { id: "crown", name: "Crown", price: 300 }, { id: "moon", name: "Moon", price: 300 }, { id: "smile", name: "Smile", price: 300 }
+    ],
+    backboards: [
+      { id: "cut", name: "Cut to Shape", price: 0, description: "Precision-cut backing that follows your neon" },
+      { id: "whole", name: "Whole Board / Square", price: 1200, description: "A clean rectangular acrylic backing" },
+      { id: "none", name: "No Backing / Minimal", price: 0, description: "Minimal hardware for a floating look" }
+    ],
+    hardware: [
+      { id: "screws", name: "Wall Screws", price: 0, description: "Simple wall-mount hardware" },
+      { id: "wire", name: "Hanging Wire", price: 300, description: "For suspended installations" },
+      { id: "dimmer", name: "Standard Dimmer", price: 500, description: "Brightness control" },
+      { id: "smart", name: "Smart WiFi / Wireless Remote", price: 1000, description: "Smart control and remote" },
+      { id: "indoor", name: "Indoor LED", price: 0, description: "For indoor installations" },
+      { id: "outdoor", name: "IP67 Waterproof Outdoor", price: 900, description: "For protected outdoor use" }
+    ]
+  },
+  fonts: [{ id: "neon-script", name: "Neon Script", class: "font-neon-script" }, { id: "classic", name: "Classic", class: "" }],
+  presentation: { text_color_selection: true, effect_selection: true, shape_color_mode: "single" }
+};
+
+const BACKGROUNDS = [
+  ["Dark Room", "/images/mojo_bg_clean.jpg"], ["Living Room", "/images/better_together.jpg"],
+  ["Gaming Room", "/images/astro_with_full_moon.png"], ["Bedroom", "/images/astro_with_moon.png"],
+  ["Cafe", "/images/wings_and_drinks.png"], ["Office", "/images/whats_in_the_box.png"], ["Concrete Wall", "/images/website_banner_01.png"]
+];
+const LIGHTING = {
+  night: { label: "Dark Room", filter: "brightness(.38) contrast(1.25)" },
+  evening: { label: "Cozy Evening", filter: "brightness(.62) contrast(1.1) sepia(.12)" },
+  day: { label: "Daytime", filter: "brightness(.95) contrast(1)" }
+};
+
+function shapeIcon(name, size = 30) {
+  const props = { size, strokeWidth: 1.7 };
+  const n = String(name || "").toLowerCase();
+  if (n.includes("heart")) return <Heart {...props} />;
+  if (n.includes("star")) return <Star {...props} />;
+  if (n.includes("moon")) return <Moon {...props} />;
+  if (n.includes("crown")) return <Crown {...props} />;
+  if (n.includes("smile")) return <Smile {...props} />;
+  if (n.includes("light") || n.includes("zap")) return <Zap {...props} />;
+  return <Sparkles {...props} />;
+}
+function money(value) { return `₹${Number(value || 0).toLocaleString("en-IN")}`; }
+function physicalWidth(size) {
+  const match = String(size?.description || "").match(/([\d.]+)\s*[×x]/);
+  return match ? Number(match[1]) : 50;
+}
+function fontFamily(font) { return font?.class || "inherit"; }
+
+export function ConfiguratorExperience({ type = "custom_neon" }) {
+  const isMojo = type === "mojo_mix";
+  const [config, setConfig] = useState(null), [loading, setLoading] = useState(true), [step, setStep] = useState(0);
+  const [text, setText] = useState("Good Vibes Only"), [font, setFont] = useState(null), [align, setAlign] = useState("center");
+  const [size, setSize] = useState(null), [color, setColor] = useState(null), [multiColor, setMultiColor] = useState(false);
+  const [letterColors, setLetterColors] = useState({}), [selectedLetter, setSelectedLetter] = useState(null), [shapes, setShapes] = useState([]);
+  const [backboard, setBackboard] = useState(null), [hardware, setHardware] = useState(null);
+  const [background, setBackground] = useState(BACKGROUNDS[0][1]), [wallFile, setWallFile] = useState(null);
+  const [mood, setMood] = useState("day"), [lightOn, setLightOn] = useState(true), [showRuler, setShowRuler] = useState(true);
+  const [calibrating, setCalibrating] = useState(false), [calibrationInches, setCalibrationInches] = useState("50");
+  const [calibrationRatio, setCalibrationRatio] = useState(null), [calibrationWidth, setCalibrationWidth] = useState(300), [scale, setScale] = useState(1);
+  const previewRef = useRef(null), textRef = useRef(null), dragRef = useRef(null);
+
+  useEffect(() => {
+    let alive = true;
+    setLoading(true);
+    getConfiguratorOptions(type).then((data) => {
+      if (!alive) return;
+      const next = data?.options ? data : FALLBACK, opts = next.options || FALLBACK.options;
+      const fonts = next.fonts?.length ? next.fonts : FALLBACK.fonts;
+      setConfig(next); setFont(fonts[0]); setSize(opts.sizes?.[0] || FALLBACK.options.sizes[0]);
+      setColor(isMojo ? null : (opts.colors?.[0] || FALLBACK.options.colors[0]));
+      setBackboard(opts.backboards?.[0] || FALLBACK.options.backboards[0]); setHardware(opts.hardware?.[0] || FALLBACK.options.hardware[0]); setLoading(false);
+    }).catch(() => {
+      if (!alive) return;
+      setConfig(FALLBACK); setFont(FALLBACK.fonts[0]); setSize(FALLBACK.options.sizes[0]); setColor(isMojo ? null : FALLBACK.options.colors[0]);
+      setBackboard(FALLBACK.options.backboards[0]); setHardware(FALLBACK.options.hardware[0]); setLoading(false);
+    });
+    return () => { alive = false; };
+  }, [type, isMojo]);
+
+  const options = config?.options || FALLBACK.options;
+  const fonts = config?.fonts?.length ? config.fonts : FALLBACK.fonts;
+  const presentation = config?.presentation || {};
+  const currentStep = STEPS[step];
+  const valid = {
+    text: text.trim().length > 0 && text.length <= 50 && !!font,
+    shapes: true, color: isMojo || !!color, backboard: !!backboard, hardware: !!hardware
+  };
+  const complete = STEPS.every((item) => valid[item]);
+  const price = useMemo(() => {
+    let total = Number(size?.price || 0) + Number(backboard?.price || 0) + Number(hardware?.price || 0);
+    shapes.forEach((shape) => { total += Number(shape.price || 0); });
+    return total;
+  }, [size, backboard, hardware, shapes]);
+
+  useEffect(() => {
+    const box = previewRef.current, el = textRef.current;
+    if (!box || !el) return undefined;
+    const measure = () => {
+      const width = Math.max(el.scrollWidth, 1), height = Math.max(el.scrollHeight, 1);
+      const safeWidth = box.clientWidth * 0.86, safeHeight = box.clientHeight * 0.52;
+      let fitted = Math.min(1, safeWidth / width, safeHeight / height);
+      if (calibrationRatio) {
+        const targetPixels = physicalWidth(size) * calibrationRatio;
+        fitted = Math.min(fitted * 2.4, targetPixels / width);
+      }
+      setScale(Math.max(0.08, Math.min(1.08, fitted)));
+    };
+    measure();
+    const observer = new ResizeObserver(measure); observer.observe(box); window.addEventListener("resize", measure);
+    return () => { observer.disconnect(); window.removeEventListener("resize", measure); };
+  }, [text, font, size, background, calibrationRatio]);
+
+  function addShape(shape) { setShapes((current) => [...current, { ...shape, uid: `${shape.id}-${Date.now()}-${Math.random()}`, position: "left" }]); }
+  function removeShape(uid) { setShapes((current) => current.filter((shape) => shape.uid !== uid)); }
+  function updateShape(uid, patch) { setShapes((current) => current.map((shape) => shape.uid === uid ? { ...shape, ...patch } : shape)); }
+  function uploadWall(event) {
+    const file = event.target.files?.[0]; if (!file) return;
+    if (wallFile) URL.revokeObjectURL(wallFile); const url = URL.createObjectURL(file);
+    setWallFile(url); setBackground(url); setCalibrationRatio(null);
+  }
+  function chooseBackground(url) {
+    if (wallFile) URL.revokeObjectURL(wallFile); setWallFile(null); setBackground(url); setCalibrationRatio(null);
+  }
+  function reset() {
+    if (wallFile) URL.revokeObjectURL(wallFile);
+    setText("Good Vibes Only"); setShapes([]); setMultiColor(false); setLetterColors({}); setSelectedLetter(null);
+    setBackground(BACKGROUNDS[0][1]); setWallFile(null); setMood("day"); setLightOn(true); setShowRuler(true); setCalibrating(false); setCalibrationRatio(null); setStep(0);
+  }
+  function beginCalibrationDrag(event) {
+    if (!calibrating) return;
+    dragRef.current = { startX: event.clientX, startWidth: calibrationWidth };
+    window.addEventListener("pointermove", moveCalibration); window.addEventListener("pointerup", endCalibration, { once: true });
+  }
+  function moveCalibration(event) {
+    if (!dragRef.current) return;
+    const max = (previewRef.current?.clientWidth || 800) * 0.85;
+    setCalibrationWidth(Math.max(80, Math.min(max, dragRef.current.startWidth + event.clientX - dragRef.current.startX)));
+  }
+  function endCalibration() { dragRef.current = null; window.removeEventListener("pointermove", moveCalibration); }
+  function setCalibration() {
+    const inches = Number(calibrationInches); if (inches > 0) { setCalibrationRatio(calibrationWidth / inches); setCalibrating(false); }
+  }
+
+  const lighting = LIGHTING[mood], neonColor = color?.hex || "#63df21";
+  const textStyle = {
+    fontFamily: fontFamily(font), fontSize: "clamp(40px,5.8vw,96px)", lineHeight: 1.02, whiteSpace: "pre", display: "inline-block", textAlign: align,
+    transform: `scale(${scale})`, transformOrigin: "center center", color: isMojo ? "transparent" : neonColor,
+    backgroundImage: isMojo ? "linear-gradient(90deg,#ffde00,#ff7b00,#ff007b,#c400ff,#00d4ff,#ffde00)" : undefined,
+    WebkitBackgroundClip: isMojo ? "text" : undefined, backgroundSize: isMojo ? "200% auto" : undefined,
+    animation: isMojo ? "nsSpectrum 3s linear infinite" : undefined, opacity: lightOn ? 1 : 0.55,
+    textShadow: lightOn ? `0 0 3px ${neonColor},0 0 10px ${neonColor},0 0 25px ${neonColor},0 0 50px ${neonColor}` : "none",
+    filter: lightOn ? `drop-shadow(0 0 8px ${neonColor}) drop-shadow(0 0 25px ${neonColor})` : "none"
+  };
+
+  if (loading) return <><Header /><main className="ns-config-loading">Loading your neon builder…</main><Footer /></>;
+
+  return (
+    <>
+      <Header />
+      <main className={`ns-configurator ${isMojo ? "ns-mojo" : ""}`}>
+        <section className="ns-builder-heading"><div className="ns-container">
+          <div className="ns-breadcrumb">Home / {isMojo ? "Mojo Mix" : "Custom Neon"}</div>
+          <h1>CREATE YOUR <em>{isMojo ? "MOJO MIX" : "CUSTOM NEON"} SIGN</em></h1>
+          <p>Design it. See it. Love it. <Heart size={15} /></p>
+          <div className="ns-trust-row"><span><WandSparkles /> Live Real-time Preview</span><span><Heart /> Custom Made Just For You</span><span><Sparkles /> Premium Quality &amp; Safe</span><span><Star /> Made in India</span></div>
+        </div></section>
+
+        <section className="ns-container ns-builder-shell"><div className="ns-config-layout">
+          <aside className="ns-panel ns-controls">
+            <div className="ns-stepper">{STEPS.map((item, index) => <button key={item} className={`${step === index ? "active" : ""} ${valid[item] ? "done" : ""}`} onClick={() => { if (index <= step || STEPS.slice(0, index).every((s) => valid[s])) setStep(index); }}><span className="ns-step-num">{valid[item] ? <Check size={13} /> : index + 1}</span><span>{LABELS[item]}</span></button>)}</div>
+            <div className="ns-control-body">
+              {currentStep === "text" && <>
+                <div className="ns-field"><label>YOUR TEXT <small>{text.length}/50</small></label><textarea value={text} maxLength={50} rows={3} onChange={(e) => setText(e.target.value)} /></div>
+                <div className="ns-field"><label>FONT STYLE</label><select value={font?.id || font?.name || ""} onChange={(e) => setFont(fonts.find((f) => String(f.id || f.name) === e.target.value) || fonts[0])}>{fonts.map((item) => <option key={item.id || item.name} value={item.id || item.name}>{item.name}</option>)}</select></div>
+                <div className="ns-field"><label>ALIGNMENT</label><div className="ns-align"><button className={align === "left" ? "selected" : ""} onClick={() => setAlign("left")}><AlignLeft /></button><button className={align === "center" ? "selected" : ""} onClick={() => setAlign("center")}><AlignCenter /></button><button className={align === "right" ? "selected" : ""} onClick={() => setAlign("right")}><AlignRight /></button></div></div>
+                <div className="ns-field"><label>SIZE</label><div className="ns-option-list">{options.sizes?.map((item) => <button key={item.id} className={size?.id === item.id ? "selected" : ""} onClick={() => setSize(item)}><span><b>{item.name}</b><small>{item.description || ""}</small></span><strong>{money(item.price)}</strong></button>)}</div></div>
+              </>}
+
+              {currentStep === "shapes" && <>
+                <div className="ns-section-title"><div><b>ADD NEON SHAPES</b><small>Add one or more decorative elements.</small></div></div>
+                <div className="ns-shape-list">{options.shapes?.map((item) => <div className="ns-shape-row" key={item.id}><span className="ns-shape-label">{shapeIcon(item.name, 24)}<b>{item.name}</b></span><button className="ns-icon-btn" onClick={() => addShape(item)}><Plus size={16} /></button><span className="ns-count">{shapes.filter((x) => x.id === item.id).length}</span><button className="ns-icon-btn" onClick={() => { const last = [...shapes].reverse().find((x) => x.id === item.id); if (last) removeShape(last.uid); }}><Minus size={16} /></button></div>)}</div>
+                {shapes.length > 0 && <div className="ns-added"><label>POSITION YOUR SHAPES</label>{shapes.map((item, index) => <div className="ns-shape-config" key={item.uid}><div className="ns-shape-config-top"><span>{shapeIcon(item.name, 20)} {item.name} {index + 1}</span><button onClick={() => removeShape(item.uid)}><Trash2 size={14} /></button></div><div className="ns-position"><button className={item.position === "left" ? "selected" : ""} onClick={() => updateShape(item.uid, { position: "left" })}>LEFT</button><button className={item.position === "right" ? "selected" : ""} onClick={() => updateShape(item.uid, { position: "right" })}>RIGHT</button></div></div>)}</div>}
+              </>}
+
+              {currentStep === "color" && (isMojo ? <div className="ns-mojo-info"><div className="ns-spectrum-demo" /><h3>MOJO SPECTRUM</h3><p>Your neon continuously flows through a vibrant multicolour spectrum. No text colour selection is required.</p><div className="ns-mojo-check"><Check /> Animated multicolour text</div><div className="ns-mojo-check"><Check /> Smooth colour transition</div></div> : <>
+                {multiColor && <div className="ns-field"><label>SELECT A LETTER</label><div className="ns-letter-picker">{[...text].map((char, index) => char.trim() ? <button key={index} className={selectedLetter === index ? "selected" : ""} onClick={() => setSelectedLetter(index)}>{char}</button> : <span key={index}> </span>)}</div></div>}
+                <div className="ns-field"><label>{multiColor && selectedLetter !== null ? "COLOUR FOR SELECTED LETTER" : "TEXT COLOR"}</label><div className="ns-color-grid">{options.colors?.map((item) => <button key={item.id || item.name} className={color?.id === item.id ? "selected" : ""} style={{ background: item.hex }} aria-label={item.name} onClick={() => { if (multiColor && selectedLetter !== null) setLetterColors((current) => ({ ...current, [selectedLetter]: item })); setColor(item); }} />)}</div></div>
+                {presentation.text_color_selection !== false && <label className="ns-toggle"><input type="checkbox" checked={multiColor} onChange={(e) => setMultiColor(e.target.checked)} /> Multicolour text</label>}
+              </>)}
+
+              {currentStep === "backboard" && <div className="ns-card-list">{options.backboards?.map((item) => <button key={item.id} className={backboard?.id === item.id ? "selected" : ""} onClick={() => setBackboard(item)}><span><b>{item.name}</b><small>{item.description || ""}</small></span><strong>{Number(item.price || 0) ? `+${money(item.price)}` : "FREE"}</strong></button>)}</div>}
+              {currentStep === "hardware" && <div className="ns-card-list">{options.hardware?.map((item) => <button key={item.id} className={hardware?.id === item.id ? "selected" : ""} onClick={() => setHardware(item)}><span><b>{item.name}</b><small>{item.description || ""}</small></span><strong>{Number(item.price || 0) ? `+${money(item.price)}` : "FREE"}</strong></button>)}</div>}
+            </div>
+            <div className="ns-nav-actions"><button className="ns-secondary" disabled={step === 0} onClick={() => setStep((value) => Math.max(0, value - 1))}><ArrowLeft /> BACK</button>{step < STEPS.length - 1 ? <button className="ns-primary" disabled={!valid[currentStep]} onClick={() => setStep((value) => value + 1)}>NEXT STEP <ArrowRight /></button> : <button className="ns-primary" disabled={!complete} onClick={() => alert("Configuration ready. WooCommerce cart wiring is the next integration step.")}>ADD TO CART <ArrowRight /></button>}</div>
+            <div className="ns-mini-completion">{STEPS.map((item, index) => <span key={item} className={valid[item] ? "done" : index === step ? "current" : ""} />)}</div>
+          </aside>
+
+          <div className="ns-preview-column"><div className="ns-panel ns-preview">
+            <div className="ns-preview-toolbar"><div className="ns-preview-tabs"><button className="active">PREVIEW</button><button>YOUR WALL</button></div><div className="ns-preview-tools"><button onClick={reset} title="Reset"><RotateCcw size={16} /></button></div></div>
+            <div className="ns-preview-studio-toolbar"><div className="ns-lighting-buttons">{Object.entries(LIGHTING).map(([id, item]) => <button key={id} className={mood === id ? "selected" : ""} onClick={() => setMood(id)}>{id === "night" ? <Moon size={14} /> : id === "evening" ? <Sunset size={14} /> : <Sun size={14} />}{item.label}</button>)}</div><div className="ns-studio-actions"><button className={lightOn ? "selected" : ""} onClick={() => setLightOn((value) => !value)}>{lightOn ? "LIGHT ON" : "LIGHT OFF"}</button><button className={showRuler ? "selected" : ""} onClick={() => setShowRuler((value) => !value)}><Ruler size={14} /> {showRuler ? "HIDE RULER" : "SHOW RULER"}</button></div></div>
+            <div ref={previewRef} className="ns-canvas" style={{ backgroundImage: `url("${background}")` }}>
+              <img className="ns-canvas-background" src={background} alt="" style={{ filter: lighting.filter }} />
+              <div className="ns-canvas-shade" style={{ opacity: lightOn ? 0.48 : 0.6 }} />
+              {calibrating && <div className="ns-calibration-panel"><div><b>Calibrate Room Size</b><span>Drag the line to match a known width.</span></div><input type="number" min="1" value={calibrationInches} onChange={(e) => setCalibrationInches(e.target.value)} /><button onClick={setCalibration}>SET SCALE</button></div>}
+              <div className="ns-neon-art"><div ref={textRef} className={`ns-neon-text ${isMojo ? "spectrum" : ""}`} style={textStyle}>{multiColor && !isMojo ? [...text].map((char, index) => <span key={index} style={{ color: (letterColors[index] || color)?.hex || neonColor }}>{char}</span>) : text || "Your Neon"}</div><div className="ns-art-shapes">{shapes.slice(0, 8).map((item) => <span key={item.uid} className={isMojo ? "spectrum" : ""} style={!isMojo ? { color: neonColor } : undefined}>{shapeIcon(item.name, 62)}</span>)}</div><div className="ns-neon-base-line" style={{ background: neonColor, boxShadow: lightOn ? `0 0 10px ${neonColor},0 0 25px ${neonColor}` : "none" }} /></div>
+              {showRuler && <div className="ns-ruler-overlay"><span>{size?.description || ""}</span></div>}
+              {!calibrating && <button className="ns-calibrate-button" onClick={() => setCalibrating(true)}><Ruler size={15} /> CALIBRATE ROOM SIZE</button>}
+              {calibrating && <div className="ns-calibration-line" style={{ width: calibrationWidth }} onPointerDown={beginCalibrationDrag}><span>{calibrationInches}&quot; reference</span></div>}
+            </div>
+            <div className="ns-background-picker"><div className="ns-bg-title"><b>CHOOSE A BACKGROUND</b><label><input type="file" accept="image/*" onChange={uploadWall} /><Upload size={14} /> UPLOAD YOUR WALL</label></div><div className="ns-bg-grid">{BACKGROUNDS.map(([name, url]) => <button key={name} className={background === url ? "selected" : ""} onClick={() => chooseBackground(url)}><img src={url} alt="" /><span>{name}</span>{background === url && <i><Check size={11} /></i>}</button>)}</div></div>
+          </div>
+          <div className="ns-summary ns-panel"><div className="ns-summary-title"><Sparkles /><b>YOUR NEON SIGN SUMMARY</b></div><div className="ns-summary-details"><span>Text <b>{text || "—"}</b></span><span>Font <b>{font?.name || "—"}</b></span><span>Colour <b>{isMojo ? "MOJO SPECTRUM" : color?.name || "—"}</b></span><span>Size <b>{size?.name || "—"}</b></span><span>Shapes <b>{shapes.length || "None"}</b></span><span>Board <b>{backboard?.name || "—"}</b></span></div><div className="ns-price"><small>ESTIMATED PRICE</small><strong>{money(price)}</strong><span>Inclusive of all taxes</span></div><button className="ns-cart-cta" disabled={!complete} onClick={() => alert("Configuration ready. WooCommerce cart wiring is the next integration step.")}>ADD TO CART <ArrowRight /></button></div>
+          </div>
+        </div></section>
+      </main>
+      <Footer />
+    </>
+  );
 }
