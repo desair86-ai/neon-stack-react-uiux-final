@@ -94,14 +94,16 @@ export async function getCategories() {
 
 
 export async function getConfiguratorOptions(configuratorType) {
-  const baseUrl = process.env.NEXT_PUBLIC_WORDPRESS_REST_URL;
+  let baseUrl = process.env.NEXT_PUBLIC_WORDPRESS_REST_URL; if (baseUrl && !baseUrl.startsWith("http")) baseUrl = "https://" + baseUrl;
   if (!baseUrl) throw new Error("Missing NEXT_PUBLIC_WORDPRESS_REST_URL");
   
+  if (baseUrl) {
+    baseUrl = baseUrl.replace(/\/+$/, "");
+  }
   const res = await fetch(`${baseUrl}/neon-stack/v2/config?configurator=${configuratorType}`);
   if (!res.ok) {
-    console.error("Failed to fetch configurator", await res.text());
+    console.error('Failed to fetch configurator', await res.text());
     return null;
   }
   return res.json();
 }
-

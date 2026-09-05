@@ -401,41 +401,49 @@ export function CustomNeon({ type = 'custom_neon' }) {
   const [config, setConfig] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Core configuration states
+  // TEXT
   const [text, setText] = useState('Good Vibes Only');
   const [textAlign, setTextAlign] = useState('center');
-  const [activeFont, setActiveFont] = useState(FONTS[0] || { name: 'Neon Script', class: 'font-neon' });
+  const [activeFont, setActiveFont] = useState({ name: 'Neon Script', class: 'font-neon-script' });
   const [color, setColor] = useState({ name: 'pink', hex: '#ff00ff', glow: '255,0,255' });
   const [isMultiColor, setIsMultiColor] = useState(false);
   const [letterColors, setLetterColors] = useState({});
   const [size, setSize] = useState(100);
+  
+  // SHAPES
   const [addedShapes, setAddedShapes] = useState([]); 
   
+  // BACKBOARD & HARDWARE
+  const [backboard, setBackboard] = useState('cut');
+  const [hardware, setHardware] = useState('screws');
+
+  // PREVIEW
   const [bg, setBg] = useState('/images/hero_living.jpg');
-  const [bgMood, setBgMood] = useState('night'); // 'day', 'night'
+  const [bgType, setBgType] = useState('preset'); // 'preset', 'custom'
+  const [bgMood, setBgMood] = useState('night'); 
   
+  // CALIBRATION
+  const [isCalibrating, setIsCalibrating] = useState(false);
+  const [calibrationInches, setCalibrationInches] = useState('50');
+  const [calibrationRatio, setCalibrationRatio] = useState(null);
+  const [calibrationLineWidth, setCalibrationLineWidth] = useState(300);
+
   const [activeTab, setActiveTab] = useState('text');
   
-  const textRef = useRef(null);
-
   useEffect(() => {
     import('./lib/api').then(({ getConfiguratorOptions }) => {
       getConfiguratorOptions(type).then(data => {
-        if (!data || !data.colors) throw new Error("No data returned");
+        if (!data || !data.colors || data.colors.length === 0) throw new Error("No data returned");
         setConfig(data);
         if (data?.colors?.length > 0) setColor(data.colors[0]);
         if (data?.fonts?.length > 0) setActiveFont(data.fonts[0]);
         setLoading(false);
       }).catch(e => {
-        console.error("WP API error", e);
+        console.error("WP API fallback", e);
         setConfig({
-          sizes: [{ label: '100 cm', value: 100, price: '3,499' }],
-          colors: [
-            { name: 'pink', hex: '#ff00ff', glow: '255,0,255' },
-            { name: 'cyan', hex: '#00ffff', glow: '0,255,255' },
-            { name: 'yellow', hex: '#ffff00', glow: '255,255,0' },
-          ],
-          fonts: [{ name: 'Neon Script', class: 'font-neon-script', url: '' }]
+          sizes: [{ label: '50 cm', value: 50, price: '1,499' }, { label: '100 cm', value: 100, price: '3,499' }, { label: '150 cm', value: 150, price: '5,499' }],
+          colors: COLORS,
+          fonts: FONTS
         });
         setLoading(false);
       });
@@ -447,27 +455,27 @@ export function CustomNeon({ type = 'custom_neon' }) {
     if (file) {
       const url = URL.createObjectURL(file);
       setBg(url);
+      setBgType('custom');
+      setIsCalibrating(true);
+      setCalibrationRatio(null);
     }
   };
 
   const getPrice = () => {
     if (!config?.sizes) return '3,499';
     const s = config.sizes.reduce((prev, curr) => Math.abs(curr.value - size) < Math.abs(prev.value - size) ? curr : prev, config.sizes[0]);
-    return s.price || '3,499';
-  };
-
-  const handleAddToCart = () => {
-    alert("Added to cart! (WooCommerce Integration Pending)");
+    let base = parseInt(String(s.price).replace(/,/g, '')) || 3499;
+    if (backboard === 'none') base += 1000;
+    if (hardware === 'stand') base += 800;
+    return base.toLocaleString('en-IN');
   };
 
   if (loading) return <><Header/><main style={{padding: '100px', textAlign: 'center'}}>Loading configurator...</main><Footer/></>;
 
-  const activeColors = config?.colors || [];
-  const activeFonts = config?.fonts || [];
+  const activeColors = config?.colors || COLORS;
+  const activeFonts = config?.fonts || FONTS;
   
-  // Create a glow style for non-Mojo text
   const getGlow = (hex) => {
-    // Basic approximation if glow property is missing
     const g = hex.replace('#', '');
     const r = parseInt(g.substring(0,2), 16) || 255;
     const green = parseInt(g.substring(2,4), 16) || 0;
@@ -475,6 +483,25 @@ export function CustomNeon({ type = 'custom_neon' }) {
     const rgb = `${r},${green},${b}`;
     return `0 0 5px #fff, 0 0 10px #fff, 0 0 20px rgba(${rgb},1), 0 0 40px rgba(${rgb},1), 0 0 80px rgba(${rgb},1)`;
   };
+
+  // Calculate dynamic scale
+  let finalScale = size / 100;
+  if (bgType === 'custom' && calibrationRatio !== null) {
+      const targetWidthPixels = size * calibrationRatio;
+      finalScale = targetWidthPixels / 800; // rough baseline width for text
+  }
+
+  const BackboardOptions = [
+      { id: 'cut', name: 'Cut to Shape', desc: 'Follows text outline' },
+      { id: 'square', name: 'Square/Rectangle', desc: 'Clean straight edges' },
+      { id: 'none', name: 'No Backboard', desc: 'Floating letters (+₹1,000)' }
+  ];
+
+  const HardwareOptions = [
+      { id: 'screws', name: 'Wall Screws', desc: 'Standard mounting (Free)' },
+      { id: 'wire', name: 'Hanging Wire', desc: 'For windows & ceilings (Free)' },
+      { id: 'stand', name: 'Acrylic Stand', desc: 'For desk or floor (+₹800)' }
+  ];
 
   return (
     <>
@@ -487,17 +514,14 @@ export function CustomNeon({ type = 'custom_neon' }) {
             color: transparent;
             animation: flowGradient 3s linear infinite;
         }
-        @keyframes flowGradient {
-            0% { background-position: 0% center; }
-            100% { background-position: 200% center; }
-        }
-        .canvas-mood-night::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: rgba(0,0,0,0.6);
-            z-index: 1;
-        }
+        @keyframes flowGradient { 0% { background-position: 0% center; } 100% { background-position: 200% center; } }
+        .canvas-mood-night::after { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,0.6); z-index: 1; }
+        .builderTabs button { flex: 1; padding: 15px; background: transparent; border: none; border-bottom: 2px solid transparent; color: var(--muted); cursor: pointer; font-weight: bold; font-size: 13px; letter-spacing: 1px; }
+        .builderTabs button.active { color: #fff; border-bottom-color: #00ffbc; }
+        .optionCard { background: #0a0d14; border: 1px solid #1c212e; border-radius: 8px; padding: 15px; cursor: pointer; display: flex; flex-direction: column; gap: 5px; }
+        .optionCard.active { border-color: #ff65bf; background: rgba(255, 101, 191, 0.05); }
+        .calibrationLine { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border-top: 4px dashed #ff0055; z-index: 50; display: flex; align-items: center; justify-content: center; }
+        .calibrationKnob { position: absolute; top: -10px; width: 20px; height: 20px; background: #fff; border: 3px solid #ff0055; border-radius: 50%; cursor: ew-resize; }
       `}</style>
       <main className="builderPage">
         <section className="builderHeader">
@@ -505,107 +529,60 @@ export function CustomNeon({ type = 'custom_neon' }) {
             <div className="crumb">Home <ChevronRight/> {isMojo ? 'Mojo Mix' : 'Custom Neon'}</div>
             <h1>CREATE YOUR <em>{isMojo ? 'MOJO MIX' : 'CUSTOM NEON'}</em> SIGN</h1>
             <p>Design it. See it. Love it. <Heart size={16} color="#ff65bf" style={{display: 'inline', marginLeft: '5px'}}/></p>
-            <div className="builderTrust">
-                <Benefit icon={<Monitor/>} title="Live Real-time Preview" text=""/>
-                <Benefit icon={<WandSparkles/>} title="Custom Made Just For You" text=""/>
-                <Benefit icon={<ShieldCheck/>} title="Premium Quality & Safe" text=""/>
-                <Benefit icon={<Gem/>} title="Made in India" text=""/>
-            </div>
           </div>
         </section>
         
         <section className="container">
           <div className="builderLayout">
             <div className="builderControls">
-               <div className="builderTabs">
+               <div className="builderTabs" style={{display: 'flex', borderBottom: '1px solid #1c212e', marginBottom: '25px'}}>
                   <button className={activeTab === 'text' ? 'active' : ''} onClick={()=>setActiveTab('text')}>TEXT</button>
                   <button className={activeTab === 'shapes' ? 'active' : ''} onClick={()=>setActiveTab('shapes')}>SHAPES</button>
+                  <button className={activeTab === 'backboard' ? 'active' : ''} onClick={()=>setActiveTab('backboard')}>BACKBOARD</button>
+                  <button className={activeTab === 'hardware' ? 'active' : ''} onClick={()=>setActiveTab('hardware')}>HARDWARE</button>
                </div>
                <div className="tabContent">
                  {activeTab === 'text' && (
                      <>
                         <div className="controlGroup">
                             <label>YOUR TEXT <span>{text.length}/50</span></label>
-                            <textarea 
-                                value={text} 
-                                onChange={e=>setText(e.target.value.substring(0, 50))} 
-                                placeholder="Enter your text..."
-                                rows={2}
-                                style={{background: '#0a0d14', border: '1px solid #1c212e', color: '#fff', padding: '12px', borderRadius: '8px', width: '100%', resize: 'none', fontFamily: 'inherit'}}
-                            />
+                            <textarea value={text} onChange={e=>setText(e.target.value.substring(0, 50))} rows={2} style={{background: '#0a0d14', border: '1px solid #1c212e', color: '#fff', padding: '12px', borderRadius: '8px', width: '100%', resize: 'none'}} />
                             <div style={{display: 'flex', gap: '5px', marginTop: '10px'}}>
                                <button onClick={()=>setTextAlign('left')} style={{padding: '5px 10px', background: textAlign==='left'?'#1c212e':'transparent', border: '1px solid #1c212e', borderRadius: '6px', color: '#fff'}}><AlignLeft size={16}/></button>
                                <button onClick={()=>setTextAlign('center')} style={{padding: '5px 10px', background: textAlign==='center'?'#1c212e':'transparent', border: '1px solid #1c212e', borderRadius: '6px', color: '#fff'}}><AlignCenter size={16}/></button>
                                <button onClick={()=>setTextAlign('right')} style={{padding: '5px 10px', background: textAlign==='right'?'#1c212e':'transparent', border: '1px solid #1c212e', borderRadius: '6px', color: '#fff'}}><AlignRight size={16}/></button>
                             </div>
                         </div>
-                        
                         <div className="controlGroup">
                             <label>FONT STYLE</label>
-                            <div style={{display: 'flex', gap: '15px', alignItems: 'center'}}>
-                                <select 
-                                    style={{flex: 1, background: '#0a0d14', border: '1px solid #1c212e', color: '#fff', padding: '12px', borderRadius: '8px'}}
-                                    value={activeFont.name}
-                                    onChange={e => setActiveFont(activeFonts.find(f => f.name === e.target.value) || activeFonts[0])}
-                                >
-                                    {activeFonts.map(f => <option key={f.name} value={f.name}>{f.name}</option>)}
-                                </select>
-                            </div>
+                            <select style={{width: '100%', background: '#0a0d14', border: '1px solid #1c212e', color: '#fff', padding: '12px', borderRadius: '8px'}} value={activeFont.name} onChange={e => setActiveFont(activeFonts.find(f => f.name === e.target.value) || activeFonts[0])}>
+                                {activeFonts.map(f => <option key={f.name} value={f.name}>{f.name}</option>)}
+                            </select>
                         </div>
-
                         {!isMojo && (
                             <div className="controlGroup">
                                 <div style={{display: 'flex', justifyContent: 'space-between'}}>
                                     <label>TEXT COLOR</label>
-                                    <label style={{display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer'}}>
-                                        <input type="checkbox" checked={isMultiColor} onChange={e=>setIsMultiColor(e.target.checked)} />
-                                        Multi-Color
-                                    </label>
+                                    <label style={{display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', fontSize: '13px'}}><input type="checkbox" checked={isMultiColor} onChange={e=>setIsMultiColor(e.target.checked)} /> Multi-Color</label>
                                 </div>
-                                {isMultiColor && <small style={{color: 'var(--muted)', display: 'block', marginBottom: '10px'}}>Click on individual letters in the preview to color them!</small>}
-                                <div className="colorGrid">
+                                <div className="colorGrid" style={{display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '10px', marginTop: '10px'}}>
                                     {activeColors.map(c => (
-                                        <button 
-                                            key={c.name} 
-                                            onClick={() => setColor(c)}
-                                            style={{
-                                                width: '30px', height: '30px', borderRadius: '50%', border: 'none', cursor: 'pointer',
-                                                background: c.hex,
-                                                boxShadow: color.name === c.name ? `0 0 0 2px #0a0d14, 0 0 0 4px ${c.hex}` : 'none'
-                                            }}
-                                            title={c.name}
-                                        />
+                                        <button key={c.name} onClick={() => setColor(c)} style={{width: '35px', height: '35px', borderRadius: '50%', border: 'none', cursor: 'pointer', background: c.hex, boxShadow: color.name === c.name ? `0 0 0 2px #0a0d14, 0 0 0 4px ${c.hex}` : 'none'}} title={c.name}/>
                                     ))}
                                 </div>
                             </div>
                         )}
-                        
                         <div className="controlGroup">
                             <label style={{display: 'flex', justifyContent: 'space-between'}}>SIZE <span>{size} cm</span></label>
-                            <input 
-                                type="range" 
-                                min="50" max="250" step="10" 
-                                value={size} 
-                                onChange={e=>setSize(Number(e.target.value))}
-                                style={{width: '100%', accentColor: '#ff65bf'}}
-                            />
+                            <input type="range" min="50" max="250" step="10" value={size} onChange={e=>setSize(Number(e.target.value))} style={{width: '100%', accentColor: '#ff65bf'}} />
                         </div>
                      </>
                  )}
-                 
                  {activeTab === 'shapes' && (
                      <div className="controlGroup">
                         <label>ADD SHAPES</label>
-                        <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px'}}>
-                            {SHAPES.map(s => (
-                                <button 
-                                    key={s.id} 
-                                    onClick={() => handleAddShape(s)}
-                                    style={{background: '#0a0d14', border: '1px solid #1c212e', borderRadius: '8px', padding: '15px', color: '#fff', fontSize: '24px', cursor: 'pointer'}}
-                                >
-                                    {s.icon}
-                                </button>
-                            ))}
+                        <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px'}}>
+                            {SHAPES.map(s => <button key={s.id} onClick={() => setAddedShapes([...addedShapes, { id: Date.now().toString(), type: s.icon, color: color.hex }])} style={{background: '#0a0d14', border: '1px solid #1c212e', borderRadius: '8px', padding: '15px', color: '#fff', fontSize: '24px', cursor: 'pointer'}}>{s.icon}</button>)}
                         </div>
                         {addedShapes.length > 0 && (
                             <div style={{marginTop: '20px'}}>
@@ -620,17 +597,31 @@ export function CustomNeon({ type = 'custom_neon' }) {
                         )}
                      </div>
                  )}
+                 {activeTab === 'backboard' && (
+                     <div className="controlGroup" style={{display: 'grid', gap: '15px'}}>
+                        {BackboardOptions.map(opt => (
+                            <div key={opt.id} className={`optionCard ${backboard === opt.id ? 'active' : ''}`} onClick={() => setBackboard(opt.id)}>
+                                <b>{opt.name}</b>
+                                <small style={{color: 'var(--muted)'}}>{opt.desc}</small>
+                            </div>
+                        ))}
+                     </div>
+                 )}
+                 {activeTab === 'hardware' && (
+                     <div className="controlGroup" style={{display: 'grid', gap: '15px'}}>
+                        {HardwareOptions.map(opt => (
+                            <div key={opt.id} className={`optionCard ${hardware === opt.id ? 'active' : ''}`} onClick={() => setHardware(opt.id)}>
+                                <b>{opt.name}</b>
+                                <small style={{color: 'var(--muted)'}}>{opt.desc}</small>
+                            </div>
+                        ))}
+                     </div>
+                 )}
                </div>
             </div>
 
-            <div className={`builderPreview ${bgMood === 'night' ? 'canvas-mood-night' : ''}`} style={{position: 'relative', overflow: 'hidden'}}>
-               <div style={{
-                   position: 'absolute', inset: 0, 
-                   background: `url(${bg})`, 
-                   backgroundSize: 'cover', 
-                   backgroundPosition: 'center',
-                   transition: 'background 0.5s'
-               }} />
+            <div className={`builderPreview ${bgMood === 'night' ? 'canvas-mood-night' : ''}`} style={{position: 'relative', overflow: 'hidden', minHeight: '500px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+               <div style={{position: 'absolute', inset: 0, background: `url(${bg})`, backgroundSize: 'cover', backgroundPosition: 'center', transition: 'background 0.5s'}} />
                
                <div style={{position: 'absolute', top: 0, left: 0, right: 0, padding: '20px', display: 'flex', justifyContent: 'space-between', zIndex: 10}}>
                    <div style={{display: 'flex', gap: '15px'}}>
@@ -642,54 +633,46 @@ export function CustomNeon({ type = 'custom_neon' }) {
                    </div>
                </div>
                
-               {/* Render Canvas Elements */}
-               <div style={{position: 'relative', zIndex: 10, transform: `scale(${size / 100})`, transition: 'transform 0.3s'}}>
-                   <div 
-                     style={{
-                         display: 'flex', 
-                         flexDirection: 'column', 
-                         alignItems: textAlign === 'center' ? 'center' : textAlign === 'left' ? 'flex-start' : 'flex-end',
-                         textAlign,
-                         fontFamily: activeFont.name
-                     }}
-                   >
+               {isCalibrating && bgType === 'custom' && (
+                  <div style={{position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 40, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'}}>
+                     <h3 style={{color: '#fff', marginBottom: '20px'}}>Calibrate Your Wall</h3>
+                     <p style={{color: 'var(--muted)', marginBottom: '30px', textAlign: 'center', maxWidth: '300px'}}>Drag the line to match a known object's width, then enter its real size.</p>
+                     
+                     <div style={{position: 'relative', width: `${calibrationLineWidth}px`, height: '2px', background: '#ff0055', marginBottom: '40px'}}>
+                        <div className="calibrationKnob" style={{left: '-10px'}} />
+                        <div className="calibrationKnob" style={{right: '-10px'}} />
+                     </div>
+                     
+                     <div style={{display: 'flex', gap: '10px', alignItems: 'center'}}>
+                         <input type="number" value={calibrationInches} onChange={e=>setCalibrationInches(e.target.value)} style={{background: '#111', border: '1px solid #333', color: '#fff', padding: '10px', width: '100px', borderRadius: '8px'}} />
+                         <span style={{color: '#fff'}}>cm</span>
+                         <button onClick={() => {
+                             if(parseFloat(calibrationInches) > 0) {
+                                 setCalibrationRatio(calibrationLineWidth / parseFloat(calibrationInches));
+                                 setIsCalibrating(false);
+                             }
+                         }} style={{background: '#00ffbc', color: '#000', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer'}}>Save</button>
+                     </div>
+                  </div>
+               )}
+               
+               <div style={{position: 'relative', zIndex: 10, transform: `scale(${finalScale})`, transition: 'transform 0.3s'}}>
+                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: textAlign === 'center' ? 'center' : textAlign === 'left' ? 'flex-start' : 'flex-end', textAlign, fontFamily: activeFont.name }}>
                      {text.split('\n').map((line, lineIdx) => (
                        <div key={lineIdx} style={{ whiteSpace: 'nowrap' }}>
                          {line.split('').map((char, charIdx) => {
                            const globalIdx = lineIdx * 100 + charIdx;
                            const charColor = (isMultiColor && letterColors[globalIdx]) ? letterColors[globalIdx] : color.hex;
-                           
                            return (
-                             <span 
-                               key={globalIdx} 
-                               className={isMojo ? 'mojo-gradient' : ''}
-                               style={{ 
-                                 display: 'inline-block',
-                                 fontSize: '4rem',
-                                 ...( !isMojo ? {
-                                     color: '#fff',
-                                     textShadow: getGlow(charColor)
-                                 } : {}),
-                                 cursor: isMultiColor ? 'pointer' : 'default'
-                               }}
-                               onClick={() => {
-                                 if (isMultiColor && !isMojo) {
-                                   setLetterColors({...letterColors, [globalIdx]: color.hex});
-                                 }
-                               }}
-                             >
+                             <span key={globalIdx} className={isMojo ? 'mojo-gradient' : ''} style={{ display: 'inline-block', fontSize: '6rem', lineHeight: '1.2', ...( !isMojo ? { color: '#fff', textShadow: getGlow(charColor) } : {}), cursor: isMultiColor ? 'pointer' : 'default' }} onClick={() => { if (isMultiColor && !isMojo) setLetterColors({...letterColors, [globalIdx]: color.hex}); }}>
                                {char === ' ' ? '\u00A0' : char}
                              </span>
                            );
                          })}
                        </div>
                      ))}
-                     
-                     {/* Added Shapes (Simplified bottom positioning) */}
                      <div style={{display: 'flex', gap: '20px', marginTop: '20px'}}>
-                         {addedShapes.map(shape => (
-                             <span key={shape.id} style={{fontSize: '3rem', filter: isMojo ? 'none' : `drop-shadow(0 0 10px ${color.hex}) drop-shadow(0 0 20px ${color.hex})`}}>{shape.type}</span>
-                         ))}
+                         {addedShapes.map(shape => <span key={shape.id} style={{fontSize: '4rem', filter: isMojo ? 'none' : `drop-shadow(0 0 10px ${color.hex}) drop-shadow(0 0 20px ${color.hex})`}}>{shape.type}</span>)}
                      </div>
                    </div>
                </div>
@@ -700,77 +683,39 @@ export function CustomNeon({ type = 'custom_neon' }) {
                            <b style={{fontSize: '12px', color: '#fff', letterSpacing: '1px'}}>CHOOSE A BACKGROUND</b>
                            <div style={{display: 'flex', gap: '10px', marginTop: '12px'}}>
                                {[rooms.living, rooms.gaming, rooms.party, rooms.office, rooms.cafe].map((r, i) => (
-                                 <button key={i} onClick={()=>setBg(r)} style={{width: '90px', height: '55px', border: bg===r ? '2px solid #ff65bf' : '1px solid #1c212e', borderRadius: '6px', background: `url(${r}) center/cover`, padding: 0, cursor: 'pointer', position: 'relative'}}>
-                                   {bg===r && <span style={{position: 'absolute', top: '-6px', right: '-6px', background: '#ff65bf', color: '#fff', borderRadius: '50%', width: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px'}}>✓</span>}
-                                 </button>
+                                 <button key={i} onClick={()=>{setBg(r); setBgType('preset');}} style={{width: '60px', height: '40px', border: bg===r ? '2px solid #ff65bf' : '1px solid #1c212e', borderRadius: '6px', background: `url(${r}) center/cover`, cursor: 'pointer', position: 'relative'}} />
                                ))}
                            </div>
                        </div>
-                       
-                       <label style={{background: 'transparent', border: '1px solid #1c212e', color: '#fff', padding: '12px 20px', borderRadius: '8px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer'}}>
-                           UPLOAD YOUR WALL <Upload size={16}/>
+                       <label style={{background: 'transparent', border: '1px solid #1c212e', color: '#fff', padding: '10px 15px', borderRadius: '8px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer'}}>
+                           UPLOAD YOUR WALL <Upload size={14}/>
                            <input type="file" accept="image/*" onChange={handleFileUpload} style={{display: 'none'}} />
                        </label>
                    </div>
                </div>
             </div>
   
-            <div style={{background: '#070910', border: '1px solid #1c212e', borderRadius: '16px', padding: '25px', display: 'grid', gridTemplateColumns: 'auto 1fr auto auto', gap: '40px', alignItems: 'center'}}>
+            <div style={{background: '#070910', border: '1px solid #1c212e', borderRadius: '16px', padding: '25px', display: 'grid', gridTemplateColumns: 'auto 1fr auto auto', gap: '30px', alignItems: 'center'}}>
                 <div style={{display: 'flex', alignItems: 'center', gap: '15px'}}>
-                   <Rocket color="#ff65bf" size={40}/>
-                   <b style={{color: '#fff', fontSize: '15px', letterSpacing: '1px'}}>YOUR NEON SIGN SUMMARY</b>
+                   <Rocket color="#ff65bf" size={32}/>
+                   <b style={{color: '#fff', fontSize: '14px', letterSpacing: '1px'}}>YOUR NEON SIGN SUMMARY</b>
                 </div>
-                <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', fontSize: '13px'}}>
-                    <div style={{display: 'flex', gap: '15px'}}><span style={{color: 'var(--muted)', width: '50px'}}>Text</span><span style={{color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100px'}}>{text || 'None'}</span></div>
-                    <div style={{display: 'flex', gap: '15px'}}><span style={{color: 'var(--muted)', width: '50px'}}>Color</span><span style={{color: '#fff', textTransform: 'capitalize'}}>{isMojo ? 'Mojo Mix' : isMultiColor ? 'Multi' : color.name}</span></div>
-                    <div style={{display: 'flex', gap: '15px'}}><span style={{color: 'var(--muted)', width: '50px'}}>Type</span><span style={{color: '#fff'}}>{isMojo ? 'Mojo Mix' : 'Custom'}</span></div>
-                    <div style={{display: 'flex', gap: '15px'}}><span style={{color: 'var(--muted)', width: '50px'}}>Font</span><span style={{color: '#fff'}}>{activeFont.name}</span></div>
-                    <div style={{display: 'flex', gap: '15px'}}><span style={{color: 'var(--muted)', width: '50px'}}>Shapes</span><span style={{color: '#fff'}}>{addedShapes.length}</span></div>
-                    <div style={{display: 'flex', gap: '15px'}}><span style={{color: 'var(--muted)', width: '50px'}}>Size</span><span style={{color: '#fff'}}>{size} cm</span></div>
+                <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '12px'}}>
+                    <div style={{display: 'flex', gap: '10px'}}><span style={{color: 'var(--muted)', width: '40px'}}>Text</span><span style={{color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '80px'}}>{text || 'None'}</span></div>
+                    <div style={{display: 'flex', gap: '10px'}}><span style={{color: 'var(--muted)', width: '40px'}}>Color</span><span style={{color: '#fff'}}>{isMojo ? 'Mojo Mix' : isMultiColor ? 'Multi' : color.name}</span></div>
+                    <div style={{display: 'flex', gap: '10px'}}><span style={{color: 'var(--muted)', width: '40px'}}>Type</span><span style={{color: '#fff'}}>{isMojo ? 'Mojo Mix' : 'Custom'}</span></div>
+                    <div style={{display: 'flex', gap: '10px'}}><span style={{color: 'var(--muted)', width: '40px'}}>Font</span><span style={{color: '#fff'}}>{activeFont.name}</span></div>
                 </div>
                 <div>
-                   <small style={{color: 'var(--muted)', display: 'block', fontSize: '12px', letterSpacing: '1px', marginBottom: '5px'}}>ESTIMATED PRICE</small>
-                   <b style={{fontSize: '32px', color: '#fff', fontFamily: "'Space Grotesk', sans-serif"}}>₹{getPrice()}</b><br/>
-                   <small style={{color: 'var(--muted)', fontSize: '11px'}}>(Inclusive of all taxes)</small>
+                   <small style={{color: 'var(--muted)', display: 'block', fontSize: '11px', letterSpacing: '1px', marginBottom: '5px'}}>ESTIMATED PRICE</small>
+                   <b style={{fontSize: '28px', color: '#fff', fontFamily: "'Space Grotesk', sans-serif"}}>₹{getPrice()}</b><br/>
+                   <small style={{color: 'var(--muted)', fontSize: '10px'}}>(Inclusive of all taxes)</small>
                 </div>
-                <div style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
-                   <button className="btn solid" onClick={handleAddToCart} style={{width: '240px', background: 'linear-gradient(90deg, #ff65bf, #752eff) !important', boxShadow: 'none', border: 'none', color: '#fff', fontWeight: 'bold'}}>ADD TO CART <ShoppingCart size={18}/></button>
-                   <button className="btn ghost" style={{width: '240px', borderColor: '#ff65bf', color: '#fff'}}>SAVE DESIGN <Heart size={18}/></button>
+                <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
+                   <button className="btn solid" onClick={()=>alert('Added')} style={{width: '200px', background: 'linear-gradient(90deg, #ff65bf, #752eff)', border: 'none', color: '#fff', fontWeight: 'bold'}}>ADD TO CART <ShoppingCart size={16}/></button>
+                   <button className="btn ghost" style={{width: '200px', borderColor: '#ff65bf', color: '#fff'}}>SAVE DESIGN <Heart size={16}/></button>
                 </div>
             </div>
-          </div>
-        </section>
-        
-        <section className="container" style={{display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '20px', padding: '40px 0', borderTop: '1px solid #1c212e'}}>
-            <Benefit icon={<Gem color="#ff65bf"/>} title="Handcrafted" text="with precision"/>
-            <Benefit icon={<ShieldCheck color="#ff65bf"/>} title="Safe & Durable" text="Low voltage, high quality"/>
-            <Benefit icon={<BadgeCheck color="#ff65bf"/>} title="1 Year Warranty" text="We've got you covered"/>
-            <Benefit icon={<Truck color="#ff65bf"/>} title="Fast Delivery" text="Pan India Delivery"/>
-            <Benefit icon={<Headphones color="#ff65bf"/>} title="24/7 Support" text="We're always here"/>
-        </section>
-        
-        <section className="container" style={{padding: '60px 0'}}>
-          <h2 style={{fontSize: '24px', letterSpacing: '1px', color: '#00ffbc', textTransform: 'uppercase', marginBottom: '40px'}}>HOW IT WORKS</h2>
-          <div style={{display: 'grid', gridTemplateColumns: '1fr auto 1fr auto 1fr auto 1fr auto 1fr', alignItems: 'center', gap: '15px'}}>
-             <div style={{display: 'flex', gap: '15px', alignItems: 'start'}}>
-                <div style={{border: '1px solid #ff65bf', borderRadius: '50%', padding: '15px', color: '#ff65bf'}}><PenTool size={24}/></div>
-                <div><b style={{fontSize: '15px'}}>1. Share Your Idea</b><p style={{fontSize: '13px', color: 'var(--muted)', margin: '5px 0 0'}}>Type your text, add shapes or upload your logo.</p></div>
-             </div>
-             <ArrowRight color="var(--line)"/>
-             <div style={{display: 'flex', gap: '15px', alignItems: 'start'}}>
-                <div style={{border: '1px solid #ff65bf', borderRadius: '50%', padding: '15px', color: '#ff65bf'}}><WandSparkles size={24}/></div>
-                <div><b style={{fontSize: '15px'}}>2. We Design & Build</b><p style={{fontSize: '13px', color: 'var(--muted)', margin: '5px 0 0'}}>Our team crafts your neon sign with care.</p></div>
-             </div>
-             <ArrowRight color="var(--line)"/>
-             <div style={{display: 'flex', gap: '15px', alignItems: 'start'}}>
-                <div style={{border: '1px solid #ff65bf', borderRadius: '50%', padding: '15px', color: '#ff65bf'}}><Truck size={24}/></div>
-                <div><b style={{fontSize: '15px'}}>3. Delivered to You</b><p style={{fontSize: '13px', color: 'var(--muted)', margin: '5px 0 0'}}>Safe packaging & fast delivery to your door.</p></div>
-             </div>
-             <ArrowRight color="var(--line)"/>
-             <div style={{display: 'flex', gap: '15px', alignItems: 'start'}}>
-                <div style={{border: '1px solid #ff65bf', borderRadius: '50%', padding: '15px', color: '#ff65bf'}}><Rocket size={24}/></div>
-                <div><b style={{fontSize: '15px'}}>4. Unbox & Glow</b><p style={{fontSize: '13px', color: 'var(--muted)', margin: '5px 0 0'}}>Easy to install and ready to light up your space!</p></div>
-             </div>
           </div>
         </section>
       </main>
