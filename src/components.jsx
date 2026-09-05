@@ -408,14 +408,14 @@ export function CustomNeon({ type = 'custom_neon' }) {
   const [color, setColor] = useState({ name: 'pink', hex: '#ff00ff', glow: '255,0,255' });
   const [isMultiColor, setIsMultiColor] = useState(false);
   const [letterColors, setLetterColors] = useState({});
-  const [size, setSize] = useState(100);
+  const [selectedSize, setSelectedSize] = useState(null);
   
   // SHAPES
   const [addedShapes, setAddedShapes] = useState([]); 
   
   // BACKBOARD & HARDWARE
-  const [backboard, setBackboard] = useState('cut');
-  const [hardware, setHardware] = useState('screws');
+  const [backboard, setBackboard] = useState(null);
+  const [hardware, setHardware] = useState(null);
 
   // PREVIEW
   const [bg, setBg] = useState('/images/hero_living.jpg');
@@ -433,18 +433,30 @@ export function CustomNeon({ type = 'custom_neon' }) {
   useEffect(() => {
     import('./lib/api').then(({ getConfiguratorOptions }) => {
       getConfiguratorOptions(type).then(data => {
-        if (!data || !data.colors || data.colors.length === 0) throw new Error("No data returned");
+        if (!data || !data.options) throw new Error("No data returned");
         setConfig(data);
-        if (data?.colors?.length > 0) setColor(data.colors[0]);
+        if (data?.options?.colors?.length > 0) setColor(data.options.colors[0]);
         if (data?.fonts?.length > 0) setActiveFont(data.fonts[0]);
+        if (data?.options?.sizes?.length > 0) setSelectedSize(data.options.sizes[0]);
+        if (data?.options?.backboards?.length > 0) setBackboard(data.options.backboards[0]);
+        if (data?.options?.hardware?.length > 0) setHardware(data.options.hardware[0]);
         setLoading(false);
       }).catch(e => {
         console.error("WP API fallback", e);
-        setConfig({
-          sizes: [{ label: '50 cm', value: 50, price: '1,499' }, { label: '100 cm', value: 100, price: '3,499' }, { label: '150 cm', value: 150, price: '5,499' }],
-          colors: COLORS,
+        const fb = {
+          options: {
+            sizes: [{ id: 'small', name: 'Small', price: 1499 }, { id: 'medium', name: 'Medium', price: 3499 }, { id: 'large', name: 'Large', price: 5499 }],
+            colors: COLORS,
+            backboards: [{ id: 'cut', name: 'Cut to Shape', price: 0 }, { id: 'none', name: 'No Backboard', price: 1000 }],
+            hardware: [{ id: 'screws', name: 'Screws', price: 0 }, { id: 'stand', name: 'Stand', price: 800 }],
+            shapes: SHAPES
+          },
           fonts: FONTS
-        });
+        };
+        setConfig(fb);
+        setSelectedSize(fb.options.sizes[1]);
+        setBackboard(fb.options.backboards[0]);
+        setHardware(fb.options.hardware[0]);
         setLoading(false);
       });
     });
@@ -462,20 +474,25 @@ export function CustomNeon({ type = 'custom_neon' }) {
   };
 
   const getPrice = () => {
-    if (!config?.sizes) return '3,499';
-    const s = config.sizes.reduce((prev, curr) => Math.abs(curr.value - size) < Math.abs(prev.value - size) ? curr : prev, config.sizes[0]);
-    let base = parseInt(String(s.price).replace(/,/g, '')) || 3499;
-    if (backboard === 'none') base += 1000;
-    if (hardware === 'stand') base += 800;
+    let base = 0;
+    if (selectedSize) base += selectedSize.price || 0;
+    if (backboard) base += backboard.price || 0;
+    if (hardware) base += hardware.price || 0;
+    addedShapes.forEach(s => base += s.price || 300);
     return base.toLocaleString('en-IN');
   };
 
   if (loading) return <><Header/><main style={{padding: '100px', textAlign: 'center'}}>Loading configurator...</main><Footer/></>;
 
-  const activeColors = config?.colors || COLORS;
-  const activeFonts = config?.fonts || FONTS;
+  const activeColors = config?.options?.colors || [];
+  const activeFonts = config?.fonts || [];
+  const activeSizes = config?.options?.sizes || [];
+  const activeBackboards = config?.options?.backboards || [];
+  const activeHardware = config?.options?.hardware || [];
+  const activeShapes = config?.options?.shapes || [];
   
   const getGlow = (hex) => {
+    if(!hex) return '';
     const g = hex.replace('#', '');
     const r = parseInt(g.substring(0,2), 16) || 255;
     const green = parseInt(g.substring(2,4), 16) || 0;
@@ -485,23 +502,11 @@ export function CustomNeon({ type = 'custom_neon' }) {
   };
 
   // Calculate dynamic scale
-  let finalScale = size / 100;
+  let finalScale = (activeSizes.indexOf(selectedSize) + 1) * 0.4 || 1;
   if (bgType === 'custom' && calibrationRatio !== null) {
-      const targetWidthPixels = size * calibrationRatio;
+      const targetWidthPixels = (activeSizes.indexOf(selectedSize) * 20 + 50) * calibrationRatio;
       finalScale = targetWidthPixels / 800; // rough baseline width for text
   }
-
-  const BackboardOptions = [
-      { id: 'cut', name: 'Cut to Shape', desc: 'Follows text outline' },
-      { id: 'square', name: 'Square/Rectangle', desc: 'Clean straight edges' },
-      { id: 'none', name: 'No Backboard', desc: 'Floating letters (+₹1,000)' }
-  ];
-
-  const HardwareOptions = [
-      { id: 'screws', name: 'Wall Screws', desc: 'Standard mounting (Free)' },
-      { id: 'wire', name: 'Hanging Wire', desc: 'For windows & ceilings (Free)' },
-      { id: 'stand', name: 'Acrylic Stand', desc: 'For desk or floor (+₹800)' }
-  ];
 
   return (
     <>
@@ -541,7 +546,7 @@ export function CustomNeon({ type = 'custom_neon' }) {
                   <button className={activeTab === 'backboard' ? 'active' : ''} onClick={()=>setActiveTab('backboard')}>BACKBOARD</button>
                   <button className={activeTab === 'hardware' ? 'active' : ''} onClick={()=>setActiveTab('hardware')}>HARDWARE</button>
                </div>
-               <div className="tabContent">
+               <div className="tabContent" style={{maxHeight: '600px', overflowY: 'auto', paddingRight: '10px'}}>
                  {activeTab === 'text' && (
                      <>
                         <div className="controlGroup">
@@ -567,14 +572,24 @@ export function CustomNeon({ type = 'custom_neon' }) {
                                 </div>
                                 <div className="colorGrid" style={{display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '10px', marginTop: '10px'}}>
                                     {activeColors.map(c => (
-                                        <button key={c.name} onClick={() => setColor(c)} style={{width: '35px', height: '35px', borderRadius: '50%', border: 'none', cursor: 'pointer', background: c.hex, boxShadow: color.name === c.name ? `0 0 0 2px #0a0d14, 0 0 0 4px ${c.hex}` : 'none'}} title={c.name}/>
+                                        <button key={c.name} onClick={() => setColor(c)} style={{width: '35px', height: '35px', borderRadius: '50%', border: 'none', cursor: 'pointer', background: c.hex, boxShadow: color?.name === c.name ? `0 0 0 2px #0a0d14, 0 0 0 4px ${c.hex}` : 'none'}} title={c.name}/>
                                     ))}
                                 </div>
                             </div>
                         )}
                         <div className="controlGroup">
-                            <label style={{display: 'flex', justifyContent: 'space-between'}}>SIZE <span>{size} cm</span></label>
-                            <input type="range" min="50" max="250" step="10" value={size} onChange={e=>setSize(Number(e.target.value))} style={{width: '100%', accentColor: '#ff65bf'}} />
+                            <label>SIZE</label>
+                            <div style={{display: 'grid', gap: '10px'}}>
+                                {activeSizes.map(s => (
+                                    <div key={s.id} className={`optionCard ${selectedSize?.id === s.id ? 'active' : ''}`} onClick={() => setSelectedSize(s)}>
+                                        <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                                            <b>{s.name}</b>
+                                            <span>₹{s.price}</span>
+                                        </div>
+                                        {s.description && <small style={{color: 'var(--muted)'}}>{s.description}</small>}
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                      </>
                  )}
@@ -582,14 +597,18 @@ export function CustomNeon({ type = 'custom_neon' }) {
                      <div className="controlGroup">
                         <label>ADD SHAPES</label>
                         <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px'}}>
-                            {SHAPES.map(s => <button key={s.id} onClick={() => setAddedShapes([...addedShapes, { id: Date.now().toString(), type: s.icon, color: color.hex }])} style={{background: '#0a0d14', border: '1px solid #1c212e', borderRadius: '8px', padding: '15px', color: '#fff', fontSize: '24px', cursor: 'pointer'}}>{s.icon}</button>)}
+                            {activeShapes.map(s => (
+                                <button key={s.id} onClick={() => setAddedShapes([...addedShapes, { id: Date.now().toString(), type: s.name, price: s.price, color: color?.hex }])} style={{background: '#0a0d14', border: '1px solid #1c212e', borderRadius: '8px', padding: '15px', color: '#fff', fontSize: '16px', cursor: 'pointer'}}>
+                                    {s.name}
+                                </button>
+                            ))}
                         </div>
                         {addedShapes.length > 0 && (
                             <div style={{marginTop: '20px'}}>
                                 <label>ADDED SHAPES</label>
                                 {addedShapes.map((shape, idx) => (
                                     <div key={shape.id} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', background: '#1c212e', borderRadius: '8px', marginBottom: '5px'}}>
-                                        <span style={{fontSize: '20px'}}>{shape.type}</span>
+                                        <span style={{fontSize: '14px'}}>{shape.type} (+₹{shape.price})</span>
                                         <button onClick={() => setAddedShapes(addedShapes.filter((_, i) => i !== idx))} style={{background: 'transparent', border: 'none', color: '#ff65bf', cursor: 'pointer'}}>Remove</button>
                                     </div>
                                 ))}
@@ -599,20 +618,26 @@ export function CustomNeon({ type = 'custom_neon' }) {
                  )}
                  {activeTab === 'backboard' && (
                      <div className="controlGroup" style={{display: 'grid', gap: '15px'}}>
-                        {BackboardOptions.map(opt => (
-                            <div key={opt.id} className={`optionCard ${backboard === opt.id ? 'active' : ''}`} onClick={() => setBackboard(opt.id)}>
-                                <b>{opt.name}</b>
-                                <small style={{color: 'var(--muted)'}}>{opt.desc}</small>
+                        {activeBackboards.map(opt => (
+                            <div key={opt.id} className={`optionCard ${backboard?.id === opt.id ? 'active' : ''}`} onClick={() => setBackboard(opt)}>
+                                <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                                    <b>{opt.name}</b>
+                                    <span>{opt.price > 0 ? `+₹${opt.price}` : 'Free'}</span>
+                                </div>
+                                {opt.description && <small style={{color: 'var(--muted)'}}>{opt.description}</small>}
                             </div>
                         ))}
                      </div>
                  )}
                  {activeTab === 'hardware' && (
                      <div className="controlGroup" style={{display: 'grid', gap: '15px'}}>
-                        {HardwareOptions.map(opt => (
-                            <div key={opt.id} className={`optionCard ${hardware === opt.id ? 'active' : ''}`} onClick={() => setHardware(opt.id)}>
-                                <b>{opt.name}</b>
-                                <small style={{color: 'var(--muted)'}}>{opt.desc}</small>
+                        {activeHardware.map(opt => (
+                            <div key={opt.id} className={`optionCard ${hardware?.id === opt.id ? 'active' : ''}`} onClick={() => setHardware(opt)}>
+                                <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                                    <b>{opt.name}</b>
+                                    <span>{opt.price > 0 ? `+₹${opt.price}` : 'Free'}</span>
+                                </div>
+                                {opt.description && <small style={{color: 'var(--muted)'}}>{opt.description}</small>}
                             </div>
                         ))}
                      </div>
@@ -662,9 +687,9 @@ export function CustomNeon({ type = 'custom_neon' }) {
                        <div key={lineIdx} style={{ whiteSpace: 'nowrap' }}>
                          {line.split('').map((char, charIdx) => {
                            const globalIdx = lineIdx * 100 + charIdx;
-                           const charColor = (isMultiColor && letterColors[globalIdx]) ? letterColors[globalIdx] : color.hex;
+                           const charColor = (isMultiColor && letterColors[globalIdx]) ? letterColors[globalIdx] : color?.hex;
                            return (
-                             <span key={globalIdx} className={isMojo ? 'mojo-gradient' : ''} style={{ display: 'inline-block', fontSize: '6rem', lineHeight: '1.2', ...( !isMojo ? { color: '#fff', textShadow: getGlow(charColor) } : {}), cursor: isMultiColor ? 'pointer' : 'default' }} onClick={() => { if (isMultiColor && !isMojo) setLetterColors({...letterColors, [globalIdx]: color.hex}); }}>
+                             <span key={globalIdx} className={isMojo ? 'mojo-gradient' : ''} style={{ display: 'inline-block', fontSize: '6rem', lineHeight: '1.2', ...( !isMojo ? { color: '#fff', textShadow: getGlow(charColor) } : {}), cursor: isMultiColor ? 'pointer' : 'default' }} onClick={() => { if (isMultiColor && !isMojo) setLetterColors({...letterColors, [globalIdx]: color?.hex}); }}>
                                {char === ' ' ? '\u00A0' : char}
                              </span>
                            );
@@ -672,7 +697,7 @@ export function CustomNeon({ type = 'custom_neon' }) {
                        </div>
                      ))}
                      <div style={{display: 'flex', gap: '20px', marginTop: '20px'}}>
-                         {addedShapes.map(shape => <span key={shape.id} style={{fontSize: '4rem', filter: isMojo ? 'none' : `drop-shadow(0 0 10px ${color.hex}) drop-shadow(0 0 20px ${color.hex})`}}>{shape.type}</span>)}
+                         {addedShapes.map(shape => <span key={shape.id} style={{fontSize: '4rem', filter: isMojo ? 'none' : `drop-shadow(0 0 10px ${color?.hex}) drop-shadow(0 0 20px ${color?.hex})`}}>{shape.type}</span>)}
                      </div>
                    </div>
                </div>
@@ -702,7 +727,7 @@ export function CustomNeon({ type = 'custom_neon' }) {
                 </div>
                 <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '12px'}}>
                     <div style={{display: 'flex', gap: '10px'}}><span style={{color: 'var(--muted)', width: '40px'}}>Text</span><span style={{color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '80px'}}>{text || 'None'}</span></div>
-                    <div style={{display: 'flex', gap: '10px'}}><span style={{color: 'var(--muted)', width: '40px'}}>Color</span><span style={{color: '#fff'}}>{isMojo ? 'Mojo Mix' : isMultiColor ? 'Multi' : color.name}</span></div>
+                    <div style={{display: 'flex', gap: '10px'}}><span style={{color: 'var(--muted)', width: '40px'}}>Color</span><span style={{color: '#fff'}}>{isMojo ? 'Mojo Mix' : isMultiColor ? 'Multi' : color?.name}</span></div>
                     <div style={{display: 'flex', gap: '10px'}}><span style={{color: 'var(--muted)', width: '40px'}}>Type</span><span style={{color: '#fff'}}>{isMojo ? 'Mojo Mix' : 'Custom'}</span></div>
                     <div style={{display: 'flex', gap: '10px'}}><span style={{color: 'var(--muted)', width: '40px'}}>Font</span><span style={{color: '#fff'}}>{activeFont.name}</span></div>
                 </div>
