@@ -85,7 +85,7 @@ export function Header(){
           <Link href="/blogs" className={pathname === '/blogs' ? 'active' : ''} onMouseEnter={()=>setShop(false)}>Blogs</Link>
           <Link href="/contact" className={pathname === '/contact' ? 'active' : ''} onMouseEnter={()=>setShop(false)}>Contact</Link>
         </nav>
-        <div className="headerActions" onMouseEnter={()=>setShop(false)}><button><Search/></button><button className="account"><UserRound/></button><button><ShoppingCart/><em>2</em></button></div>
+        <div className="headerActions" onMouseEnter={()=>setShop(false)}><button><Search/></button><Link href="/account" className="account"><UserRound/></Link><Link href="/cart"><ShoppingCart/></Link></div>
       </header>
       {shop && <MegaMenu close={()=>setShop(false)}/>} 
       {mobile && <MobileMenu close={()=>setMobile(false)}/>} 
@@ -737,7 +737,7 @@ export function CustomNeon({ type = 'custom_neon' }) {
                    <small style={{color: 'var(--muted)', fontSize: '10px'}}>(Inclusive of all taxes)</small>
                 </div>
                 <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
-                   <button className="btn solid" onClick={()=>alert('Added')} style={{width: '200px', background: 'linear-gradient(90deg, #ff65bf, #752eff)', border: 'none', color: '#fff', fontWeight: 'bold'}}>ADD TO CART <ShoppingCart size={16}/></button>
+                   <button className="btn solid" onClick={()=>window.location.href='/cart'} style={{width: '200px', background: 'linear-gradient(90deg, #ff65bf, #752eff)', border: 'none', color: '#fff', fontWeight: 'bold'}}>ADD TO CART <ShoppingCart size={16}/></button>
                    <button className="btn ghost" style={{width: '200px', borderColor: '#ff65bf', color: '#fff'}}>SAVE DESIGN <Heart size={16}/></button>
                 </div>
             </div>

@@ -1,0 +1,4 @@
+const fs=require('fs');
+let c=fs.readFileSync('src/ConfiguratorExperience.jsx','utf8');
+c = c.replace(/const shapePosition=\(s,side,index\)=>\{[^\}]+\}\};/, 'const shapePosition=(s,side,index)=>{const offsetGap=0.6+index*0.9;const finalShapeColor=lightOn?(s.color?.hex||neonColor):darkenHex(s.color?.hex||neonColor);return {position:"absolute",top:"50%",left:side==="left"?calc(0% - +offsetGap+m):calc(100% + +offsetGap+m),color:mojo?undefined:finalShapeColor,backgroundImage:mojo?"linear-gradient(90deg,#ffde00,#ff7b00,#ff007b,#c400ff,#00d4ff,#ffde00)":undefined,WebkitBackgroundClip:mojo?"text":undefined,backgroundSize:mojo?"300% 100%":undefined,animation:mojo?"nsMojoSpectrum 3s linear infinite":undefined,opacity:lightOn?1:.9,transform:"translate(-50%,-50%)",fontSize:Math.max(30,fontSize*.5),filter:"none",textShadow:"none",display:"flex",alignItems:"center",justifyContent:"center"}};\n');
+fs.writeFileSync('src/ConfiguratorExperience.jsx',c);
