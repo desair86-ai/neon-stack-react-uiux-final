@@ -35,7 +35,8 @@
 .ns-configurator .ns-canvas-background{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important;z-index:0!important}
 .ns-configurator .ns-canvas-shade{position:absolute!important;inset:0!important;z-index:1!important;pointer-events:none!important}
 .ns-configurator .ns-neon-art{position:relative!important;z-index:20!important;display:flex!important;align-items:center!important;justify-content:center!important;flex-direction:column!important;gap:9px!important;width:86%!important;height:76%!important;opacity:1!important;visibility:visible!important}
-.ns-configurator .ns-neon-text{position:relative!important;z-index:30!important;display:inline-block!important;visibility:visible!important;opacity:1!important;max-width:86%!important;min-width:12px!important;color:var(--ns-aqua)!important;-webkit-text-fill-color:var(--ns-aqua)!important;text-shadow:0 0 3px rgba(255,255,255,.95),0 0 9px var(--ns-aqua),0 0 22px var(--ns-aqua),0 0 48px rgba(95,245,199,.72)!important;mix-blend-mode:normal!important}
+/* Do not hard-code aqua here: the selected WordPress colour is applied by React/ConfiguratorBehaviorPatch. */
+.ns-configurator .ns-neon-text{position:relative!important;z-index:30!important;display:inline-block!important;visibility:visible!important;max-width:86%!important;min-width:12px!important;mix-blend-mode:normal!important}
 .ns-configurator.ns-mojo .ns-neon-text{color:transparent!important;-webkit-text-fill-color:transparent!important;background-clip:text!important;-webkit-background-clip:text!important}
 .ns-configurator .ns-art-shapes{position:absolute!important;inset:0!important;z-index:25!important;pointer-events:none!important}
 .ns-configurator .ns-neon-base-line{position:relative!important;z-index:24!important}
