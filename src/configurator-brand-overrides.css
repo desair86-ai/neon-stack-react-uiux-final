@@ -32,8 +32,7 @@
 .ns-configurator .ns-canvas{min-height:430px!important;height:clamp(430px,48vw,650px)!important;position:relative!important;isolation:isolate!important}
 .ns-configurator .ns-canvas-image{z-index:0!important}.ns-configurator .ns-canvas-shade{z-index:1!important}
 .ns-configurator .ns-neon-art{z-index:5!important;position:relative!important;opacity:1!important;visibility:visible!important}
-.ns-configurator:not(.ns-mojo) .ns-neon-text{color:var(--ns-aqua)!important;-webkit-text-fill-color:var(--ns-aqua)!important;opacity:1!important;visibility:visible!important;position:relative!important;z-index:7!important;text-shadow:0 0 3px rgba(255,255,255,.95),0 0 9px var(--ns-aqua),0 0 22px var(--ns-aqua),0 0 48px rgba(95,245,199,.75)!important}
-.ns-configurator.ns-mojo .ns-neon-text{-webkit-text-fill-color:transparent!important;color:transparent!important;position:relative!important;z-index:7!important;visibility:visible!important}
+.ns-configurator:not(.ns-mojo) .ns-neon-text{opacity:1!important;visibility:visible!important;position:relative!important;z-index:7!important}
 .ns-configurator .ns-art-shapes{z-index:6!important;pointer-events:none!important}
 
 /* Keep native wall upload usable but visually integrated. */
