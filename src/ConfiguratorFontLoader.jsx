@@ -21,7 +21,8 @@ export function ConfiguratorFontLoader() {
           if (!src || !family || seen.has(family) || cancelled) continue;
           seen.add(family);
           try {
-            const face = new FontFace(family, `url(${JSON.stringify(src)})`);
+            const proxy = `/api/config-font?url=${encodeURIComponent(src)}`;
+            const face = new FontFace(family, `url(${JSON.stringify(proxy)})`);
             const loaded = await face.load();
             if (!cancelled) document.fonts.add(loaded);
           } catch (error) {
