@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///C:/dev/neon-stack-react-uiux-final/src/lib/woocommerce.js"],"sourcesContent":["import { fetchGraphQL } from \"./api\";\n\nexport async function addToCart(productId, quantity = 1, neonStackData = null) {\n  let extraData = \"\";\n  if (neonStackData) {\n    const jsonStr = JSON.stringify({ neon_stack: neonStackData });\n    const escapedJson = jsonStr.replace(/\"/g, \"\\\\\\\"\");\n    extraData = `, extraData: \"${escapedJson}\"`;\n  }\n\n  const query = `\n    mutation AddToCart {\n      addToCart(input: { productId: ${productId}, quantity: ${quantity} ${extraData} }) {\n        cart {\n          total\n        }\n      }\n    }\n  `;\n  \n  return fetchGraphQL(query);\n}\r\n"],"names":["addToCart","productId","quantity","neonStackData","extraData","jsonStr","JSON","stringify","neon_stack","escapedJson","replace","query"],"mappings":";;;;AAAA;;AAEO,eAAeA,UAAUC,SAAS,EAAEC,WAAW,CAAC,EAAEC,gBAAgB,IAAI;IAC3E,IAAIC,YAAY;IAChB,IAAID,eAAe;QACjB,MAAME,UAAUC,KAAKC,SAAS,CAAC;YAAEC,YAAYL;QAAc;QAC3D,MAAMM,cAAcJ,QAAQK,OAAO,CAAC,MAAM;QAC1CN,YAAY,CAAC,cAAc,EAAEK,YAAY,CAAC,CAAC;IAC7C;IAEA,MAAME,QAAQ,CAAC;;oCAEmB,EAAEV,UAAU,YAAY,EAAEC,SAAS,CAAC,EAAEE,UAAU;;;;;;EAMlF,CAAC;IAED,OAAO,IAAA,oIAAY,EAACO;AACtB"}}]
-}
