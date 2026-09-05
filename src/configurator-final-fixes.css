@@ -1,0 +1,64 @@
+.ns-configurator{--ns-aqua:#5ff5c7;--ns-aqua-deep:#21d9ad;--ns-purple:#8b5cf6;--ns-purple-bright:#a875ff}
+
+/* Brand accents */
+.ns-configurator .ns-builder-heading h1 em{background:linear-gradient(90deg,var(--ns-aqua),var(--ns-purple));-webkit-background-clip:text;background-clip:text;color:transparent}
+.ns-configurator .ns-stepper button.active:after{background:linear-gradient(90deg,var(--ns-aqua),var(--ns-purple))}
+.ns-configurator .ns-step-num,.ns-configurator .ns-stepper button.active .ns-step-num,.ns-configurator .ns-stepper button.done .ns-step-num{border-color:var(--ns-aqua)!important}
+.ns-configurator .ns-stepper button.active .ns-step-num,.ns-configurator .ns-stepper button.done .ns-step-num{background:var(--ns-aqua)!important;color:#06100d!important;box-shadow:0 0 16px rgba(95,245,199,.22)}
+.ns-configurator .ns-stepper button.active,.ns-configurator .ns-stepper button.done{color:#f4fffb}
+.ns-configurator .ns-field textarea:focus,.ns-configurator .ns-field select:focus,.ns-configurator .ns-align button.selected,.ns-configurator .ns-option-list button.selected,.ns-configurator .ns-card-list button.selected{border-color:var(--ns-aqua)!important}
+.ns-configurator .ns-option-list button.selected,.ns-configurator .ns-card-list button.selected{background:linear-gradient(90deg,rgba(95,245,199,.10),rgba(139,92,246,.08))!important}
+.ns-configurator .ns-shape-label svg,.ns-configurator .ns-shape-config-top svg,.ns-configurator .ns-mojo-check svg,.ns-configurator .ns-trust-row svg{color:var(--ns-aqua)!important}
+.ns-configurator .ns-position button.selected{background:linear-gradient(90deg,var(--ns-aqua),var(--ns-purple))!important;color:#06100d!important;border-color:var(--ns-aqua)!important}
+
+/* Remove the second PREVIEW/YOUR WALL mode tab. Wall upload stays below the preview. */
+.ns-configurator .ns-preview-tabs button:nth-child(2){display:none!important}
+.ns-configurator .ns-preview-tabs button.active{border-color:var(--ns-aqua)!important;color:#fff!important}
+
+/* Put Preview + studio controls on ONE header row, each in its own column. */
+.ns-configurator .ns-preview{position:relative!important}
+.ns-configurator .ns-preview-toolbar{position:relative!important;height:56px!important;display:grid!important;grid-template-columns:150px minmax(0,1fr) 38px!important;align-items:center!important;padding:0 10px!important;border-bottom:1px solid #242938!important}
+.ns-configurator .ns-preview-tabs{height:100%!important;display:flex!important;align-items:stretch!important}
+.ns-configurator .ns-preview-tabs button{padding:0 18px!important;font-size:11px!important;letter-spacing:.8px!important}
+.ns-configurator .ns-preview-studio-toolbar{position:static!important;grid-column:2!important;grid-row:1!important;height:100%!important;display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:center!important;gap:10px!important;padding:0 8px!important;background:transparent!important;border:0!important;box-shadow:none!important}
+.ns-configurator .ns-lighting-buttons,.ns-configurator .ns-studio-actions{display:flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;flex-wrap:nowrap!important}
+.ns-configurator .ns-studio-actions{justify-content:flex-end!important}
+.ns-configurator .ns-preview-studio-toolbar button{appearance:none!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;height:34px!important;padding:0 10px!important;background:#0b1019!important;border:1px solid #2b3448!important;border-radius:9px!important;color:#cbd3df!important;font:700 10px/1 inherit!important;letter-spacing:.25px!important;white-space:nowrap!important;cursor:pointer!important}
+.ns-configurator .ns-preview-studio-toolbar button:hover{border-color:rgba(95,245,199,.6)!important;color:#fff!important;background:#0e1720!important}
+.ns-configurator .ns-preview-studio-toolbar button.selected{border-color:var(--ns-aqua)!important;background:linear-gradient(90deg,rgba(95,245,199,.11),rgba(139,92,246,.13))!important;color:#f1fff9!important;box-shadow:0 0 12px rgba(95,245,199,.10)!important}
+.ns-configurator .ns-lighting-buttons button.selected{border-color:var(--ns-purple)!important}
+.ns-configurator .ns-preview-tools{grid-column:3!important;grid-row:1!important;display:flex!important;justify-content:flex-end!important}
+.ns-configurator .ns-preview-tools button{display:grid!important;place-items:center!important;width:32px!important;height:32px!important;border:0!important;background:transparent!important;color:#8992a4!important}
+
+/* The live sign must always be above the wall image and shade. */
+.ns-configurator .ns-canvas{position:relative!important;isolation:isolate!important;overflow:hidden!important}
+.ns-configurator .ns-canvas-background{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important;z-index:0!important}
+.ns-configurator .ns-canvas-shade{position:absolute!important;inset:0!important;z-index:1!important;pointer-events:none!important}
+.ns-configurator .ns-neon-art{position:relative!important;z-index:20!important;display:flex!important;align-items:center!important;justify-content:center!important;flex-direction:column!important;gap:9px!important;width:86%!important;height:76%!important;opacity:1!important;visibility:visible!important}
+.ns-configurator .ns-neon-text{position:relative!important;z-index:30!important;display:inline-block!important;visibility:visible!important;opacity:1!important;max-width:86%!important;min-width:12px!important;color:var(--ns-aqua)!important;-webkit-text-fill-color:var(--ns-aqua)!important;text-shadow:0 0 3px rgba(255,255,255,.95),0 0 9px var(--ns-aqua),0 0 22px var(--ns-aqua),0 0 48px rgba(95,245,199,.72)!important;mix-blend-mode:normal!important}
+.ns-configurator.ns-mojo .ns-neon-text{color:transparent!important;-webkit-text-fill-color:transparent!important;background-clip:text!important;-webkit-background-clip:text!important}
+.ns-configurator .ns-art-shapes{position:absolute!important;inset:0!important;z-index:25!important;pointer-events:none!important}
+.ns-configurator .ns-neon-base-line{position:relative!important;z-index:24!important}
+
+/* Background section remains the only place for wall upload. */
+.ns-configurator .ns-background-picker{border-top:1px solid #202738!important;padding-top:14px!important}
+.ns-configurator .ns-background-picker .ns-bg-title{color:#edf2f7!important;font-size:11px!important;font-weight:800!important;letter-spacing:.8px!important}
+.ns-configurator .ns-background-picker input[type=file]{max-width:165px!important;color:#aeb7c7!important;font-size:11px!important}
+.ns-configurator .ns-background-picker input[type=file]::file-selector-button{border:1px solid var(--ns-aqua)!important;border-radius:8px!important;padding:7px 11px!important;margin-right:7px!important;background:rgba(95,245,199,.08)!important;color:#eafff8!important;font:700 11px/1 inherit!important}
+
+/* Keep calibration in the brand system. */
+.ns-configurator .ns-calibrate-button{border-color:var(--ns-aqua)!important;background:linear-gradient(90deg,var(--ns-aqua),var(--ns-purple))!important;color:#06100d!important}
+
+@media(max-width:1050px){
+  .ns-configurator .ns-preview-toolbar{grid-template-columns:120px minmax(0,1fr) 34px!important}
+  .ns-configurator .ns-preview-studio-toolbar{grid-template-columns:1fr!important;gap:4px!important}
+  .ns-configurator .ns-lighting-buttons,.ns-configurator .ns-studio-actions{gap:4px!important}
+  .ns-configurator .ns-preview-studio-toolbar button{height:30px!important;padding:0 7px!important;font-size:9px!important}
+}
+@media(max-width:760px){
+  .ns-configurator .ns-preview-toolbar{height:auto!important;min-height:56px!important;grid-template-columns:1fr 34px!important}
+  .ns-configurator .ns-preview-studio-toolbar{grid-column:1/-1!important;grid-row:2!important;display:flex!important;justify-content:space-between!important;flex-wrap:wrap!important;padding:6px 0!important}
+  .ns-configurator .ns-preview-tabs{grid-column:1!important;grid-row:1!important}
+  .ns-configurator .ns-preview-tools{grid-column:2!important;grid-row:1!important}
+  .ns-configurator .ns-lighting-buttons,.ns-configurator .ns-studio-actions{flex-wrap:wrap!important;justify-content:flex-start!important}
+}
