@@ -1,0 +1,45 @@
+/* Neon Stack configurator visual corrections. */
+.ns-configurator{--ns-aqua:#5ff5c7;--ns-aqua-deep:#21d9ad;--ns-purple:#8b5cf6;--ns-purple-bright:#a875ff;--ns-border:#283044;--ns-panel:#080b12}
+.ns-configurator .ns-builder-heading h1 em{background:linear-gradient(90deg,var(--ns-aqua),var(--ns-purple));-webkit-background-clip:text;background-clip:text;color:transparent}
+.ns-configurator .ns-stepper button.active:after{background:linear-gradient(90deg,var(--ns-aqua),var(--ns-purple))}
+.ns-configurator .ns-step-num,.ns-configurator .ns-stepper button.active .ns-step-num,.ns-configurator .ns-stepper button.done .ns-step-num{border-color:var(--ns-aqua)}
+.ns-configurator .ns-stepper button.active .ns-step-num,.ns-configurator .ns-stepper button.done .ns-step-num{color:#07110e;background:var(--ns-aqua);box-shadow:0 0 16px rgba(95,245,199,.22)}
+.ns-configurator .ns-stepper button.active,.ns-configurator .ns-stepper button.done{color:#f4fffb}
+.ns-configurator .ns-field textarea:focus,.ns-configurator .ns-field select:focus,.ns-configurator .ns-align button.selected,.ns-configurator .ns-option-list button.selected,.ns-configurator .ns-card-list button.selected,.ns-configurator .ns-shape-row:focus-within{border-color:var(--ns-aqua)!important;box-shadow:0 0 0 1px rgba(95,245,199,.08)}
+.ns-configurator .ns-option-list button.selected,.ns-configurator .ns-card-list button.selected{background:linear-gradient(90deg,rgba(95,245,199,.10),rgba(139,92,246,.08))}
+.ns-configurator .ns-primary,.ns-configurator .ns-calibrate-btn{border-color:var(--ns-aqua)!important;background:linear-gradient(90deg,var(--ns-aqua),var(--ns-purple))!important;color:#06100d!important;box-shadow:0 0 22px rgba(95,245,199,.18),0 0 24px rgba(139,92,246,.12)!important}
+.ns-configurator .ns-mini-completion span.done{background:var(--ns-aqua)}
+.ns-configurator .ns-shape-label svg,.ns-configurator .ns-shape-config-top svg,.ns-configurator .ns-mojo-check svg,.ns-configurator .ns-trust-row svg{color:var(--ns-aqua)}
+.ns-configurator .ns-icon-btn:hover,.ns-configurator .ns-position button.selected{border-color:var(--ns-aqua)}
+.ns-configurator .ns-position button.selected{background:linear-gradient(90deg,var(--ns-aqua),var(--ns-purple));color:#06100d}
+
+/* Only Preview remains; the old YOUR WALL tab is intentionally hidden. */
+.ns-configurator .ns-preview-tabs button:nth-child(2){display:none!important}
+.ns-configurator .ns-preview-tabs button.active{border-color:var(--ns-aqua)!important;color:#fff!important}
+
+/* Compact, polished preview controls. */
+.ns-configurator .ns-preview-topbar{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:center!important;gap:12px!important;padding:8px 10px!important;border:1px solid #293143!important;border-radius:14px!important;background:rgba(5,8,14,.94)!important}
+.ns-configurator .ns-lighting-moods,.ns-configurator .ns-preview-controls{display:flex!important;align-items:center!important;gap:6px!important;flex-wrap:nowrap!important}
+.ns-configurator .ns-preview-controls{justify-content:flex-end!important}
+.ns-configurator .ns-preview-topbar button{appearance:none!important;-webkit-appearance:none!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;min-height:36px!important;padding:7px 11px!important;margin:0!important;border:1px solid #2b3448!important;border-radius:9px!important;background:#0b1019!important;color:#cbd3df!important;font-family:inherit!important;font-size:11px!important;line-height:1!important;letter-spacing:.35px!important;font-weight:700!important;white-space:nowrap!important;text-transform:none!important;box-shadow:none!important}
+.ns-configurator .ns-preview-topbar button svg{width:15px!important;height:15px!important;flex:0 0 auto!important}
+.ns-configurator .ns-preview-topbar button:hover{border-color:rgba(95,245,199,.55)!important;background:#0e1720!important;color:#fff!important}
+.ns-configurator .ns-preview-topbar button.selected{border-color:var(--ns-aqua)!important;background:rgba(95,245,199,.10)!important;color:#effff9!important;box-shadow:0 0 14px rgba(95,245,199,.12)!important}
+.ns-configurator .ns-lighting-moods button.selected{border-color:var(--ns-purple)!important;background:linear-gradient(90deg,rgba(95,245,199,.10),rgba(139,92,246,.16))!important}
+
+/* Stable preview stage and guaranteed sign layering. */
+.ns-configurator .ns-preview-stage{padding:12px!important}
+.ns-configurator .ns-canvas{min-height:430px!important;height:clamp(430px,48vw,650px)!important;position:relative!important;isolation:isolate!important}
+.ns-configurator .ns-canvas-image{z-index:0!important}.ns-configurator .ns-canvas-shade{z-index:1!important}
+.ns-configurator .ns-neon-art{z-index:5!important;position:relative!important;opacity:1!important;visibility:visible!important}
+.ns-configurator:not(.ns-mojo) .ns-neon-text{color:var(--ns-aqua)!important;-webkit-text-fill-color:var(--ns-aqua)!important;opacity:1!important;visibility:visible!important;position:relative!important;z-index:7!important;text-shadow:0 0 3px rgba(255,255,255,.95),0 0 9px var(--ns-aqua),0 0 22px var(--ns-aqua),0 0 48px rgba(95,245,199,.75)!important}
+.ns-configurator.ns-mojo .ns-neon-text{-webkit-text-fill-color:transparent!important;color:transparent!important;position:relative!important;z-index:7!important;visibility:visible!important}
+.ns-configurator .ns-art-shapes{z-index:6!important;pointer-events:none!important}
+
+/* Keep native wall upload usable but visually integrated. */
+.ns-configurator .ns-background-picker input[type=file]{max-width:170px!important;color:#aeb7c7!important;font-size:11px!important;line-height:34px!important}
+.ns-configurator .ns-background-picker input[type=file]::file-selector-button{border:1px solid var(--ns-aqua)!important;border-radius:8px!important;padding:8px 12px!important;margin-right:8px!important;background:rgba(95,245,199,.08)!important;color:#eafff8!important;font:700 11px/1 inherit!important;cursor:pointer!important}
+.ns-configurator .ns-background-picker{border-top:1px solid #202738;padding-top:14px!important}
+.ns-configurator .ns-background-picker .ns-bg-title,.ns-configurator .ns-background-picker>label{color:#edf2f7!important;font-size:11px!important;font-weight:800!important;letter-spacing:.8px!important}
+.ns-configurator .ns-calibration-card{border-color:var(--ns-purple)!important}.ns-configurator .ns-calibration-input label{color:var(--ns-aqua)!important}
+@media(max-width:900px){.ns-configurator .ns-preview-topbar{grid-template-columns:1fr!important}.ns-configurator .ns-lighting-moods,.ns-configurator .ns-preview-controls{flex-wrap:wrap!important;justify-content:flex-start!important}.ns-configurator .ns-preview-topbar button{font-size:10px!important;min-height:34px!important}}
