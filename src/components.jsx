@@ -13,7 +13,7 @@ import {
   MapPin, Phone, Mail, Clock3, Plus, RotateCcw, Undo2, Redo2, Image as ImageIcon,
   Package, Headphones, Leaf, BadgeCheck, Zap, Palette, PenTool, Box, ChevronRight, Lightbulb,
   Rocket, Music, ShoppingBag, HelpCircle
-, Moon, Crown, Smile } from 'lucide-react';
+, Moon, Crown, Smile, Monitor, Sun, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
 import './styles.css';
 
 const img = (id, w=1200) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}&q=85`;
@@ -421,6 +421,7 @@ export function CustomNeon({ type = 'custom_neon' }) {
   useEffect(() => {
     import('./lib/api').then(({ getConfiguratorOptions }) => {
       getConfiguratorOptions(type).then(data => {
+        if (!data || !data.colors) throw new Error("No data returned");
         setConfig(data);
         if (data?.colors?.length > 0) setColor(data.colors[0]);
         if (data?.fonts?.length > 0) setActiveFont(data.fonts[0]);
