@@ -13,7 +13,7 @@ import {
   MapPin, Phone, Mail, Clock3, Plus, RotateCcw, Undo2, Redo2, Image as ImageIcon,
   Package, Headphones, Leaf, BadgeCheck, Zap, Palette, PenTool, Box, ChevronRight, Lightbulb,
   Rocket, Music, ShoppingBag, HelpCircle
-} from 'lucide-react';
+, Moon, Crown, Smile } from 'lucide-react';
 import './styles.css';
 
 const img = (id, w=1200) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}&q=85`;
@@ -398,7 +398,7 @@ export function CustomNeon({ type = 'custom_neon' }) {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('TEXT');
   const [text, setText] = useState('Good Vibes Only');
-  const [bg, setBg] = useState('dark');
+  const [bg, setBg] = useState(rooms?.living || '/images/hero_living.jpg');
   const [color, setColor] = useState('pink');
 
   useEffect(() => {
@@ -435,33 +435,176 @@ export function CustomNeon({ type = 'custom_neon' }) {
 
   if (loading) return <><Header/><main style={{padding: '100px', textAlign: 'center'}}>Loading configurator...</main><Footer/></>;
 
+  const colors = config?.options?.[type]?.colors || [
+    {id:'pink', hex:'#ff65bf'}, {id:'purple', hex:'#8B16F6'}, {id:'blue', hex:'#2938FF'}, {id:'cyan', hex:'#00ffbc'},
+    {id:'green', hex:'#86EA4E'}, {id:'yellow', hex:'#E88900'}, {id:'orange', hex:'#E04314'}, {id:'white', hex:'#fff'}
+  ];
+
   return <><Header/>
-    <main className="builderPage">
-      <section className="builderHeader container">
-        <h1>CREATE YOUR <em>{type === 'mojo_mix' ? 'MOJO MIX' : 'CUSTOM NEON'}</em> SIGN</h1>
-        <p>Design it. See it. Love it.</p>
+    <main className="builderPage" style={{background: '#05060a'}}>
+      <section className="builderHeader container" style={{textAlign: 'center', marginBottom: '40px', paddingTop: '40px'}}>
+        <h1 style={{margin: 0, fontSize: 'clamp(38px,4vw,58px)', fontFamily: "'Space Grotesk', sans-serif"}}>CREATE YOUR <em style={{background: 'linear-gradient(90deg, #00ffbc, #752eff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontStyle: 'normal'}}>{type === 'mojo_mix' ? 'MOJO MIX' : 'CUSTOM NEON'}</em> SIGN</h1>
+        <p style={{fontSize: '18px', color: 'var(--muted)', marginTop: '10px'}}>Design it. See it. Love it. ♡</p>
+        <div style={{display: 'flex', justifyContent: 'center', gap: '30px', marginTop: '30px', color: '#ff65bf', fontSize: '14px', fontWeight: '600', flexWrap: 'wrap'}}>
+           <span style={{display: 'flex', alignItems: 'center', gap: '8px'}}><Zap size={16}/> Live Real-time Preview</span>
+           <span style={{display: 'flex', alignItems: 'center', gap: '8px'}}><WandSparkles size={16}/> Custom Made Just For You</span>
+           <span style={{display: 'flex', alignItems: 'center', gap: '8px'}}><ShieldCheck size={16}/> Premium Quality & Safe</span>
+           <span style={{display: 'flex', alignItems: 'center', gap: '8px'}}><Gem size={16}/> Made in India</span>
+        </div>
       </section>
-      <section className="builder container">
-        <aside>
-          <div className="builderTabs"><button className="active">TEXT</button></div>
-          <div className="builderControls">
-            <label>YOUR TEXT</label><input value={text} onChange={e=>setText(e.target.value)}/>
-            <label>TEXT COLOR</label>
-            <div className="swatches">{(config?.colors || ['pink','blue','green','mojo']).map(c=><button className={color===c?'active':''} key={c} onClick={()=>setColor(c)} style={{'--c':c}}/>)}</div>
-            <button className="btn solid" onClick={handleAddToCart}>ADD TO CART <ShoppingCart/></button>
+      
+      <section className="builder container" style={{display: 'grid', gridTemplateColumns: '320px 1fr', gap: '30px', alignItems: 'start', paddingBottom: '40px'}}>
+        <aside style={{background: '#070910', border: '1px solid #1c212e', borderRadius: '16px', padding: '0'}}>
+          <div className="builderTabs" style={{display: 'flex', borderBottom: '1px solid #1c212e'}}>
+             <button className={tab==='TEXT'?'active':''} onClick={()=>setTab('TEXT')} style={{flex: 1, padding: '20px 0', borderBottom: tab==='TEXT'?'2px solid #00ffbc':'2px solid transparent', background: 'transparent', color: tab==='TEXT'?'#fff':'var(--muted)', fontSize: '14px', fontWeight: '600', letterSpacing: '1px'}}>TEXT</button>
+             <button className={tab==='SHAPES'?'active':''} onClick={()=>setTab('SHAPES')} style={{flex: 1, padding: '20px 0', borderBottom: tab==='SHAPES'?'2px solid #00ffbc':'2px solid transparent', background: 'transparent', color: tab==='SHAPES'?'#fff':'var(--muted)', fontSize: '14px', fontWeight: '600', letterSpacing: '1px'}}>SHAPES</button>
+             <button className={tab==='UPLOAD'?'active':''} onClick={()=>setTab('UPLOAD')} style={{flex: 1, padding: '20px 0', borderBottom: tab==='UPLOAD'?'2px solid #00ffbc':'2px solid transparent', background: 'transparent', color: tab==='UPLOAD'?'#fff':'var(--muted)', fontSize: '14px', fontWeight: '600', letterSpacing: '1px'}}>UPLOAD LOGO</button>
+          </div>
+          
+          <div className="builderControls" style={{padding: '25px'}}>
+             {tab === 'TEXT' && (
+               <>
+                 <label style={{display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--muted)', marginBottom: '10px', letterSpacing: '1px'}}>YOUR TEXT <span>{text.length}/50</span></label>
+                 <input value={text} onChange={e=>setText(e.target.value)} maxLength={50} style={{width: '100%', padding: '15px', background: '#0a0d14', border: '1px solid #1c212e', borderRadius: '8px', color: '#fff', marginBottom: '25px', fontSize: '16px'}} />
+                 
+                 <label style={{display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--muted)', marginBottom: '10px', letterSpacing: '1px'}}>FONT STYLE</label>
+                 <div style={{position: 'relative', marginBottom: '25px'}}>
+                   <select style={{width: '100%', padding: '15px', background: '#0a0d14', border: '1px solid #1c212e', borderRadius: '8px', color: '#fff', fontSize: '16px', appearance: 'none'}}>
+                     <option>Neon Script</option>
+                   </select>
+                   <span style={{position: 'absolute', right: '15px', top: '15px', color: '#ff65bf', fontStyle: 'italic', fontSize: '18px', pointerEvents: 'none'}}>Abc</span>
+                 </div>
+                 
+                 <label style={{display: 'block', fontSize: '12px', color: 'var(--muted)', marginBottom: '10px', letterSpacing: '1px'}}>TEXT COLOR</label>
+                 <div className="swatches" style={{display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '30px'}}>
+                    {colors.map(c=><button key={c.id} onClick={()=>setColor(c.id)} style={{width: '24px', height: '24px', borderRadius: '50%', border: color===c.id ? '2px solid #fff' : '2px solid transparent', background: c.hex || `var(--${c.id})`, cursor: 'pointer', outline: color===c.id ? '2px solid '+c.hex : 'none', outlineOffset: '2px'}}/>)}
+                 </div>
+
+                 <label style={{display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--muted)', marginBottom: '10px', letterSpacing: '1px'}}>SIZE <span>100 cm</span></label>
+                 <input type="range" style={{width: '100%', marginBottom: '30px', accentColor: '#ff65bf'}} />
+
+                 <label style={{display: 'block', fontSize: '12px', color: 'var(--muted)', marginBottom: '10px', letterSpacing: '1px'}}>GLOW STYLE</label>
+                 <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px', marginBottom: '30px'}}>
+                    <button style={{padding: '10px 0', background: 'transparent', border: '1px solid #ff65bf', color: '#ff65bf', borderRadius: '6px', fontSize: '12px'}}>Steady</button>
+                    <button style={{padding: '10px 0', background: 'transparent', border: '1px solid #1c212e', color: 'var(--muted)', borderRadius: '6px', fontSize: '12px'}}>Pulse</button>
+                    <button style={{padding: '10px 0', background: 'transparent', border: '1px solid #1c212e', color: 'var(--muted)', borderRadius: '6px', fontSize: '12px'}}>Flash</button>
+                    <button style={{padding: '10px 0', background: 'transparent', border: '1px solid #1c212e', color: 'var(--muted)', borderRadius: '6px', fontSize: '12px'}}>Chase</button>
+                 </div>
+
+                 <label style={{display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--muted)', marginBottom: '10px', letterSpacing: '1px'}}>ADD SHAPES <span style={{color: '#ff65bf', cursor: 'pointer', textTransform: 'none'}}>See all</span></label>
+                 <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '30px'}}>
+                    {[<Heart/>, <Star/>, <Moon/>, <Zap/>, <Crown/>, <Music/>, <Smile/>, <BadgeCheck/>].map((icon, i) => (
+                      <button key={i} style={{aspectRatio: '1', border: '1px solid #1c212e', borderRadius: '8px', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ff65bf'}}>{React.cloneElement(icon, {size: 20})}</button>
+                    ))}
+                 </div>
+                 
+                 <button style={{width: '100%', padding: '15px', background: 'transparent', border: '1px solid #1c212e', borderRadius: '8px', color: '#fff', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px'}}>UPLOAD YOUR LOGO <Upload size={16}/></button>
+               </>
+             )}
           </div>
         </aside>
-        <div className="builderPreview">
-          <h3>Preview</h3>
-          <div><NeonText lines={[text]} colors={[color]} /></div>
-          <button className="btn solid" onClick={handleAddToCart}>ADD TO CART <ShoppingCart/></button>
+
+        <div className="builderPreview" style={{display: 'flex', flexDirection: 'column', gap: '20px'}}>
+          <div style={{flex: 1, minHeight: '550px', background: `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.6)), url(${bg}) center/cover`, borderRadius: '16px', border: '1px solid #1c212e', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden'}}>
+             <div style={{position: 'absolute', top: 0, left: 0, right: 0, padding: '20px', display: 'flex', justifyContent: 'space-between'}}>
+                 <div style={{display: 'flex', gap: '30px'}}>
+                    <b style={{color: '#fff', borderBottom: '2px solid #ff65bf', paddingBottom: '10px', fontSize: '13px', letterSpacing: '1px'}}>PREVIEW</b>
+                    <b style={{color: 'var(--muted)', paddingBottom: '10px', fontSize: '13px', letterSpacing: '1px'}}>YOUR WALL</b>
+                 </div>
+                 <div style={{display: 'flex', gap: '15px'}}>
+                    <button style={{background: 'transparent', border: 'none', color: 'var(--muted)'}}><Undo2 size={18}/></button> 
+                    <button style={{background: 'transparent', border: 'none', color: 'var(--muted)'}}><Redo2 size={18}/></button> 
+                    <button style={{background: 'transparent', border: '1px solid #1c212e', color: '#fff', padding: '5px 15px', borderRadius: '6px', fontSize: '12px'}}>Reset</button>
+                 </div>
+             </div>
+             
+             <div style={{transform: 'scale(1.2)'}}><NeonText lines={[text]} colors={[color]} /></div>
+             
+             <div style={{position: 'absolute', bottom: 0, left: 0, right: 0, padding: '25px', background: 'linear-gradient(transparent, rgba(0,0,0,0.9))'}}>
+                 <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'end'}}>
+                     <div>
+                         <b style={{fontSize: '12px', color: '#fff', letterSpacing: '1px'}}>CHOOSE A BACKGROUND</b>
+                         <div style={{display: 'flex', gap: '10px', marginTop: '12px'}}>
+                             {[rooms.living, rooms.gaming, rooms.party, rooms.office, rooms.cafe].map((r, i) => (
+                               <button key={i} onClick={()=>setBg(r)} style={{width: '90px', height: '55px', border: bg===r ? '2px solid #ff65bf' : '1px solid #1c212e', borderRadius: '6px', background: `url(${r}) center/cover`, padding: 0, cursor: 'pointer', position: 'relative'}}>
+                                 {bg===r && <span style={{position: 'absolute', top: '-6px', right: '-6px', background: '#ff65bf', color: '#fff', borderRadius: '50%', width: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px'}}>✓</span>}
+                               </button>
+                             ))}
+                         </div>
+                     </div>
+                     <button style={{background: 'transparent', border: '1px solid #1c212e', color: '#fff', padding: '12px 20px', borderRadius: '8px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '10px'}}>UPLOAD YOUR WALL <Upload size={16}/></button>
+                 </div>
+             </div>
+          </div>
+
+          <div style={{background: '#070910', border: '1px solid #1c212e', borderRadius: '16px', padding: '25px', display: 'grid', gridTemplateColumns: 'auto 1fr auto auto', gap: '40px', alignItems: 'center'}}>
+              <div style={{display: 'flex', alignItems: 'center', gap: '15px'}}>
+                 <Rocket color="#ff65bf" size={40}/>
+                 <b style={{color: '#fff', fontSize: '15px', letterSpacing: '1px'}}>YOUR NEON SIGN SUMMARY</b>
+              </div>
+              <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', fontSize: '13px'}}>
+                  <div style={{display: 'flex', gap: '15px'}}><span style={{color: 'var(--muted)', width: '50px'}}>Text</span><span style={{color: '#fff'}}>{text || 'None'}</span></div>
+                  <div style={{display: 'flex', gap: '15px'}}><span style={{color: 'var(--muted)', width: '50px'}}>Color</span><span style={{color: '#fff', textTransform: 'capitalize'}}>{color}</span></div>
+                  <div style={{display: 'flex', gap: '15px'}}><span style={{color: 'var(--muted)', width: '50px'}}>Glow</span><span style={{color: '#fff'}}>Steady</span></div>
+                  <div style={{display: 'flex', gap: '15px'}}><span style={{color: 'var(--muted)', width: '50px'}}>Font</span><span style={{color: '#fff'}}>Neon Script</span></div>
+                  <div style={{display: 'flex', gap: '15px'}}><span style={{color: 'var(--muted)', width: '50px'}}>Shapes</span><span style={{color: '#fff'}}>None</span></div>
+                  <div style={{display: 'flex', gap: '15px'}}><span style={{color: 'var(--muted)', width: '50px'}}>Size</span><span style={{color: '#fff'}}>100 cm</span></div>
+              </div>
+              <div>
+                 <small style={{color: 'var(--muted)', display: 'block', fontSize: '12px', letterSpacing: '1px', marginBottom: '5px'}}>ESTIMATED PRICE</small>
+                 <b style={{fontSize: '32px', color: '#fff', fontFamily: "'Space Grotesk', sans-serif"}}>₹3,499</b><br/>
+                 <small style={{color: 'var(--muted)', fontSize: '11px'}}>(Inclusive of all taxes)</small>
+              </div>
+              <div style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
+                 <button className="btn solid" onClick={handleAddToCart} style={{width: '240px', background: 'linear-gradient(90deg, #ff65bf, #752eff) !important', boxShadow: 'none', border: 'none', color: '#fff', fontWeight: 'bold'}}>ADD TO CART <ShoppingCart size={18}/></button>
+                 <button className="btn ghost" style={{width: '240px', borderColor: '#ff65bf', color: '#fff'}}>SAVE DESIGN <Heart size={18}/></button>
+              </div>
+          </div>
+        </div>
+      </section>
+      
+      <section className="container" style={{display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '20px', padding: '40px 0', borderTop: '1px solid #1c212e'}}>
+          <Benefit icon={<Gem color="#ff65bf"/>} title="Handcrafted" text="with precision"/>
+          <Benefit icon={<ShieldCheck color="#ff65bf"/>} title="Safe & Durable" text="Low voltage, high quality"/>
+          <Benefit icon={<BadgeCheck color="#ff65bf"/>} title="1 Year Warranty" text="We've got you covered"/>
+          <Benefit icon={<Truck color="#ff65bf"/>} title="Fast Delivery" text="Pan India Delivery"/>
+          <Benefit icon={<Headphones color="#ff65bf"/>} title="24/7 Support" text="We're always here"/>
+      </section>
+      
+      <section className="container" style={{padding: '60px 0'}}>
+        <h2 style={{fontSize: '24px', letterSpacing: '1px', color: '#00ffbc', textTransform: 'uppercase', marginBottom: '40px'}}>HOW IT WORKS</h2>
+        <div style={{display: 'grid', gridTemplateColumns: '1fr auto 1fr auto 1fr auto 1fr auto 1fr', alignItems: 'center', gap: '15px'}}>
+           <div style={{display: 'flex', gap: '15px', alignItems: 'start'}}>
+              <div style={{border: '1px solid #ff65bf', borderRadius: '50%', padding: '15px', color: '#ff65bf'}}><PenTool size={24}/></div>
+              <div><b style={{fontSize: '15px'}}>1. Share Your Idea</b><p style={{fontSize: '13px', color: 'var(--muted)', margin: '5px 0 0'}}>Type your text, add shapes or upload your logo.</p></div>
+           </div>
+           <ArrowRight color="var(--line)"/>
+           <div style={{display: 'flex', gap: '15px', alignItems: 'start'}}>
+              <div style={{border: '1px solid #ff65bf', borderRadius: '50%', padding: '15px', color: '#ff65bf'}}><WandSparkles size={24}/></div>
+              <div><b style={{fontSize: '15px'}}>2. We Design & Build</b><p style={{fontSize: '13px', color: 'var(--muted)', margin: '5px 0 0'}}>Our team crafts your neon sign with care.</p></div>
+           </div>
+           <ArrowRight color="var(--line)"/>
+           <div style={{display: 'flex', gap: '15px', alignItems: 'start'}}>
+              <div style={{border: '1px solid #ff65bf', borderRadius: '50%', padding: '15px', color: '#ff65bf'}}><Truck size={24}/></div>
+              <div><b style={{fontSize: '15px'}}>3. Delivered to You</b><p style={{fontSize: '13px', color: 'var(--muted)', margin: '5px 0 0'}}>Safe packaging & fast delivery to your door.</p></div>
+           </div>
+           <ArrowRight color="var(--line)"/>
+           <div style={{display: 'flex', gap: '15px', alignItems: 'start'}}>
+              <div style={{border: '1px solid #ff65bf', borderRadius: '50%', padding: '15px', color: '#ff65bf'}}><Rocket size={24}/></div>
+              <div><b style={{fontSize: '15px'}}>4. Unbox & Glow</b><p style={{fontSize: '13px', color: 'var(--muted)', margin: '5px 0 0'}}>Easy to install and ready to light up your space!</p></div>
+           </div>
+           
+           <div style={{background: '#070910', border: '1px solid #1c212e', borderRadius: '12px', padding: '20px'}}>
+             <b style={{color: '#00ffbc', fontSize: '15px'}}>Need help designing?</b>
+             <p style={{color: 'var(--muted)', fontSize: '13px', margin: '5px 0 15px'}}>Our design experts are here for you.</p>
+             <button style={{background: 'transparent', border: '1px solid #ff65bf', color: '#fff', padding: '10px 20px', borderRadius: '8px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '10px'}}>CHAT WITH US <MessageCircle size={16}/></button>
+           </div>
         </div>
       </section>
     </main>
     <Footer/>
   </>;
 }
-
 export function About(){return <><Header/><main className="aboutPage"><section className="aboutHero" style={{'--bg':`url(${rooms.hero})`}}><div className="container"><small>ABOUT NEON STACK</small><h1>WE DON'T MAKE NEON SIGNS.<br/><em>WE CREATE STATEMENTS.</em></h1><div className="lineGlow"/><p>At The Neon Stack, ambience isn't decoration - it's identity. We believe every great space deserves a visual signature that captures attention, sparks conversation and stays in people's memories long after they leave.</p><p>Our mission is simple: transform ordinary spaces into unforgettable experiences through thoughtful design, premium craftsmanship and uncompromising quality.</p></div></section><section className="story container"><div className="storyImg" style={{backgroundImage:`url(/images/mascot-image.png)`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundColor: 'transparent'}} /><div><small>A LETTER FROM THE FOUNDER</small><h2>CRAFTED WITH PASSION,<br/>MADE TO GLOW.</h2><p>I've always believed that lighting has the power to change the way people experience a space. Every time I travelled through Southeast Asia and across Vietnam, I found myself admiring the vibrant neon-lit streets.</p><p>When I returned to Mumbai, one thought stayed with me - why shouldn't our spaces tell stories like these? That single thought became The Neon Stack.</p><p><em>"We're not here to manufacture products. We're here to create experiences people remember."<br/>— Makarand Shree Sathe, Founder</em></p></div></section><WhyWeExist /><OurPromise /><NeonStackDifference /><WhatDrivesUs /><CTA title="LET'S CREATE SOMETHING AMAZING TOGETHER" text="Have an idea in mind? We'd love to bring it to life."/></main><Footer/></>}
 export function Contact(){return <><Header/><main className="contactPage"><section className="contactHero" style={{'--bg':`url(${rooms.office})`}}><div className="container"><div className="crumb">HOME <ChevronRight/> CONTACT US</div><h1>LET’S CREATE<br/><em>SOMETHING AMAZING</em><br/>TOGETHER.</h1><div className="lineGlow"/><p>Have a question, an idea, or ready to light up your space?<br/>We’d love to hear from you.</p></div></section><section className="contactGrid container"><div className="reach"><h2>REACH OUT TO US</h2><ContactItem icon={<MapPin/>} title="VISIT US">Neon Stack Studio<br/>S No. 123, Creative Street,<br/>Wakad, Pune – 411057,<br/>Maharashtra, India</ContactItem><ContactItem icon={<Phone/>} title="CALL US">+91 98765 43210<br/>Mon – Sat: 10:00 AM – 7:00 PM</ContactItem><ContactItem icon={<Mail/>} title="EMAIL US">hello@neonstack.in<br/>wecare@neonstack.in</ContactItem><ContactItem icon={<MessageCircle/>} title="WHATSAPP">+91 98765 43210<br/>Quick replies on WhatsApp</ContactItem><ContactItem icon={<Clock3/>} title="BUSINESS HOURS">Mon – Sat: 10:00 AM – 7:00 PM<br/>Sunday: Closed</ContactItem></div><form className="contactForm"><h2>SEND US A MESSAGE</h2><p>Fill out the form below and we’ll get back to you as soon as possible.</p><div className="formRow"><input placeholder="Your Name *"/><input placeholder="Email Address *"/></div><div className="formRow"><input placeholder="Phone Number"/><input placeholder="Subject"/></div><textarea placeholder="Your Message / Tell us about your idea *"/><div className="uploadDrop"><Upload/><b>Upload Logo / Reference (Optional)</b><small>JPG, PNG or PDF (Max. 10MB)</small></div><button className="btn primary" type="button">SEND MESSAGE <ArrowRight/></button></form></section><section className="mapBand container"><div><h2>FIND US HERE</h2><p>We’re easy to reach.<br/>Visit our studio or connect with us<br/>online from anywhere in India.</p><button className="btn ghost">GET DIRECTIONS <ArrowRight/></button></div><div className="fakeMap"><MapPin/><b>Neon Stack Studio</b></div></section><section className="subscribe container"><Mail/><div><h3>STAY IN THE GLOW</h3><p>Get new designs, offers & inspiration straight to your inbox.</p></div><input placeholder="Enter your email address"/><button className="btn primary">SUBSCRIBE <ArrowRight/></button></section></main><Footer/></>}
 function ContactItem({icon,title,children}){return <div className="contactItem"><span>{icon}</span><div><b>{title}</b><p>{children}</p></div></div>}
