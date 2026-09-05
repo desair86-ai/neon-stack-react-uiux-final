@@ -103,3 +103,29 @@
         min-height: 0;
     }
 }
+
+/* Increase interface font sizes by ~2px */
+.ns-stepper button { font-size: 13px !important; }
+.ns-step-num { font-size: 15px !important; }
+.ns-field label { font-size: 12px !important; }
+.ns-field p { font-size: 15px !important; }
+.ns-field textarea { font-size: 16px !important; }
+.ns-option-list span b { font-size: 16px !important; }
+.ns-option-list span small { font-size: 12px !important; }
+.ns-option-list strong { font-size: 16px !important; }
+.ns-shape-label b { font-size: 15px !important; }
+.ns-count { font-size: 16px !important; }
+.ns-shape-config-top b { font-size: 13px !important; }
+.ns-position button { font-size: 13px !important; }
+.ns-summary-title { font-size: 13px !important; }
+.ns-summary-details span b { font-size: 13px !important; }
+.ns-price small, .ns-price span { font-size: 10px !important; }
+.ns-price strong { font-size: 26px !important; }
+.ns-next { font-size: 15px !important; }
+.ns-preview-title { font-size: 13px !important; }
+.ns-lighting-buttons button, .ns-studio-actions button { font-size: 13px !important; }
+.ns-ruler-horizontal b, .ns-ruler-vertical b { font-size: 15px !important; }
+.ns-calibrate-button { font-size: 12px !important; }
+.ns-background-title b { font-size: 13px !important; }
+.ns-upload-wall { font-size: 12px !important; }
+.ns-background-grid span { font-size: 11px !important; }
