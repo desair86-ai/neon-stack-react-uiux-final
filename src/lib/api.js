@@ -93,17 +93,16 @@ export async function getCategories() {
 }
 
 
-export async function getConfiguratorOptions(configuratorType) {
-  let baseUrl = process.env.NEXT_PUBLIC_WORDPRESS_REST_URL; if (baseUrl && !baseUrl.startsWith("http")) baseUrl = "https://" + baseUrl;
-  if (!baseUrl) throw new Error("Missing NEXT_PUBLIC_WORDPRESS_REST_URL");
-  
-  if (baseUrl) {
-    baseUrl = baseUrl.replace(/\/+$/, "");
-  }
-  const res = await fetch(`${baseUrl}/neon-stack/v2/config?configurator=${configuratorType}`);
-  if (!res.ok) {
-    console.error('Failed to fetch configurator', await res.text());
+export async function getConfiguratorOptions(configuratorType = 'custom_neon') {
+  try {
+    const res = await fetch(`/api/config?configurator=${configuratorType}`);
+    if (!res.ok) {
+      console.error('Failed to fetch configurator via proxy', await res.text());
+      return null;
+    }
+    return res.json();
+  } catch (error) {
+    console.error('Network error fetching configurator via proxy', error);
     return null;
   }
-  return res.json();
 }
