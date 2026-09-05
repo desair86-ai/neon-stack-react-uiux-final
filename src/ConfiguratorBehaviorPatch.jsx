@@ -27,7 +27,6 @@ export function ConfiguratorBehaviorPatch() {
         return;
       }
 
-      // Polish the existing Preview controls without changing their layout.
       root.querySelectorAll('.ns-preview-studio-toolbar button').forEach(btn => {
         btn.style.border = '1px solid rgba(95,245,199,.42)';
         btn.style.borderRadius = '10px';
@@ -36,15 +35,14 @@ export function ConfiguratorBehaviorPatch() {
           : 'inset 0 0 0 1px rgba(139,92,246,.12)';
       });
 
-      // Ruler follows the rendered text and changes when text/size changes.
+      // Ruler follows the rendered text and its physical size baseline.
       if (ruler) {
         const cr = canvas.getBoundingClientRect();
         const tr = textEl.getBoundingClientRect();
-        const selected = root.querySelector('.ns-option-list button.selected');
-        const desc = selected?.querySelector('small')?.textContent || '';
-        const dm = desc.match(/([\d.]+)\s*[×x]\s*([\d.]+)/);
-        const baseW = dm ? Number(dm[1]) : 50;
-        const baseH = dm ? Number(dm[2]) : 10;
+        const existingH = ruler.querySelector('.ns-sign-ruler-h b')?.textContent || '';
+        const existingV = ruler.querySelector('.ns-sign-ruler-v b')?.textContent || '';
+        const baseW = Number.parseFloat(existingH) || 50;
+        const baseH = Number.parseFloat(existingV) || 10;
         const value = root.querySelector('textarea')?.value || '';
         const lines = value.split('\n');
         const chars = lines.reduce((n, line) => n + line.replace(/\s/g, '').length, 0);
@@ -74,7 +72,7 @@ export function ConfiguratorBehaviorPatch() {
         }
       }
 
-      // Mojo Mix: force the moving spectrum used by the reference builder.
+      // Mojo Mix: moving multicolour spectrum from the reference builder.
       const mojo = root.querySelector('.ns-neon-text.spectrum');
       if (mojo) {
         mojo.style.setProperty('color', 'transparent', 'important');
@@ -86,22 +84,26 @@ export function ConfiguratorBehaviorPatch() {
         mojo.style.setProperty('animation', 'nsMojoSpectrum 3s linear infinite', 'important');
       }
 
-      // Shapes sit immediately beside the actual word, with repeated shapes stepping outward.
+      // Shapes are anchored to the rendered word, not to the canvas edges.
+      const cr = canvas.getBoundingClientRect();
+      const ar = art.getBoundingClientRect();
+      const tr = textEl.getBoundingClientRect();
+      const textLeftInArt = tr.left - ar.left;
+      const textRightInArt = tr.right - ar.left;
+      const textCenterYInArt = tr.top - ar.top + tr.height / 2;
       const shapes = [...root.querySelectorAll('.ns-art-shapes span')];
       shapes.forEach((span, index) => {
         const originalX = parseFloat(span.style.left || '0');
-        const textLeft = tr.left - cr.left;
-        const side = originalX < textLeft ? 'left' : 'right';
+        const side = originalX < textLeftInArt ? 'left' : 'right';
         const sameSide = shapes.slice(0, index).filter(s => {
           const x = parseFloat(s.style.left || '0');
-          return (x < textLeft ? 'left' : 'right') === side;
+          return (x < textLeftInArt ? 'left' : 'right') === side;
         }).length;
         const x = side === 'left'
-          ? textLeft - 38 - sameSide * 54
-          : (tr.right - cr.left) + 38 + sameSide * 54;
-        const y = (tr.top - cr.top) + tr.height / 2;
-        span.style.left = `${Math.max(10, Math.min(canvas.clientWidth - 10, x))}px`;
-        span.style.top = `${Math.max(10, Math.min(canvas.clientHeight - 10, y))}px`;
+          ? textLeftInArt - 38 - sameSide * 54
+          : textRightInArt + 38 + sameSide * 54;
+        span.style.left = `${Math.max(8, Math.min(art.clientWidth - 8, x))}px`;
+        span.style.top = `${Math.max(8, Math.min(art.clientHeight - 8, textCenterYInArt))}px`;
       });
 
       root.querySelectorAll('.ns-mojo .ns-art-shapes span').forEach((shape, index) => {
