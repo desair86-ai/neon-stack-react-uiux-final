@@ -16,12 +16,14 @@ export async function fetchGraphQL(query, variables = {}) {
   return json.data;
 }
 
-export async function getProducts() {
+export async function getProducts(categorySlug = null) {
+  const whereArg = categorySlug ? `where: { categoryIn: ["${categorySlug}"] }` : "";
   const data = await fetchGraphQL(`
     query GetProducts {
-      products(first: 50) {
+      products(first: 100, ${whereArg}) {
         nodes {
           id name slug image { sourceUrl }
+          productCategories { nodes { slug name } }
           ... on SimpleProduct { regularPrice salePrice attributes { nodes { name options } } }
           ... on VariableProduct { regularPrice salePrice attributes { nodes { name options } } }
         }
