@@ -39,20 +39,20 @@ export function ConfiguratorBehaviorPatch() {
       if (ruler) {
         const cr = canvas.getBoundingClientRect();
         const tr = textEl.getBoundingClientRect();
-        const existingH = ruler.querySelector('.ns-sign-ruler-h b')?.textContent || '';
-        const existingV = ruler.querySelector('.ns-sign-ruler-v b')?.textContent || '';
-        const baseW = Number.parseFloat(existingH) || 50;
-        const baseH = Number.parseFloat(existingV) || 10;
-        const value = root.querySelector('textarea')?.value || '';
-        const lines = value.split('\n');
-        const chars = lines.reduce((n, line) => n + line.replace(/\s/g, '').length, 0);
-        const spaces = (value.match(/ /g) || []).length;
-        const calculatedW = Math.max(1, baseW * ((Math.max(chars, 1) + spaces * 0.35) / 15));
-        const calculatedH = Math.max(baseH, baseH * lines.length);
-        const hb = ruler.querySelector('.ns-sign-ruler-h b');
-        const vb = ruler.querySelector('.ns-sign-ruler-v b');
-        if (hb) hb.textContent = `${calculatedW.toFixed(2)}"`;
-        if (vb) vb.textContent = `${calculatedH.toFixed(2)}"`;
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         ruler.style.left = `${Math.max(8, tr.left - cr.left)}px`;
         ruler.style.top = `${Math.max(8, tr.top - cr.top - 30)}px`;
         ruler.style.width = `${Math.max(100, tr.width)}px`;
