@@ -6,7 +6,6 @@
 @keyframes nsMojoSpectrum{0%{background-position:0% 50%}100%{background-position:300% 50%}}@keyframes nsMojoSpectrumColor{0%{color:#ffde00}20%{color:#ff7b00}40%{color:#ff007b}60%{color:#c400ff}80%{color:#00d4ff}100%{color:#ffde00}}@media(max-width:900px){.ns-configurator .ns-preview-studio-toolbar{grid-template-columns:1fr}.ns-configurator .ns-studio-actions{justify-content:flex-start}.ns-configurator .ns-canvas{height:420px}.ns-configurator .ns-neon-text{max-width:84%}}
 
 /* Gradient Borders for CTA buttons - OVERRIDE PURPLE */
-.ns-configurator .ns-next,
 .ns-configurator .ns-upload-wall,
 .ns-configurator .ns-lighting-buttons button,
 .ns-configurator .ns-studio-actions button {
@@ -16,6 +15,17 @@
     color: #fff !important;
     border-radius: 8px !important;
     transition: 0.3s;
+}
+
+/* ADD TO CART / CONTINUE button matching Calibrate styling */
+.ns-configurator .ns-next {
+    border-color: var(--ns-aqua) !important;
+    background: linear-gradient(90deg, var(--ns-aqua), var(--ns-purple)) !important;
+    color: #06100d !important;
+    border-radius: 999px !important;
+    font-weight: 800 !important;
+    border: none !important;
+    box-shadow: 0 0 18px rgba(117,46,255,.3) !important;
 }
 
 /* Prevent text wrap on studio buttons */
