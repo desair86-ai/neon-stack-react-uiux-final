@@ -63,3 +63,24 @@
   .ns-configurator .ns-preview-tools{grid-column:2!important;grid-row:1!important}
   .ns-configurator .ns-lighting-buttons,.ns-configurator .ns-studio-actions{flex-wrap:wrap!important;justify-content:flex-start!important}
 }
+
+/* Gradient Borders for CTA buttons */
+.ns-configurator .ns-next,
+.ns-configurator .ns-upload-wall,
+.ns-configurator .ns-lighting-buttons button,
+.ns-configurator .ns-studio-actions button {
+    background: linear-gradient(#05060a, #05060a) padding-box, linear-gradient(90deg, #752eff, #00ffbc) border-box !important;
+    border: 1.5px solid transparent !important;
+    box-shadow: 0 0 15px rgba(0,255,188,0.1) !important;
+    color: #fff !important;
+    border-radius: 8px !important;
+    transition: 0.3s;
+}
+
+.ns-configurator .ns-studio-actions {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 8px !important;
+}

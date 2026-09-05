@@ -28,7 +28,7 @@ export function ConfiguratorBehaviorPatch() {
       }
 
       root.querySelectorAll('.ns-preview-studio-toolbar button').forEach(btn => {
-        btn.style.border = '1px solid rgba(95,245,199,.42)';
+        // btn.style.border = '1px solid rgba(95,245,199,.42)';
         btn.style.borderRadius = '10px';
         btn.style.boxShadow = btn.classList.contains('selected')
           ? '0 0 14px rgba(95,245,199,.14)'

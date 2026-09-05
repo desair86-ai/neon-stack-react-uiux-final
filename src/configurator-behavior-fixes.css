@@ -4,3 +4,32 @@
 .ns-configurator .ns-summary{display:grid!important;grid-template-columns:1fr auto!important;align-items:end!important;gap:14px!important;margin:20px 0 14px!important;padding:15px 16px!important;border:1px solid #273044!important;border-radius:12px!important;background:linear-gradient(135deg,rgba(95,245,199,.045),rgba(139,92,246,.08))!important}.ns-configurator .ns-summary span{font-size:14px!important;color:#e9edf4!important;line-height:1.15!important}.ns-configurator .ns-summary strong{font-size:22px!important;color:#fff!important;white-space:nowrap!important}.ns-configurator .ns-next{width:100%!important;height:46px!important;border:1px solid #8b4cff!important;border-radius:11px!important;background:linear-gradient(90deg,#752eff,#9b5cff)!important;color:#fff!important;font-weight:900!important;font-size:12px!important;letter-spacing:.8px!important;cursor:pointer!important;box-shadow:0 0 22px rgba(117,46,255,.2)!important}.ns-configurator .ns-next:hover:not(:disabled){transform:translateY(-1px)!important;box-shadow:0 0 28px rgba(117,46,255,.34)!important}.ns-configurator .ns-next:disabled{opacity:.42!important;cursor:not-allowed!important}.ns-configurator .ns-preview-studio-toolbar button{border-color:rgba(95,245,199,.42)!important;border-radius:10px!important}.ns-configurator .ns-preview-studio-toolbar button.selected{box-shadow:0 0 14px rgba(95,245,199,.14)!important}
 
 @keyframes nsMojoSpectrum{0%{background-position:0% 50%}100%{background-position:300% 50%}}@keyframes nsMojoSpectrumColor{0%{color:#ffde00}20%{color:#ff7b00}40%{color:#ff007b}60%{color:#c400ff}80%{color:#00d4ff}100%{color:#ffde00}}@media(max-width:900px){.ns-configurator .ns-preview-studio-toolbar{grid-template-columns:1fr}.ns-configurator .ns-studio-actions{justify-content:flex-start}.ns-configurator .ns-canvas{height:420px}.ns-configurator .ns-neon-text{max-width:84%}}
+
+/* Gradient Borders for CTA buttons - OVERRIDE PURPLE */
+.ns-configurator .ns-next,
+.ns-configurator .ns-upload-wall,
+.ns-configurator .ns-lighting-buttons button,
+.ns-configurator .ns-studio-actions button {
+    background: linear-gradient(#05060a, #05060a) padding-box, linear-gradient(90deg, #752eff, #00ffbc) border-box !important;
+    border: 1.5px solid transparent !important;
+    box-shadow: 0 0 15px rgba(0,255,188,0.1) !important;
+    color: #fff !important;
+    border-radius: 8px !important;
+    transition: 0.3s;
+}
+
+/* Prevent text wrap on studio buttons */
+.ns-configurator .ns-studio-actions button {
+    white-space: nowrap !important;
+    min-width: max-content !important;
+    padding: 0 12px !important;
+}
+
+/* Force single line layout for actions */
+.ns-configurator .ns-studio-actions {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
