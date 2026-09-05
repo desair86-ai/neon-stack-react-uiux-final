@@ -1,0 +1,119 @@
+'use client';
+import { useEffect } from 'react';
+
+function colorFromSwatch(el) {
+  if (!el) return null;
+  const raw = el.style.background || el.style.backgroundColor || getComputedStyle(el).backgroundColor || '';
+  const hex = raw.match(/#[0-9a-fA-F]{6}/);
+  if (hex) return hex[0];
+  const rgb = raw.match(/rgba?\((\d+)[, ]+(\d+)[, ]+(\d+)/);
+  if (rgb) return '#' + [rgb[1], rgb[2], rgb[3]].map(v => Number(v).toString(16).padStart(2, '0')).join('');
+  return null;
+}
+
+export function ConfiguratorBehaviorPatch() {
+  useEffect(() => {
+    const root = document.querySelector('.ns-configurator');
+    if (!root) return;
+    let raf = 0;
+
+    const paint = () => {
+      const textEl = root.querySelector('.ns-neon-text');
+      const art = root.querySelector('.ns-neon-art');
+      const canvas = root.querySelector('.ns-canvas');
+      const ruler = root.querySelector('.ns-sign-ruler');
+      if (!textEl || !art || !canvas) {
+        raf = requestAnimationFrame(paint);
+        return;
+      }
+
+      // Polish the existing Preview controls without changing their layout.
+      root.querySelectorAll('.ns-preview-studio-toolbar button').forEach(btn => {
+        btn.style.border = '1px solid rgba(95,245,199,.42)';
+        btn.style.borderRadius = '10px';
+        btn.style.boxShadow = btn.classList.contains('selected')
+          ? '0 0 14px rgba(95,245,199,.14)'
+          : 'inset 0 0 0 1px rgba(139,92,246,.12)';
+      });
+
+      // Ruler follows the rendered text and changes when text/size changes.
+      if (ruler) {
+        const cr = canvas.getBoundingClientRect();
+        const tr = textEl.getBoundingClientRect();
+        const selected = root.querySelector('.ns-option-list button.selected');
+        const desc = selected?.querySelector('small')?.textContent || '';
+        const dm = desc.match(/([\d.]+)\s*[×x]\s*([\d.]+)/);
+        const baseW = dm ? Number(dm[1]) : 50;
+        const baseH = dm ? Number(dm[2]) : 10;
+        const value = root.querySelector('textarea')?.value || '';
+        const lines = value.split('\n');
+        const chars = lines.reduce((n, line) => n + line.replace(/\s/g, '').length, 0);
+        const spaces = (value.match(/ /g) || []).length;
+        const calculatedW = Math.max(1, baseW * ((Math.max(chars, 1) + spaces * 0.35) / 15));
+        const calculatedH = Math.max(baseH, baseH * lines.length);
+        const hb = ruler.querySelector('.ns-sign-ruler-h b');
+        const vb = ruler.querySelector('.ns-sign-ruler-v b');
+        if (hb) hb.textContent = `${calculatedW.toFixed(2)}"`;
+        if (vb) vb.textContent = `${calculatedH.toFixed(2)}"`;
+        ruler.style.left = `${Math.max(8, tr.left - cr.left)}px`;
+        ruler.style.top = `${Math.max(8, tr.top - cr.top - 30)}px`;
+        ruler.style.width = `${Math.max(100, tr.width)}px`;
+        ruler.style.height = `${Math.max(80, tr.height + 60)}px`;
+      }
+
+      // Custom Neon: selected WordPress colour becomes the actual neon core.
+      const custom = root.querySelector('.ns-neon-text:not(.spectrum)');
+      if (custom && !root.classList.contains('ns-mojo')) {
+        const swatch = root.querySelector('.ns-color-grid button.selected');
+        const color = colorFromSwatch(swatch);
+        if (color) {
+          custom.style.setProperty('color', color, 'important');
+          custom.style.setProperty('-webkit-text-fill-color', color, 'important');
+          custom.style.setProperty('text-shadow', `0 0 2px #fff, 0 0 5px #fff, 0 0 10px ${color}, 0 0 24px ${color}, 0 0 45px ${color}`, 'important');
+          custom.style.setProperty('filter', 'none', 'important');
+        }
+      }
+
+      // Mojo Mix: force the moving spectrum used by the reference builder.
+      const mojo = root.querySelector('.ns-neon-text.spectrum');
+      if (mojo) {
+        mojo.style.setProperty('color', 'transparent', 'important');
+        mojo.style.setProperty('-webkit-text-fill-color', 'transparent', 'important');
+        mojo.style.setProperty('background-image', 'linear-gradient(90deg,#ffde00,#ff7b00,#ff007b,#c400ff,#00d4ff,#ffde00)', 'important');
+        mojo.style.setProperty('background-size', '300% 100%', 'important');
+        mojo.style.setProperty('background-clip', 'text', 'important');
+        mojo.style.setProperty('-webkit-background-clip', 'text', 'important');
+        mojo.style.setProperty('animation', 'nsMojoSpectrum 3s linear infinite', 'important');
+      }
+
+      // Shapes sit immediately beside the actual word, with repeated shapes stepping outward.
+      const shapes = [...root.querySelectorAll('.ns-art-shapes span')];
+      shapes.forEach((span, index) => {
+        const originalX = parseFloat(span.style.left || '0');
+        const textLeft = tr.left - cr.left;
+        const side = originalX < textLeft ? 'left' : 'right';
+        const sameSide = shapes.slice(0, index).filter(s => {
+          const x = parseFloat(s.style.left || '0');
+          return (x < textLeft ? 'left' : 'right') === side;
+        }).length;
+        const x = side === 'left'
+          ? textLeft - 38 - sameSide * 54
+          : (tr.right - cr.left) + 38 + sameSide * 54;
+        const y = (tr.top - cr.top) + tr.height / 2;
+        span.style.left = `${Math.max(10, Math.min(canvas.clientWidth - 10, x))}px`;
+        span.style.top = `${Math.max(10, Math.min(canvas.clientHeight - 10, y))}px`;
+      });
+
+      root.querySelectorAll('.ns-mojo .ns-art-shapes span').forEach((shape, index) => {
+        shape.style.animationDelay = `-${(index * 0.22) % 2.4}s`;
+      });
+
+      raf = requestAnimationFrame(paint);
+    };
+
+    raf = requestAnimationFrame(paint);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  return null;
+}
