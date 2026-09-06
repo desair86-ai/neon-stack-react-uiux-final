@@ -36,7 +36,7 @@ export function ConfiguratorExperience({type="custom_neon"}){
  const [config,setConfig]=useState(null),[loading,setLoading]=useState(true),[step,setStep]=useState(0),[text,setText]=useState("The Neon Stack"),[font,setFont]=useState(null),[align,setAlign]=useState("center"),[size,setSize]=useState(null),[color,setColor]=useState(null),[isMulti,setIsMulti]=useState(false),[letterColors,setLetterColors]=useState({}),[selectedLetter,setSelectedLetter]=useState(null),[shapes,setShapes]=useState([]),[backboard,setBackboard]=useState(null),[hardware,setHardware]=useState(null),[background,setBackground]=useState(BACKGROUNDS[0][1]),[wallFile,setWallFile]=useState(null),[mood,setMood]=useState("day"),[lightOn,setLightOn]=useState(true),[showRuler,setShowRuler]=useState(true),[calibrating,setCalibrating]=useState(false),[calibrationInches,setCalibrationInches]=useState("50"),[calibrationRatio,setCalibrationRatio]=useState(null),[calibrationWidth,setCalibrationWidth]=useState(295),[calibrationPos,setCalibrationPos]=useState({x:.5,y:.52}),[signPos,setSignPos]=useState({x:.5,y:.5}),[fontSize,setFontSize]=useState(80),[bounds,setBounds]=useState(null);
  const previewRef=useRef(null),textRef=useRef(null);
  useEffect(()=>{let active=true;setLoading(true);getConfiguratorOptions(type).then(data=>{if(!active)return;const c=data?.options?data:FALLBACK,o=c.options||FALLBACK.options,fs=c.fonts?.length?c.fonts:FALLBACK.fonts;setConfig(c);setFont(fs[0]);setSize(null);setColor(mojo?null:(o.colors?.[0]||COLORS[0]));setBackboard(null);setHardware(null);setLoading(false)}).catch(()=>{if(!active)return;setConfig(FALLBACK);setFont(FALLBACK.fonts[0]);setSize(null);setColor(mojo?null:COLORS[0]);setBackboard(null);setHardware(null);setLoading(false)});return()=>{active=false}},[type,mojo]);
- const options=config?.options||FALLBACK.options,fonts=config?.fonts?.length?config.fonts:FALLBACK.fonts,presentation=config?.presentation||{},current=STEPS[step],shapeColors=presentation.shape_color_options?.length?presentation.shape_color_options:(options.colors?.length?options.colors:COLORS);
+ const options=config?.options||FALLBACK.options,fonts=config?.fonts?.length?config.fonts:FALLBACK.fonts,presentation=config?.presentation||{},current=STEPS[step],baseShapeColors=presentation.shape_color_options?.length?presentation.shape_color_options:(options.colors?.length?options.colors:COLORS),shapeColors=mojo?[{id:"mojo",name:"Mojo Mix (Animated)",hex:"linear-gradient(135deg, #ff007b, #00d4ff)"},...baseShapeColors]:baseShapeColors;
  const valid={text:Boolean(text.trim())&&Boolean(font),size:Boolean(size),shapes:true,color:mojo||Boolean(color),backboard:Boolean(backboard),hardware:Boolean(hardware)},complete=STEPS.every(k=>valid[k]);
  const price=useMemo(()=>Number(size?.price||0)+Number(backboard?.price||0)+Number(hardware?.price||0)+shapes.reduce((n,s)=>n+Number(s.price||0),0),[size,backboard,hardware,shapes]);
  const linesArray = (text || "").split('\n');
@@ -71,7 +71,26 @@ export function ConfiguratorExperience({type="custom_neon"}){
  const getShadow=c=>"none";
  const textStyle={fontFamily:fontFamily(font),fontSize:`${fontSize}px`,lineHeight:1.02,whiteSpace:"pre",display:"inline-block",textAlign:align,color:mojo?"transparent":(isMulti?undefined:(lightOn?neonColor:darkenHex(neonColor))),backgroundImage:mojo?"linear-gradient(90deg,#ffde00,#ff7b00,#ff007b,#c400ff,#00d4ff,#ffde00)":undefined,WebkitBackgroundClip:mojo?"text":undefined,backgroundSize:mojo?"300% 100%":undefined,animation:mojo?"nsMojoSpectrum 3s linear infinite":undefined,textShadow:mojo?"none":(isMulti?undefined:getShadow(neonColor)),filter:"none",opacity:lightOn?1:.9};
  const renderText=()=>{if(mojo||!isMulti)return text||"Preview";return (text||"Preview").split("").map((char,i)=>{const c=letterColors[i]||color,cHex=lightOn?(c?.hex||"#63df21"):darkenHex(c?.hex||"#63df21");return <span key={i} onClick={(e)=>{if(isMulti){e.stopPropagation();setSelectedLetter(i)}}} style={{color:cHex,textShadow:getShadow(cHex),cursor:isMulti?"pointer":"inherit",display:"inline-block",transform:isMulti&&selectedLetter===i?"scale(1.1)":"none",transition:"transform 0.2s",zIndex:isMulti&&selectedLetter===i?10:1,position:"relative"}}>{char}</span>})};
- const shapePosition=(s,side,index)=>{const offsetGap=0.6+index*0.9;const finalShapeColor=lightOn?(s.color?.hex||neonColor):darkenHex(s.color?.hex||neonColor);return {position:"absolute",top:"50%",left:side==="left"?`calc(0% - ${offsetGap}em)`:`calc(100% + ${offsetGap}em)`,color:mojo?undefined:finalShapeColor,backgroundImage:mojo?"linear-gradient(90deg,#ffde00,#ff7b00,#ff007b,#c400ff,#00d4ff,#ffde00)":undefined,WebkitBackgroundClip:mojo?"text":undefined,backgroundSize:mojo?"300% 100%":undefined,animation:mojo?"nsMojoSpectrum 3s linear infinite":undefined,opacity:lightOn?1:.9,transform:"translate(-50%,-50%)",fontSize:Math.max(30,fontSize*.5),filter:"none",textShadow:"none",display:"flex",alignItems:"center",justifyContent:"center"}};
+ const shapePosition=(s,side,index)=>{
+    const offsetGap=0.6+index*0.9;
+    const isShapeMojo = mojo && (!s.color || s.color.id === 'mojo');
+    const finalShapeColor = lightOn ? (s.color?.hex||neonColor) : darkenHex(s.color?.hex||neonColor);
+    return {
+      position:"absolute",
+      top:"50%",
+      left:side==="left"?`calc(0% - ${offsetGap}em)`:`calc(100% + ${offsetGap}em)`,
+      color: isShapeMojo ? (lightOn ? "#ff007b" : "#4a0024") : finalShapeColor,
+      animation: isShapeMojo && lightOn ? "nsMojoSpectrumColor 3s linear infinite" : undefined,
+      opacity:lightOn?1:.9,
+      transform:"translate(-50%,-50%)",
+      fontSize:Math.max(30,fontSize*.5),
+      filter: isShapeMojo && lightOn ? "drop-shadow(0 0 2px #fff) drop-shadow(0 0 7px currentColor)" : "none",
+      textShadow:"none",
+      display:"flex",
+      alignItems:"center",
+      justifyContent:"center"
+    };
+ };
  const ruler=useMemo(()=>{if(!bounds)return null;const gap=Math.max(44,Math.min(78,fontSize*.55)),left=bounds.left-leftShapes.length*gap-gap/2,right=bounds.left+bounds.width+rightShapes.length*gap+gap/2,top=bounds.top-Math.min(24,fontSize*.1),bottom=bounds.top+bounds.height+Math.min(24,fontSize*.1);return {left:Math.max(8,left),top:Math.max(8,top),width:Math.max(100,right-left),height:Math.max(70,bottom-top)}},[bounds,leftShapes.length,rightShapes.length,fontSize]);
   const handleAddToCart = async () => { 
     if (complete) {
