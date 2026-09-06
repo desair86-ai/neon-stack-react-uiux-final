@@ -90,7 +90,7 @@ export default function Page() {
                  <b>Total</b>
                  <b style={{ fontSize: '1.5rem', color: '#00ffbc' }}>₹{total.toLocaleString()}</b>
                </div>
-               <Link href="/checkout" className="btn solid" style={{ display: 'block', textAlign: 'center', width: '100%', marginTop: '30px', background: 'linear-gradient(90deg, #ff65bf, #752eff)', border: 'none', color: '#fff', textDecoration: 'none' }}>PROCEED TO CHECKOUT</Link>
+               <Link href="/checkout" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', marginTop: '30px', padding: '16px', background: 'linear-gradient(90deg, #752eff, #00ffbc)', borderRadius: '50px', border: 'none', color: '#000', fontSize: '15px', fontWeight: 700, textDecoration: 'none', letterSpacing: '1px', boxShadow: '0 0 20px rgba(117, 46, 255, 0.4)' }}>PROCEED TO CHECKOUT</Link>
             </div>
           </div>
         )}

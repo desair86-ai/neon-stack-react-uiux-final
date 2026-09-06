@@ -157,7 +157,7 @@ export default function CheckoutPage() {
                  <b style={{ fontSize: '1.5rem', color: '#00ffbc' }}>₹{total.toLocaleString()}</b>
                </div>
                
-               <button type="submit" form="checkout-form" className="btn solid" style={{ width: '100%', marginTop: '30px', background: 'linear-gradient(90deg, #ff65bf, #752eff)', border: 'none', color: '#fff', padding: '16px', fontSize: '16px', fontWeight: 'bold' }}>
+               <button type="submit" form="checkout-form" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', marginTop: '30px', background: 'linear-gradient(90deg, #752eff, #00ffbc)', border: 'none', borderRadius: '50px', color: '#000', padding: '16px', fontSize: '15px', fontWeight: 700, letterSpacing: '1px', cursor: 'pointer', boxShadow: '0 0 20px rgba(117, 46, 255, 0.4)' }}>
                  PLACE ORDER
                </button>
             </div>
