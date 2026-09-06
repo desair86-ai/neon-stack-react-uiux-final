@@ -17,6 +17,19 @@ export default function Page() {
     const updated = cart.filter(x => x.id !== id);
     setCart(updated);
     localStorage.setItem('ns_cart', JSON.stringify(updated));
+    window.dispatchEvent(new Event('cartUpdated'));
+  };
+
+  const updateQty = (id, delta) => {
+    const updated = cart.map(x => {
+      if (x.id === id) {
+        return { ...x, qty: (x.qty || 1) + delta };
+      }
+      return x;
+    }).filter(x => x.qty > 0);
+    setCart(updated);
+    localStorage.setItem('ns_cart', JSON.stringify(updated));
+    window.dispatchEvent(new Event('cartUpdated'));
   };
 
   const total = cart.reduce((acc, item) => {
@@ -53,7 +66,11 @@ export default function Page() {
                    </div>
                    <div style={{ textAlign: 'right', paddingRight: '30px' }}>
                      <b style={{ fontSize: '1.2rem' }}>₹{item.price}</b>
-                     <p style={{ margin: '10px 0 0 0' }}>Qty: {item.qty}</p>
+                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
+                       <button onClick={() => updateQty(item.id, -1)} style={{ background: '#1c212e', border: 'none', color: '#fff', width: '28px', height: '28px', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>-</button>
+                       <span>{item.qty || 1}</span>
+                       <button onClick={() => updateQty(item.id, 1)} style={{ background: '#1c212e', border: 'none', color: '#fff', width: '28px', height: '28px', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>+</button>
+                     </div>
                    </div>
                    <button onClick={() => remove(item.id)} style={{ position: 'absolute', top: '20px', right: '20px', background: 'transparent', border: 'none', color: '#ff65bf', cursor: 'pointer' }}><Trash2 size={18}/></button>
                 </div>
