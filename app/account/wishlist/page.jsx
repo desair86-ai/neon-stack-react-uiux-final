@@ -51,7 +51,7 @@ export default function WishlistPage() {
                <button onClick={() => toggleWishlist(item)} style={{ position: 'absolute', top: '15px', right: '15px', background: '#111', border: '1px solid #333', color: '#ff65bf', cursor: 'pointer', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
                  <Trash2 size={14}/>
                </button>
-               <div style={{ width: '100%', height: '200px', borderRadius: '8px', backgroundImage: item.image ? `url("${item.image}")` : 'none', backgroundSize: 'cover', backgroundPosition: 'center', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+               <div style={{ width: '100%', height: '200px', borderRadius: '8px', backgroundImage: item.image ? `url("${item.image}")` : 'none', backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                  {!item.image && <span style={{fontSize:'40px'}}>✨</span>}
                </div>
                <h3 style={{ margin: '0 0 5px 0', fontSize: '1.2rem' }}>{item.name}</h3>

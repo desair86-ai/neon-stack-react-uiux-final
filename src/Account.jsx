@@ -76,7 +76,7 @@ export function Account() {
         <div className="designGrid">
           {wishlist.slice(0,3).map(w => (
             <div className="designCard" key={w.name}>
-              <div className="designImg" style={{backgroundImage: w.image ? `url("${w.image}")` : 'none', background: !w.image ? '#111' : undefined}}>
+              <div className="designImg" style={{backgroundImage: w.image ? `url("${w.image}")` : 'none', backgroundSize: 'contain', backgroundRepeat: 'no-repeat', background: !w.image ? '#111' : undefined}}>
                 {!w.image && <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100%'}}><span style={{fontSize:'30px'}}>✨</span></div>}
               </div>
               <div className="designInfo">

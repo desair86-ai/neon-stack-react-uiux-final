@@ -53,7 +53,7 @@ export default function Page() {
               {cart.map(item => (
                 <div key={item.id} style={{ display: 'flex', gap: '20px', padding: '20px', background: '#0a0d14', border: '1px solid #1c212e', borderRadius: '12px', position: 'relative' }}>
                    {item.image ? (
-                     <div style={{ width: '100px', height: '100px', borderRadius: '8px', background: `url("${item.image}") center/cover` }} />
+                     <div style={{ width: '100px', height: '100px', borderRadius: '8px', background: `url("${item.image}") center/contain no-repeat` }} />
                    ) : (
                      <div style={{ width: '100px', height: '100px', borderRadius: '8px', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{fontSize:'30px'}}>✨</span></div>
                    )}

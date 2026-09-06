@@ -95,10 +95,10 @@ export function ConfiguratorExperience({type="custom_neon"}){
             // Generate tiny base64 for local cart UI only
             const tinyCanvas = await html2canvas(textRef.current, {
               useCORS: true,
-              scale: 0.2,
+              scale: 1, // Increased scale to prevent blurriness
               backgroundColor: null
             });
-            cartThumb = tinyCanvas.toDataURL('image/png', 0.5);
+            cartThumb = tinyCanvas.toDataURL('image/png', 0.8);
             
             const formData = new FormData();
             formData.append("screenshot", blob, "neon-preview.png");
