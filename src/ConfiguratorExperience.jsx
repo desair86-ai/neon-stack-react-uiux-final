@@ -84,7 +84,8 @@ export function ConfiguratorExperience({type="custom_neon"}){
           qty: 1,
           size: size?.name,
           color: mojo ? "Mojo Spectrum" : (color?.name || "Multi-color"),
-          font: font?.name
+          font: font?.name,
+          image: background
         };
         const cart = JSON.parse(localStorage.getItem('ns_cart') || '[]');
         cart.push(item);
