@@ -2,6 +2,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
+import { InfiniteTicker } from './InfiniteTicker';
+
 export function UvPrintedNeon() {
   return (
     <main className="uvPage" style={{ background: '#040509', color: '#fff', overflow: 'hidden', paddingBottom: '80px' }}>
@@ -11,6 +13,8 @@ export function UvPrintedNeon() {
           <span style={{ background: "linear-gradient(90deg, #00e5ff, #752eff, #6eff86)", WebkitBackgroundClip: "text", color: "transparent" }}>Neon Signs</span>
         </h1>
       </section>
+      
+      <InfiniteTicker />
 
       {/* Block 1 */}
       <section className="container" style={{ padding: '60px 0' }}>

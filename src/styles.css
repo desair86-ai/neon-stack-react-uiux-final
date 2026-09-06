@@ -285,10 +285,6 @@ body{font-size:var(--body-size);-webkit-font-smoothing:antialiased;text-renderin
 /* Main Content */
 .accountContent { display: flex; flex-direction: column; gap: 30px; }
 
-.welcomeBanner { min-height: 160px; border-radius: 16px; background: linear-gradient(90deg, rgba(1,3,8,0.9) 0%, rgba(1,3,8,0.6) 100%), url(/images/hero_living.jpg) center/cover; display: flex; align-items: center; padding: 0 40px; border: 1px solid var(--line); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-.welcomeBanner h2 { font-size: 32px; font-family: 'Space Grotesk'; margin: 0 0 8px; line-height: 1.1; }
-.welcomeBanner p { color: #c1c3cb; margin: 0; font-size: 16px; }
-
 .statCards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
 .statCard { background: #070910; border: 1px solid var(--line); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; }
 .statIcon { width: 36px; height: 36px; border-radius: 8px; display: grid; place-items: center; margin-bottom: 15px; }
@@ -557,4 +553,38 @@ footer a:hover {
 
 .desktopNav .active::after, .headerActions .active::after, .active::after { display: none !important; opacity: 0 !important; visibility: hidden !important; background: transparent !important; border: none !important; }
 .homeHero::before, .homeHero::after { display: none !important; }
+
+
+.ticker-wrap {
+  width: 100%;
+  overflow: hidden;
+  background-color: #000;
+  color: #fff;
+  padding: 12px 0;
+  box-sizing: border-box;
+  display: flex;
+  white-space: nowrap;
+  border-top: 1px solid #1a1c24;
+  border-bottom: 1px solid #1a1c24;
+}
+
+.ticker-content {
+  display: flex;
+  animation: ticker 40s linear infinite;
+  align-items: center;
+}
+
+.ticker-item {
+  display: flex;
+  align-items: center;
+  margin-right: 50px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+@keyframes ticker {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
 
