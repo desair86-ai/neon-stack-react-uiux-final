@@ -40,7 +40,7 @@
 .ns-configurator .ns-studio-actions {
     display: flex !important;
     flex-direction: row !important;
-    flex-wrap: nowrap !important;
+    flex-wrap: wrap !important;
     align-items: center !important;
     gap: 8px !important;
 }

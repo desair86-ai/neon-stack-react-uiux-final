@@ -5,7 +5,7 @@ import "../src/configurator-behavior-fixes.css";
 import { ConfiguratorFontLoader } from "../src/ConfiguratorFontLoader";
 import { ConfiguratorBehaviorPatch } from "../src/ConfiguratorBehaviorPatch";
 import { NeonChatBot } from "../src/NeonChatBot";
-
+import { WishlistProvider } from "../src/context/WishlistContext";
 export const metadata = { title: "Neon Stack", description: "Premium LED Neon Signs" };
 
 export default function RootLayout({ children }) {
@@ -14,7 +14,9 @@ export default function RootLayout({ children }) {
       <body>
         <ConfiguratorFontLoader />
         <ConfiguratorBehaviorPatch />
-        {children}
+        <WishlistProvider>
+          {children}
+        </WishlistProvider>
         <NeonChatBot />
       </body>
     </html>

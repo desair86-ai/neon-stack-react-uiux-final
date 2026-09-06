@@ -17,11 +17,11 @@
 
 /* Put Preview + studio controls on ONE header row, each in its own column. */
 .ns-configurator .ns-preview{position:relative!important}
-.ns-configurator .ns-preview-toolbar{position:relative!important;height:56px!important;display:grid!important;grid-template-columns:150px minmax(0,1fr) 38px!important;align-items:center!important;padding:0 10px!important;border-bottom:1px solid #242938!important}
+.ns-configurator .ns-preview-toolbar{position:relative!important;height:auto!important;min-height:56px!important;display:flex!important;flex-wrap:wrap!important;justify-content:space-between!important;align-items:center!important;padding:10px!important;gap:10px!important;border-bottom:1px solid #242938!important}
 .ns-configurator .ns-preview-tabs{height:100%!important;display:flex!important;align-items:stretch!important}
 .ns-configurator .ns-preview-tabs button{padding:0 18px!important;font-size:11px!important;letter-spacing:.8px!important}
-.ns-configurator .ns-preview-studio-toolbar{position:static!important;grid-column:2!important;grid-row:1!important;height:100%!important;display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:center!important;gap:10px!important;padding:0 8px!important;background:transparent!important;border:0!important;box-shadow:none!important}
-.ns-configurator .ns-lighting-buttons,.ns-configurator .ns-studio-actions{display:flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;flex-wrap:nowrap!important}
+.ns-configurator .ns-preview-studio-toolbar{position:static!important;height:100%!important;display:flex!important;align-items:center!important;gap:10px!important;padding:0 8px!important;background:transparent!important;border:0!important;box-shadow:none!important}
+.ns-configurator .ns-lighting-buttons,.ns-configurator .ns-studio-actions{display:flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;flex-wrap:wrap!important}
 .ns-configurator .ns-studio-actions{justify-content:flex-end!important}
 .ns-configurator .ns-preview-studio-toolbar button{appearance:none!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;height:34px!important;padding:0 10px!important;background:#0b1019!important;border:1px solid #2b3448!important;border-radius:9px!important;color:#cbd3df!important;font:700 10px/1 inherit!important;letter-spacing:.25px!important;white-space:nowrap!important;cursor:pointer!important}
 .ns-configurator .ns-preview-studio-toolbar button:hover{border-color:rgba(95,245,199,.6)!important;color:#fff!important;background:#0e1720!important}
@@ -51,17 +51,15 @@
 .ns-configurator .ns-calibrate-button{border-color:var(--ns-aqua)!important;background:linear-gradient(90deg,var(--ns-aqua),var(--ns-purple))!important;color:#06100d!important}
 
 @media(max-width:1050px){
-  .ns-configurator .ns-preview-toolbar{grid-template-columns:120px minmax(0,1fr) 34px!important}
-  .ns-configurator .ns-preview-studio-toolbar{grid-template-columns:1fr!important;gap:4px!important}
   .ns-configurator .ns-lighting-buttons,.ns-configurator .ns-studio-actions{gap:4px!important}
   .ns-configurator .ns-preview-studio-toolbar button{height:30px!important;padding:0 7px!important;font-size:9px!important}
 }
 @media(max-width:760px){
-  .ns-configurator .ns-preview-toolbar{height:auto!important;min-height:56px!important;grid-template-columns:1fr 34px!important}
-  .ns-configurator .ns-preview-studio-toolbar{grid-column:1/-1!important;grid-row:2!important;display:flex!important;justify-content:space-between!important;flex-wrap:wrap!important;padding:6px 0!important}
-  .ns-configurator .ns-preview-tabs{grid-column:1!important;grid-row:1!important}
-  .ns-configurator .ns-preview-tools{grid-column:2!important;grid-row:1!important}
-  .ns-configurator .ns-lighting-buttons,.ns-configurator .ns-studio-actions{flex-wrap:wrap!important;justify-content:flex-start!important}
+  .ns-configurator .ns-lighting-buttons,.ns-configurator .ns-studio-actions{flex-wrap:wrap!important;justify-content:flex-end!important}
+  .ns-configurator .ns-preview-toolbar{display:grid!important;grid-template-columns:auto 1fr!important;gap:10px!important}
+  .ns-configurator .ns-preview-title{grid-column:1!important;grid-row:1!important;align-self:start!important;padding-top:8px!important}
+  .ns-configurator .ns-lighting-buttons{grid-column:2!important;grid-row:1!important}
+  .ns-configurator .ns-studio-actions{grid-column:2!important;grid-row:2!important}
 }
 
 /* Gradient Borders for CTA buttons */
@@ -80,7 +78,7 @@
 .ns-configurator .ns-studio-actions {
     display: flex !important;
     flex-direction: row !important;
-    flex-wrap: nowrap !important;
+    flex-wrap: wrap !important;
     align-items: center !important;
     gap: 8px !important;
 }
@@ -128,4 +126,88 @@
 .ns-calibrate-button { font-size: 12px !important; }
 .ns-background-title b { font-size: 13px !important; }
 .ns-upload-wall { font-size: 12px !important; }
-.ns-background-grid span { font-size: 11px !important; }
+.ns-background-grid span { font-size: 11px !important; }/* NEW NEONCHAMP LAYOUT STYLES */
+.ns-split-layout {
+  display: grid !important;
+  grid-template-columns: 1fr 420px !important;
+  gap: 20px !important;
+  align-items: start;
+}
+@media(max-width:900px) {
+  .ns-split-layout {
+    grid-template-columns: 1fr !important;
+  }
+  .ns-builder-sticky-header {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+}
+
+/* Accordions */
+.ns-accordion-sidebar {
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+.ns-accordion-item {
+  border: 1px solid #161a23;
+  background: #080a11;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.ns-accordion-item.open {
+  border-color: #31374a;
+  box-shadow: 0 0 15px rgba(0,255,188,0.05);
+}
+.ns-accordion-header {
+  width: 100%;
+  padding: 18px 20px;
+  background: #0a0d14;
+  border: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+}
+.ns-accordion-item.open .ns-accordion-header {
+  border-bottom: 1px solid #161a23;
+  color: #00ffbc;
+}
+.ns-accordion-body {
+  padding: 20px;
+  background: #080a11;
+}
+
+/* Hide original elements from previous layout */
+.ns-stepper { display: none !important; }
+.ns-builder-heading { display: none !important; }
+.ns-control-body { padding: 0 !important; display: none !important; }
+/* SUPER NEONCHAMP LAYOUT */
+.ns-grid-bg {
+  background-size: 40px 40px !important;
+  background-image: 
+    linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px) !important;
+}
+
+.ns-champ-tab:hover {
+  background: #0a0d14 !important;
+}
+
+/* Custom scrollbar for background horizontal scroll */
+.ns-background-horiz-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+.ns-background-horiz-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+.ns-background-horiz-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}

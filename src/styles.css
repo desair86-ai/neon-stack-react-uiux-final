@@ -526,3 +526,9 @@ body{font-size:var(--body-size);-webkit-font-smoothing:antialiased;text-renderin
 
 .specialCopy .btn { margin-top: auto; align-self: flex-start; }
 
+
+@keyframes svgFlicker { 0%, 100% { opacity: 1; filter: drop-shadow(0 0 4px #c400ff); } 50% { opacity: 0.8; filter: drop-shadow(0 0 1px #c400ff); } 52% { opacity: 1; } 54% { opacity: 0.4; } 56% { opacity: 1; } } .svg-flicker { animation: svgFlicker 4s infinite; }
+
+.force-mobile-header .desktopNav { display: none !important; } .force-mobile-header .mobileOnly { display: block !important; } .force-mobile-header { height: 70px !important; padding: 0 16px !important; justify-content: space-between !important; border-bottom: 1px solid #161a23 !important; } .force-mobile-header .logo { order: 2 !important; width: auto !important; font-size: 24px !important; } .force-mobile-header ~ .headerActions { order: 3 !important; gap: 12px !important; } .force-mobile-header .account { display: none !important; } .force-mobile-header .headerActions svg { width: 20px !important; } .configurator-header-wrapper { position: sticky; top: 0; z-index: 990; background: #05060a; border-bottom: 1px solid #161a23; }
+
+.force-mobile-header .headerActions { order: 3 !important; gap: 12px !important; }

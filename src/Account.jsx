@@ -1,3 +1,4 @@
+"use client";
 import React from 'react';
 import Link from 'next/link';
 import { Header, Footer } from './components';
@@ -27,7 +28,7 @@ export function Account() {
               <Link href="/account/wishlist"><Heart className="icon"/> Wishlist <ArrowRight className="arrow"/></Link>
               <Link href="/account/addresses"><MapPin className="icon"/> Addresses <ArrowRight className="arrow"/></Link>
               <Link href="/account/profile"><User className="icon"/> Profile & Security <ArrowRight className="arrow"/></Link>
-              <button className="logoutBtn"><LogOut className="icon"/> Logout</button>
+              <button className="logoutBtn" onClick={() => window.location.href='/login'}><LogOut className="icon"/> Logout</button>
             </nav>
             
             <div className="sidebarPromo">

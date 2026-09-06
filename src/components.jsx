@@ -5,6 +5,7 @@ import { createRoot } from 'react-dom/client';
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import { getProducts, getCategories } from "./lib/api";
+import { useWishlist } from "./context/WishlistContext";
 import {
   Menu, X, Search, UserRound, ShoppingCart, ChevronDown, ArrowRight, ArrowLeft,
   Sparkles, WandSparkles, Star, Upload, SlidersHorizontal, MessageCircle, ShieldCheck,
@@ -41,15 +42,17 @@ const defaultProducts = [
   ['Hakuna Matata','Quotes','/images/10.png','','1,399'],['Cocktail','Bars','/images/wings_and_drinks.png','','1,599']
 ];
 
-function useCatalogData() {
+function useCatalogData(categorySlug = null) {
   const [data, setData] = useState({ items: defaultProducts, maxPrice: 24999, sizes: ['Up to 12 inch (52)','12 - 24 inch (97)','24 - 36 inch (63)','36 inch & above (36)'] });
   useEffect(() => {
-    getProducts().then(fetched => {
+    getProducts(categorySlug).then(fetched => {
       if (fetched && fetched.items && fetched.items.length > 0) {
+        setData(fetched);
+      } else if (fetched && fetched.items) {
         setData(fetched);
       }
     }).catch(console.error);
-  }, []);
+  }, [categorySlug]);
   return data;
 }
 
@@ -62,16 +65,19 @@ function useCategories() {
 }
 const allCategories = ['All Neon Signs','Astronaut & Space','Bars','Beauty & Salon','Bollywood','Business','Café & Restaurant','Cricket','Gaming','Gods & Spiritual','Home Decor','Kids','Love & Romance','Music & Studio','Sports & Fitness','Quotes & Words'];
 
-function Logo(){ return <Link className="logo" href="/"><span>NEON</span><b>STACK</b></Link> }
+function Logo(){ return <Link className="logo" href="/"><img src="/images/The Neon Stack Logo without icon.svg" alt="The Neon Stack" style={{height:'72px', filter:'drop-shadow(0 0 2px rgba(139,76,255,0.4))'}} className="svg-flicker"/></Link> }
 function Announcement(){ return <div className="announce"><Zap/> <span>SALE ENDS IN</span> <b>02d : 12h : 45m : 30s</b><i/> <span>Free Shipping Across India</span></div> }
 
 export function Header(){
     const pathname = usePathname();
+    const { wishlist } = useWishlist() || { wishlist: [] };
     const [mobile,setMobile]=useState(false); const [shop,setShop]=useState(false);
     const shopActive = pathname.startsWith('/collections') || pathname.startsWith('/category');
-    return <div className="header-wrapper" onMouseLeave={() => setShop(false)}>
-      <Announcement/>
-      <header className="header">
+    const isConfigurator = pathname === '/custom-neon' || pathname === '/mojo-mix';
+    
+    return <div className={`header-wrapper ${isConfigurator ? 'configurator-header-wrapper' : ''}`} onMouseLeave={() => setShop(false)}>
+      {!isConfigurator && <Announcement/>}
+      <header className={`header ${isConfigurator ? 'force-mobile-header' : ''}`}>
         <button className="mobileOnly iconBtn" onClick={()=>setMobile(true)}><Menu/></button>
         <div onMouseEnter={()=>setShop(false)}><Logo/></div>
         <nav className="desktopNav">
@@ -85,7 +91,7 @@ export function Header(){
           <Link href="/blogs" className={pathname === '/blogs' ? 'active' : ''} onMouseEnter={()=>setShop(false)}>Blogs</Link>
           <Link href="/contact" className={pathname === '/contact' ? 'active' : ''} onMouseEnter={()=>setShop(false)}>Contact</Link>
         </nav>
-        <div className="headerActions" onMouseEnter={()=>setShop(false)}><button><Search/></button><Link href="/account" className="account"><UserRound/></Link><Link href="/cart"><ShoppingCart/></Link></div>
+        <div className="headerActions" onMouseEnter={()=>setShop(false)}><button><Search/></button><Link href="/account" className="account"><UserRound/></Link><Link href="/account/wishlist" style={{position:'relative'}}><Heart/>{wishlist?.length > 0 && <span style={{position:'absolute',top:-8,right:-8,background:'#ff65bf',color:'#fff',borderRadius:'50%',width:'18px',height:'18px',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'10px',fontWeight:'bold'}}>{wishlist.length}</span>}</Link><Link href="/cart"><ShoppingCart/></Link></div>
       </header>
       {shop && <MegaMenu close={()=>setShop(false)}/>} 
       {mobile && <MobileMenu close={()=>setMobile(false)}/>} 
@@ -159,16 +165,16 @@ function MegaMenu({ close }) {
     </div>
   </div>
 }
-function MobileMenu({close}){ 
+export function MobileMenu({ close, onMouseLeave }) { 
   const [shopOpen, setShopOpen] = useState(false);
   return (
-    <div className="mobileMenu">
+    <div className="mobileMenu" onMouseLeave={onMouseLeave}>
       <div className="mobileMenuTop">
         <Logo/>
         <button className="iconBtn" onClick={close}><X/></button>
       </div>
       <div className="mobileLinks">
-        <Link href="/" onClick={close}><HomeIcon/> HOME <ChevronRight/></Link>
+        <Link href="/" onClick={close}> HOME <ChevronRight/></Link>
         <div className="mobAccordion">
           <button className="mobAccBtn" onClick={() => setShopOpen(!shopOpen)}>
             <span><ShoppingBag/> SHOP</span> <ChevronDown style={{transform: shopOpen ? 'rotate(180deg)' : 'none', transition: '0.2s'}}/>
@@ -342,7 +348,11 @@ function BoxItem({icon,text}){return <div><span>{icon}</span><b>{text}</b></div>
 function Special({title,text,action,bg,linkTo}){return <article className="special"><img className="specialImage" src={bg} alt=""/><div className="specialCopy"><h3>{title}</h3><p>{text}</p><Link className="btn ghost" href={linkTo || "#"}>{action} <ArrowRight/></Link></div></article>}
 function SectionHead({eyebrow,title,sub,link}){return <div className="sectionHead"><div><small>{eyebrow}</small><h2>{title}</h2>{sub&&<p>{sub}</p>}</div>{link&&<Link className="textLink" href="/collections">{link} <ArrowRight/></Link>}</div>}
 function NeonText({lines,colors=['pink','blue','pink']}){return <div className="neonText">{lines.map((x,i)=><span key={x} className={colors[i%colors.length]}>{x}</span>)}</div>}
-function ProductCard({p}){return <Link className="productCard" href="/collections"><div className="productImg" style={{backgroundImage:`url(${p[2]})`}}>{p[3] && p[3].trim() !== '' ? <span className="badge">{p[3]}</span> : null}<button onClick={e=>e.preventDefault()}><Heart/></button></div><div className="productInfo"><h3>{p[0]}</h3><small>{p[1]}</small><div><b>From ₹{p[4]}</b><span><ShoppingCart/></span></div></div></Link>}
+function ProductCard({p}){
+  const { toggleWishlist, isInWishlist } = useWishlist() || {};
+  const inWishlist = isInWishlist ? isInWishlist(p[0]) : false;
+  return <Link className="productCard" href="/collections"><div className="productImg" style={{backgroundImage:`url(${p[2]})`}}>{p[3] && p[3].trim() !== '' ? <span className="badge">{p[3]}</span> : null}<button onClick={e=>{e.preventDefault(); if(toggleWishlist) toggleWishlist({id:Date.now(), name: p[0], price: p[4], image: p[2], type: p[1]});}}><Heart fill={inWishlist ? "#ff65bf" : "none"} color={inWishlist ? "#ff65bf" : "currentColor"}/></button></div><div className="productInfo"><h3>{p[0]}</h3><small>{p[1]}</small><div><b>From ₹{p[4]}</b><button onClick={(e)=>{e.preventDefault(); try { const item = {id:Date.now(), name: p[0], type: p[1], price: p[4], image: p[2], qty: 1}; const cart = JSON.parse(localStorage.getItem('ns_cart')||'[]'); cart.push(item); localStorage.setItem('ns_cart',JSON.stringify(cart)); window.location.href='/cart'; }catch(err){}}} style={{background:'transparent',border:'none',color:'#fff',cursor:'pointer'}}><ShoppingCart/></button></div></div></Link>
+}
 
 export function Collections(){return <><Header/><main className="catalogPage"><section className="catalogHero container" style={{'--bg':`url(${rooms.hero})`}}><div><div className="crumb">Home <ChevronRight/> All Collections</div><h1>ALL <em>NEON</em> SIGNS</h1><p>Discover our complete collection of premium LED neon signs for every space, mood and occasion.</p><div className="heroIcons"><Benefit icon={<Gem/>} title="Made in India" text=""/><Benefit icon={<Heart/>} title="Premium Quality" text=""/><Benefit icon={<WandSparkles/>} title="Custom Made" text=""/><Benefit icon={<ShieldCheck/>} title="Safe & Durable" text=""/></div></div></section><div className="container collectionFeature"><Feature title="Custom Neon Signs" text="Make it yours." icon={<WandSparkles/>}/><Feature title="Mojo Mix Signs" text="Dynamic. Colorful. Alive." icon={<Sparkles/>}/><Feature title="UV Printed Neon" text="Detailed. Vibrant. Stunning." icon={<Palette/>}/><Feature title="Business Logo Signs" text="Stand out. Get noticed." icon={<BriefcaseBusiness/>}/></div><CatalogGrid/></main><Footer/></>}
 function Feature({title,text,icon}){return <div><span>{icon}</span><div><b>{title}</b><small>{text}</small></div></div>}
@@ -362,9 +372,9 @@ function CatalogCTA() {
   );
 }
 
-function CatalogGrid(){
+function CatalogGrid({ category = null }) {
     const [filterOpen,setFilterOpen]=useState(false);
-    const { items: products, maxPrice, sizes } = useCatalogData();
+    const { items: products, maxPrice, sizes } = useCatalogData(category);
     const categories = useCategories();
     const categoryNames = categories.map(c => c.name);
 
@@ -533,7 +543,6 @@ export function CustomNeon({ type = 'custom_neon' }) {
           <div className="container">
             <div className="crumb">Home <ChevronRight/> {isMojo ? 'Mojo Mix' : 'Custom Neon'}</div>
             <h1>CREATE YOUR <em>{isMojo ? 'MOJO MIX' : 'CUSTOM NEON'}</em> SIGN</h1>
-            <p>Design it. See it. Love it. <Heart size={16} color="#ff65bf" style={{display: 'inline', marginLeft: '5px'}}/></p>
           </div>
         </section>
         
@@ -737,7 +746,24 @@ export function CustomNeon({ type = 'custom_neon' }) {
                    <small style={{color: 'var(--muted)', fontSize: '10px'}}>(Inclusive of all taxes)</small>
                 </div>
                 <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
-                   <button className="btn solid" onClick={()=>window.location.href='/cart'} style={{width: '200px', background: 'linear-gradient(90deg, #ff65bf, #752eff)', border: 'none', color: '#fff', fontWeight: 'bold'}}>ADD TO CART <ShoppingCart size={16}/></button>
+                   <button className="btn solid" onClick={()=>{
+                       try {
+                           const item = {
+                               id: Date.now(),
+                               name: text ? `"${text.substring(0,15)}${text.length>15?'...':''}"` : (isMojo ? 'Mojo Mix' : 'Custom Neon'),
+                               type: isMojo ? 'Mojo Mix' : 'Custom Neon',
+                               price: getPrice(),
+                               color: isMojo ? 'Mojo Mix' : (isMultiColor ? 'Multi' : color?.name),
+                               size: selectedSize?.name || 'Standard',
+                               font: activeFont?.name || 'Default',
+                               qty: 1
+                           };
+                           const cart = JSON.parse(localStorage.getItem('ns_cart') || '[]');
+                           cart.push(item);
+                           localStorage.setItem('ns_cart', JSON.stringify(cart));
+                           window.location.href='/cart';
+                       } catch(e) { window.location.href='/cart'; }
+                   }} style={{width: '200px', background: 'linear-gradient(90deg, #ff65bf, #752eff)', border: 'none', color: '#fff', fontWeight: 'bold'}}>ADD TO CART <ShoppingCart size={16}/></button>
                    <button className="btn ghost" style={{width: '200px', borderColor: '#ff65bf', color: '#fff'}}>SAVE DESIGN <Heart size={16}/></button>
                 </div>
             </div>
