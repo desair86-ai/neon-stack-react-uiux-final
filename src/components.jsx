@@ -19,14 +19,14 @@ import './styles.css';
 
 const img = (id, w=1200) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}&q=85`;
 const rooms = {
-  hero: '/images/website_banner_01.png',
-  living: '/images/better_together.jpg',
-  gaming: '/images/astro_with_full_moon.png',
-  office: '/images/whats_in_the_box.png',
-  cafe: '/images/pizza_and_drink.png',
-  bedroom: '/images/astro_with_moon.png',
-  studio: '/images/remote_details_01.png',
-  party: '/images/wings_and_drinks.png',
+  hero: '/images/website_banner_01.webp',
+  living: '/images/better_together.webp',
+  gaming: '/images/jeep_led_neon_sign.webp',
+  office: '/images/whats_in_the_box.webp',
+  cafe: '/images/pizza_and_drink.webp',
+  bedroom: '/images/astro_with_moon.webp',
+  studio: '/images/remote_details_01.webp',
+  party: '/images/wings_and_drinks.webp',
 };
 
 const categories = [
@@ -34,12 +34,12 @@ const categories = [
   ['Bar & Nightlife','Martini'],['Events & Weddings','Heart'],['Fitness & Sports','Dumbbell']
 ];
 const defaultProducts = [
-  ['Gaming Controller','Gaming','/images/1.png','','1,499'],['Astronaut On Moon','Astronaut & Space','/images/astro_with_full_moon.png','','1,999'],
-  ['Good Vibes Only','Quotes','/images/2.png','','1,199'],['Coffee Time','Café & Restaurant','/images/3.png','','1,399'],
-  ['Rahul','Custom Neon','/images/4.png','','1,599'],['Love You','Love & Romance','/images/5.png','','1,199'],
-  ['Buddha','Gods & Spiritual','/images/6.png','','1,799'],['Google Logo','Business','/images/7.png','','2,499'],
-  ['Game Room','Gaming','/images/8.png','MOJO MIX','1,899'],['Motorcycle','Motorbikes','/images/9.png','','1,999'],
-  ['Hakuna Matata','Quotes','/images/10.png','','1,399'],['Cocktail','Bars','/images/wings_and_drinks.png','','1,599']
+  ['Gaming Controller','Gaming','/images/1.webp','','1,499'],['Astronaut On Moon','Astronaut & Space','/images/astro_with_full_moon.webp','','1,999'],
+  ['Good Vibes Only','Quotes','/images/2.webp','','1,199'],['Coffee Time','Café & Restaurant','/images/3.webp','','1,399'],
+  ['Rahul','Custom Neon','/images/4.webp','','1,599'],['Love You','Love & Romance','/images/5.webp','','1,199'],
+  ['Buddha','Gods & Spiritual','/images/6.webp','','1,799'],['Google Logo','Business','/images/7.webp','','2,499'],
+  ['Game Room','Gaming','/images/8.webp','MOJO MIX','1,899'],['Motorcycle','Motorbikes','/images/9.webp','','1,999'],
+  ['Hakuna Matata','Quotes','/images/10.webp','','1,399'],['Cocktail','Bars','/images/wings_and_drinks.webp','','1,599']
 ];
 
 function useCatalogData(categorySlug = null) {
@@ -335,13 +335,13 @@ export function Home(){
   return <><Header/><main>
   <section className="homeHero" style={{'--bg':`url(${rooms.hero})`}}><div className="heroCopy"><small>PREMIUM LED NEON • MADE IN INDIA</small><h1>TURN YOUR<br/>IDEA INTO<br/><em>LIGHT.</em></h1><p>Premium LED neon signs, custom made for homes, businesses & every moment that matters.</p><div className="heroBtns"><Link className="btn primary" href="/custom-neon">CREATE YOUR NEON <ArrowRight/></Link><Link className="btn ghost" href="/collections">SHOP NEON SIGNS</Link></div><div className="heroProof"><Benefit icon={<Sparkles/>} title="Made in India" text="Proudly handcrafted"/><Benefit icon={<Gem/>} title="Premium Quality" text="Built to last"/><Benefit icon={<ShieldCheck/>} title="Safe & Efficient" text="Low voltage LED"/><Benefit icon={<Truck/>} title="7–10 Day Delivery*" text="Pan India Shipping"/></div></div></section>
   <section className="section container"><SectionHead eyebrow="SHOP BY SPACE" title="Find the perfect neon for every space & occasion." link="VIEW ALL COLLECTIONS"/><div className="spaceTiles">{categories.map(([n,ic],i)=>{const I=iconByName(ic); return <Link key={n} href={`/category/${slug(n)}`} className="spaceTile" style={{"--tile-delay":`${i * 40}ms`}}><span className="spaceIcon"><I/></span><b>{n}</b></Link>})}</div></section>
-  <section className="section darkSection"><div className="container"><SectionHead eyebrow="OUR SPECIAL NEON SIGNS" title="Signature neon technologies." sub="Explore the ways Neon Stack can make your space glow."/><div className="specialGrid"><Special title="CUSTOM NEON SIGN" text="Design your own text, logo or artwork." action="CUSTOMIZE NOW" bg="/images/better_together.jpg" /><Special title="MOJO MIX NEON SIGN" text="Next-gen RGB neon with 200+ effects, music sync & app control." action="EXPLORE MOJO" bg="/images/234 (7).png" /><Special title="UV PRINTED NEON" text="Intricate designs with UV printed backing for a premium finish." action="EXPLORE UV" bg="/images/4.png" /></div></div></section>
+  <section className="section darkSection"><div className="container"><SectionHead eyebrow="OUR SPECIAL NEON SIGNS" title="Signature neon technologies." sub="Explore the ways Neon Stack can make your space glow."/><div className="specialGrid"><Special title="CUSTOM NEON SIGN" text="Design your own text, logo or artwork." action="CUSTOMIZE NOW" bg="/images/better_together.webp" /><Special title="MOJO MIX NEON SIGN" text="Next-gen RGB neon with 200+ effects, music sync & app control." action="EXPLORE MOJO" bg="/images/mojomix.webp" /><Special title="UV PRINTED NEON" text="Intricate designs with UV printed backing for a premium finish." action="EXPLORE UV" bg="/images/UVneon.webp" /></div></div></section>
   <section className="section container"><SectionHead eyebrow="BESTSELLERS" title="Neon signs people love." link="SHOP ALL"/><div className="productStrip">{products.slice(0,6).map(p=><ProductCard key={p[0]} p={p}/>)}</div></section>
   <section className="why"><div className="container"><SectionHead eyebrow="WHY CHOOSE NEON STACK?" title="Built for glow. Designed to last."/><div className="whyGrid"><Benefit icon={<Store/>} title="Made in India" text="Proudly designed & handcrafted locally."/><Benefit icon={<WandSparkles/>} title="Custom Made" text="Your text, logo or idea brought to life."/><Benefit icon={<Gem/>} title="Premium Quality" text="High grade LED neon & materials."/><Benefit icon={<Heart/>} title="Safe & Durable" text="Low voltage, energy efficient & long lasting."/><Benefit icon={<Headphones/>} title="Premium Support" text="We're here for your experience."/></div></div></section>
   <section className="section container realGlow"><div className="realCopy"><small>REAL SPACES. REAL GLOW.</small><h2>See how Neon Stack lights up beautiful spaces.</h2><p>From living rooms to gaming setups, discover signs in their natural environment.</p><Link className="textLink" href="/collections">SEE MORE INSTALLATIONS <ArrowRight/></Link></div><div className="installGrid">{[rooms.living,rooms.gaming,rooms.party,rooms.cafe].map((r,i)=><div key={i} className="install" style={{backgroundImage:`url(${r})`}}></div>)}</div></section>
   
-  <section className="mojoSection" style={{backgroundImage: "linear-gradient(to right, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 30%, transparent 50%, rgba(0,0,0,0.6) 70%, rgba(0,0,0,0.95) 100%), url('/images/mojo_bg_clean.jpg')", backgroundSize: 'cover', backgroundPosition: 'center'}}><div className="container mojoLayout"><div><small>MEET MOJO MIX</small><h2>Neon that<br/><em>moves.</em></h2><p>200+ Flow Effects • Music Sync • App Control • Unlimited Colors</p><Link className="btn primary" href="/mojo-mix">EXPLORE MOJO MIX <ArrowRight/></Link></div><div className="mojoVisual"><img src="/images/mascot-image.png" alt="Mascot" className="mojoMascot" style={{height: '340px', width: 'auto', objectFit: 'contain'}} /></div></div></section>
-  <section className="section container howBox"><div className="howGrid" style={{display: 'flex', flexDirection: 'column', gap: '80px'}}><div><SectionHead eyebrow="HOW IT WORKS" title="From idea to glow."/><div className="steps" style={{border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px'}}>{[['01','Share Your Idea','Send your text, logo or reference.', MessageCircle],['02','Get Your Mockup','We create a design & share it with you.', Palette],['03','Approve & We Craft','Once approved, we start crafting.', Sparkles],['04','Safe Delivery','Carefully packed & delivered to you.', Truck]].map(([n,t,d,Icon], i)=><React.Fragment key={n}><div className="step" style={{border: 'none', padding: '0', textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center'}}><div style={{width: '60px', height: '60px', border: '2px solid #00ffbc', borderRadius: '50%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#00ffbc', boxShadow: '0 0 15px #00ffbc55', marginBottom: '20px'}}><Icon size={20} /> <b style={{fontSize: '14px', marginTop: '4px'}}>{n}</b></div><h3 style={{margin: '0 0 10px', fontSize: '15px', whiteSpace: 'nowrap'}}>{t}</h3><p style={{margin: 0, fontSize: '14px'}}>{d}</p></div>{i < 3 && <ArrowRight size={24} color="#00ffbc" style={{flexShrink: 0}} />}</React.Fragment>)}</div></div><div className="boxContents"><SectionHead eyebrow="WHAT’S IN THE BOX" title="Everything you need to unbox, install & glow."/><div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '30px', flexWrap: 'wrap'}}><img src="/images/whats_in_the_box.png" alt="What's in the box" style={{width: '100%', maxWidth: '350px', height: 'auto', borderRadius: '12px'}} /><img src="/images/remote_details_01.png" alt="Remote Details" style={{width: '100%', maxWidth: '350px', height: 'auto', borderRadius: '12px'}} /></div></div></div></section>
+  <section className="mojoSection" style={{backgroundImage: "linear-gradient(to right, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 30%, transparent 50%, rgba(0,0,0,0.6) 70%, rgba(0,0,0,0.95) 100%), url('/images/mojo_bg_clean.webp')", backgroundSize: 'cover', backgroundPosition: 'center'}}><div className="container mojoLayout"><div><small>MEET MOJO MIX</small><h2>Neon that<br/><em>moves.</em></h2><p>200+ Flow Effects • Music Sync • App Control • Unlimited Colors</p><Link className="btn primary" href="/mojo-mix">EXPLORE MOJO MIX <ArrowRight/></Link></div><div className="mojoVisual"><img src="/images/mascot-image.png" alt="Mascot" className="mojoMascot" style={{height: '340px', width: 'auto', objectFit: 'contain'}} /></div></div></section>
+  <section className="section container howBox"><div className="howGrid" style={{display: 'flex', flexDirection: 'column', gap: '80px'}}><div><SectionHead eyebrow="HOW IT WORKS" title="From idea to glow."/><div className="steps" style={{border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px'}}>{[['01','Share Your Idea','Send your text, logo or reference.', MessageCircle],['02','Get Your Mockup','We create a design & share it with you.', Palette],['03','Approve & We Craft','Once approved, we start crafting.', Sparkles],['04','Safe Delivery','Carefully packed & delivered to you.', Truck]].map(([n,t,d,Icon], i)=><React.Fragment key={n}><div className="step" style={{border: 'none', padding: '0', textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center'}}><div style={{width: '60px', height: '60px', border: '2px solid #00ffbc', borderRadius: '50%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#00ffbc', boxShadow: '0 0 15px #00ffbc55', marginBottom: '20px'}}><Icon size={20} /> <b style={{fontSize: '14px', marginTop: '4px'}}>{n}</b></div><h3 style={{margin: '0 0 10px', fontSize: '15px', whiteSpace: 'nowrap'}}>{t}</h3><p style={{margin: 0, fontSize: '14px'}}>{d}</p></div>{i < 3 && <ArrowRight size={24} color="#00ffbc" style={{flexShrink: 0}} />}</React.Fragment>)}</div></div><div className="boxContents"><SectionHead eyebrow="WHAT’S IN THE BOX" title="Everything you need to unbox, install & glow."/><div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '30px', flexWrap: 'wrap'}}><img src="/images/whats_in_the_box.webp" alt="What's in the box" style={{width: '100%', maxWidth: '350px', height: 'auto', borderRadius: '12px'}} /><img src="/images/remote_details_01.webp" alt="Remote Details" style={{width: '100%', maxWidth: '350px', height: 'auto', borderRadius: '12px'}} /></div></div></div></section>
   <section className="trustCTA container"><div className="customerProof"><h3>THOUSANDS OF HAPPY CUSTOMERS</h3><p>Trusted by 20,000+ customers across India.</p><div className="stars">⭐⭐⭐⭐⭐ <b>4.9/5</b></div><small>From 2,500+ Reviews</small></div><CTA/></section>
 </main><Footer/></>}
 function BoxItem({icon,text}){return <div><span>{icon}</span><b>{text}</b></div>}
@@ -428,7 +428,7 @@ export function CustomNeon({ type = 'custom_neon' }) {
   const [hardware, setHardware] = useState(null);
 
   // PREVIEW
-  const [bg, setBg] = useState('/images/hero_living.jpg');
+  const [bg, setBg] = useState('/images/hero_living.webp');
   const [bgType, setBgType] = useState('preset'); // 'preset', 'custom'
   const [bgMood, setBgMood] = useState('night'); 
   
