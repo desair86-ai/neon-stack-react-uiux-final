@@ -16,6 +16,34 @@ export async function fetchGraphQL(query, variables = {}) {
   return json.data;
 }
 
+export async function getFeaturedProducts() {
+  const data = await fetchGraphQL(`
+    query GetFeaturedProducts {
+      products(first: 3, where: { featured: true }) {
+        nodes {
+          id name slug image { sourceUrl }
+          ... on SimpleProduct { regularPrice salePrice }
+          ... on VariableProduct { regularPrice salePrice }
+        }
+      }
+    }
+  `);
+  const nodes = data?.products?.nodes || [];
+  return nodes.map((p) => {
+    let price = '4,999';
+    if (p.salePrice && p.regularPrice) {
+      price = p.salePrice.replace(/[^0-9.,]+/g, '');
+    } else if (p.regularPrice) {
+      price = p.regularPrice.replace(/[^0-9.,]+/g, '');
+    }
+    return {
+      name: p.name,
+      image: p.image?.sourceUrl || '',
+      price: price
+    };
+  });
+}
+
 export async function getProducts(categorySlug = null) {
   const whereArg = categorySlug ? `where: { categoryIn: ["${categorySlug}"] }` : "";
   const data = await fetchGraphQL(`

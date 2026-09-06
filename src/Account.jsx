@@ -1,11 +1,17 @@
 "use client";
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Package, PenTool, Heart, MapPin, Plus } from 'lucide-react';
 import { useWishlist } from './context/WishlistContext';
+import { getFeaturedProducts } from './lib/api';
 
 export function Account() {
   const { wishlist } = useWishlist() || { wishlist: [] };
+  const [featured, setFeatured] = useState([]);
+  
+  useEffect(() => {
+    getFeaturedProducts().then(setFeatured).catch(console.error);
+  }, []);
   
   return (
     <>
@@ -70,11 +76,11 @@ export function Account() {
       
       <section className="accountSection">
         <div className="sectionHeader">
-          <h3>Your Wishlist</h3>
-          <Link href="/account/wishlist" className="viewAll">View all &rarr;</Link>
+          <h3>Featured Products</h3>
+          <Link href="/collections" className="viewAll">View all &rarr;</Link>
         </div>
         <div className="designGrid">
-          {wishlist.slice(0,3).map(w => (
+          {featured.map(w => (
             <div className="designCard" key={w.name}>
               <div className="designImg" style={{backgroundImage: w.image ? `url("${w.image}")` : 'none', backgroundSize: 'contain', backgroundRepeat: 'no-repeat', background: !w.image ? '#111' : undefined}}>
                 {!w.image && <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100%'}}><span style={{fontSize:'30px'}}>✨</span></div>}
@@ -107,6 +113,3 @@ export function Account() {
     </>
   );
 }
-
-
-
