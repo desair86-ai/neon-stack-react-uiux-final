@@ -78,7 +78,11 @@ export function Header(){
     
     useEffect(() => {
       const updateCount = () => {
-        try { setCartCount(JSON.parse(localStorage.getItem('ns_cart') || '[]').length); } catch(e){}
+        try {
+          const cart = JSON.parse(localStorage.getItem('ns_cart') || '[]');
+          const count = cart.reduce((acc, item) => acc + (item.qty || 1), 0);
+          setCartCount(count);
+        } catch(e){}
       };
       updateCount();
       window.addEventListener('cartUpdated', updateCount);
