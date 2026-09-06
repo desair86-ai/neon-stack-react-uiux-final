@@ -119,14 +119,14 @@ export function OurPromise() {
 
 export function NeonStackDifference() {
   const slides = [
-    { src: "/images/generated/neon_tube_close_1782443029110.png", alt: "Layered Craftsmanship", title: "Layered Craftsmanship", subtitle: "Signature acrylic techniques." },
-    { src: "/images/generated/glowing_logo_split_1782443098549.png", alt: "Bespoke Solutions", title: "Bespoke Solutions", subtitle: "Custom designs tailored." },
-    { src: "/images/generated/neon_sign_kit_1782443038661.png", alt: "Premium Materials", title: "Premium Materials", subtitle: "Highest grade LEDs." },
-    { src: "/images/generated/drilling_wall_hole_1782443059654.png", alt: "Fast Turnaround", title: "Fast Turnaround", subtitle: "Rapid production." },
-    { src: "/images/generated/mounting_screw_install_1782443069589.png", alt: "Precision Built", title: "Precision Built", subtitle: "Flawless edges." },
-    { src: "/images/generated/media__1782442791885.png", alt: "Modern Aesthetics", title: "Modern Aesthetics", subtitle: "Clean, contemporary designs." },
-    { src: "/images/generated/measuring_tape_wall_1782443048985.png", alt: "Exceptional Service", title: "Exceptional Service", subtitle: "Dedicated support." },
-    { src: "/images/generated/plugging_power_1782443080893.png", alt: "Reliable Support", title: "Reliable Support", subtitle: "Comprehensive warranties." }
+    { src: "/images/generated/neon_tube_close_1782443029110.webp", alt: "Layered Craftsmanship", title: "Layered Craftsmanship", subtitle: "Signature acrylic techniques." },
+    { src: "/images/generated/glowing_logo_split_1782443098549.webp", alt: "Bespoke Solutions", title: "Bespoke Solutions", subtitle: "Custom designs tailored." },
+    { src: "/images/generated/neon_sign_kit_1782443038661.webp", alt: "Premium Materials", title: "Premium Materials", subtitle: "Highest grade LEDs." },
+    { src: "/images/generated/drilling_wall_hole_1782443059654.webp", alt: "Fast Turnaround", title: "Fast Turnaround", subtitle: "Rapid production." },
+    { src: "/images/generated/mounting_screw_install_1782443069589.webp", alt: "Precision Built", title: "Precision Built", subtitle: "Flawless edges." },
+    { src: "/images/generated/media__1782442791885.webp", alt: "Modern Aesthetics", title: "Modern Aesthetics", subtitle: "Clean, contemporary designs." },
+    { src: "/images/generated/measuring_tape_wall_1782443048985.webp", alt: "Exceptional Service", title: "Exceptional Service", subtitle: "Dedicated support." },
+    { src: "/images/generated/plugging_power_1782443080893.webp", alt: "Reliable Support", title: "Reliable Support", subtitle: "Comprehensive warranties." }
   ];
 
   return (
