@@ -542,3 +542,18 @@ footer a:hover {
   color: #00FFBC !important;
   text-shadow: none !important;
 }
+.megaMenu {
+  position: absolute;
+  top: 90px;
+  left: 0;
+  width: 100%;
+  background: #090b12;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  z-index: 999;
+  display: grid;
+  grid-template-columns: 300px 1fr 350px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.7);
+  height: auto;
+  min-height: 400px;
+}

@@ -19,7 +19,7 @@ import './styles.css';
 
 const img = (id, w=1200) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}&q=85`;
 const rooms = {
-  hero: '/images/website_banner_01.webp',
+  hero: 'website_banner_01.webp',
   living: '/images/better_together.webp',
   gaming: '/images/jeep_led_neon_sign.webp',
   office: '/images/whats_in_the_box.webp',
