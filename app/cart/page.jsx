@@ -51,11 +51,11 @@ export default function Page() {
                      {item.color && <p style={{ color: 'var(--muted)', margin: 0, fontSize: '0.9rem' }}>Color: {item.color}</p>}
                      {item.font && <p style={{ color: 'var(--muted)', margin: 0, fontSize: '0.9rem' }}>Font: {item.font}</p>}
                    </div>
-                   <div style={{ textAlign: 'right' }}>
+                   <div style={{ textAlign: 'right', paddingRight: '30px' }}>
                      <b style={{ fontSize: '1.2rem' }}>₹{item.price}</b>
                      <p style={{ margin: '10px 0 0 0' }}>Qty: {item.qty}</p>
                    </div>
-                   <button onClick={() => remove(item.id)} style={{ position: 'absolute', top: '15px', right: '15px', background: 'transparent', border: 'none', color: '#ff65bf', cursor: 'pointer' }}><Trash2 size={18}/></button>
+                   <button onClick={() => remove(item.id)} style={{ position: 'absolute', top: '20px', right: '20px', background: 'transparent', border: 'none', color: '#ff65bf', cursor: 'pointer' }}><Trash2 size={18}/></button>
                 </div>
               ))}
             </div>

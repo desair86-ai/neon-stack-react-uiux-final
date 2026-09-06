@@ -75,6 +75,22 @@ export function ConfiguratorExperience({type="custom_neon"}){
  const ruler=useMemo(()=>{if(!bounds)return null;const gap=Math.max(44,Math.min(78,fontSize*.55)),left=bounds.left-leftShapes.length*gap-gap/2,right=bounds.left+bounds.width+rightShapes.length*gap+gap/2,top=bounds.top-Math.min(24,fontSize*.1),bottom=bounds.top+bounds.height+Math.min(24,fontSize*.1);return {left:Math.max(8,left),top:Math.max(8,top),width:Math.max(100,right-left),height:Math.max(70,bottom-top)}},[bounds,leftShapes.length,rightShapes.length,fontSize]);
   const handleAddToCart = () => { 
     if (complete) {
+      try {
+        const item = {
+          id: Date.now(),
+          name: text || "Custom Neon",
+          type: type === "mojo_mix" ? "Mojo Mix" : "Custom Neon",
+          price: price,
+          qty: 1,
+          size: size?.name,
+          color: mojo ? "Mojo Spectrum" : (color?.name || "Multi-color"),
+          font: font?.name
+        };
+        const cart = JSON.parse(localStorage.getItem('ns_cart') || '[]');
+        cart.push(item);
+        localStorage.setItem('ns_cart', JSON.stringify(cart));
+        window.dispatchEvent(new Event('cartUpdated'));
+      } catch (err) {}
       window.location.href='/cart';
     } else {
       const missing = STEPS.find(k => !valid[k]);
