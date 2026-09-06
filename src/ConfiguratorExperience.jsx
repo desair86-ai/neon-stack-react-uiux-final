@@ -80,16 +80,26 @@ export function ConfiguratorExperience({type="custom_neon"}){
       if (btn) btn.innerHTML = 'UPLOADING PREVIEW...';
       try {
         let screenshotToken = null;
+        let cartThumb = background;
         if (textRef.current) {
           try {
             const html2canvas = (await import('html2canvas')).default;
             
+            // Generate full-size blob for WordPress
             const canvas = await html2canvas(textRef.current, {
               useCORS: true,
-              backgroundColor: null // transparent background
+              backgroundColor: null 
             });
-            
             const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+            
+            // Generate tiny base64 for local cart UI only
+            const tinyCanvas = await html2canvas(textRef.current, {
+              useCORS: true,
+              scale: 0.2,
+              backgroundColor: null
+            });
+            cartThumb = tinyCanvas.toDataURL('image/png', 0.5);
+            
             const formData = new FormData();
             formData.append("screenshot", blob, "neon-preview.png");
             
@@ -118,7 +128,8 @@ export function ConfiguratorExperience({type="custom_neon"}){
           size: size?.name,
           color: mojo ? "Mojo Spectrum" : (color?.name || "Multi-color"),
           font: font?.name,
-          screenshot_token: screenshotToken
+          screenshot_token: screenshotToken,
+          image: cartThumb
         };
         const cart = JSON.parse(localStorage.getItem('ns_cart') || '[]');
         cart.push(item);
