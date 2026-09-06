@@ -17,7 +17,7 @@ export function UvPrintedNeon() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '40px', alignItems: 'center' }}>
           <motion.div initial={{ opacity: 0, x: -50 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.6 }}>
             <div style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid rgba(202,110,255,0.2)', boxShadow: '0 0 30px rgba(202,110,255,0.3)' }}>
-              <img src="/images/1.png" alt="UV Print Neon Art" style={{ width: '100%', display: 'block' }} />
+              <img src="/images/UVneon.webp" alt="UV Print Neon Art" style={{ width: '100%', display: 'block' }} />
             </div>
           </motion.div>
           <motion.div initial={{ opacity: 0, x: 50 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.6 }}>
@@ -40,7 +40,7 @@ export function UvPrintedNeon() {
           </motion.div>
           <motion.div initial={{ opacity: 0, x: 50 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.6 }} style={{ order: 2 }}>
             <div style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid rgba(110,255,134,0.2)', boxShadow: '0 0 30px rgba(110,255,134,0.3)' }}>
-              <img src="/images/12 (3).png" alt="UV Printing Process" style={{ width: '100%', display: 'block' }} />
+              <img src="/images/bxynu2pquqilctnfq4rn.webp" alt="UV Printing Process" style={{ width: '100%', display: 'block' }} />
             </div>
           </motion.div>
         </div>
@@ -51,7 +51,7 @@ export function UvPrintedNeon() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '40px', alignItems: 'center' }}>
           <motion.div initial={{ opacity: 0, x: -50 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.6 }}>
             <div style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid rgba(254,138,46,0.2)', boxShadow: '0 0 30px rgba(254,138,46,0.3)' }}>
-              <img src="/images/4.png" alt="Traditional vs UV Print" style={{ width: '100%', display: 'block' }} />
+              <img src="/images/planet_uv_printed_led_neon_light.webp" alt="Traditional vs UV Print" style={{ width: '100%', display: 'block' }} />
             </div>
           </motion.div>
           <motion.div initial={{ opacity: 0, x: 50 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.6 }}>
@@ -90,3 +90,4 @@ export function UvPrintedNeon() {
     </main>
   );
 }
+
