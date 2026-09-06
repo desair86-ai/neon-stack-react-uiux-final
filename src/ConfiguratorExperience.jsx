@@ -73,9 +73,35 @@ export function ConfiguratorExperience({type="custom_neon"}){
  const renderText=()=>{if(mojo||!isMulti)return text||"Preview";return (text||"Preview").split("").map((char,i)=>{const c=letterColors[i]||color,cHex=lightOn?(c?.hex||"#63df21"):darkenHex(c?.hex||"#63df21");return <span key={i} onClick={(e)=>{if(isMulti){e.stopPropagation();setSelectedLetter(i)}}} style={{color:cHex,textShadow:getShadow(cHex),cursor:isMulti?"pointer":"inherit",display:"inline-block",transform:isMulti&&selectedLetter===i?"scale(1.1)":"none",transition:"transform 0.2s",zIndex:isMulti&&selectedLetter===i?10:1,position:"relative"}}>{char}</span>})};
  const shapePosition=(s,side,index)=>{const offsetGap=0.6+index*0.9;const finalShapeColor=lightOn?(s.color?.hex||neonColor):darkenHex(s.color?.hex||neonColor);return {position:"absolute",top:"50%",left:side==="left"?`calc(0% - ${offsetGap}em)`:`calc(100% + ${offsetGap}em)`,color:mojo?undefined:finalShapeColor,backgroundImage:mojo?"linear-gradient(90deg,#ffde00,#ff7b00,#ff007b,#c400ff,#00d4ff,#ffde00)":undefined,WebkitBackgroundClip:mojo?"text":undefined,backgroundSize:mojo?"300% 100%":undefined,animation:mojo?"nsMojoSpectrum 3s linear infinite":undefined,opacity:lightOn?1:.9,transform:"translate(-50%,-50%)",fontSize:Math.max(30,fontSize*.5),filter:"none",textShadow:"none",display:"flex",alignItems:"center",justifyContent:"center"}};
  const ruler=useMemo(()=>{if(!bounds)return null;const gap=Math.max(44,Math.min(78,fontSize*.55)),left=bounds.left-leftShapes.length*gap-gap/2,right=bounds.left+bounds.width+rightShapes.length*gap+gap/2,top=bounds.top-Math.min(24,fontSize*.1),bottom=bounds.top+bounds.height+Math.min(24,fontSize*.1);return {left:Math.max(8,left),top:Math.max(8,top),width:Math.max(100,right-left),height:Math.max(70,bottom-top)}},[bounds,leftShapes.length,rightShapes.length,fontSize]);
-  const handleAddToCart = () => { 
+  const handleAddToCart = async () => { 
     if (complete) {
       try {
+        let finalImage = background;
+        if (previewRef.current) {
+          try {
+            const html2canvas = (await import('html2canvas')).default;
+            const wasRuler = showRuler;
+            const wasCalibrating = calibrating;
+            setShowRuler(false);
+            setCalibrating(false);
+            
+            // wait a tick for react to hide ruler
+            await new Promise(r => setTimeout(r, 50));
+            
+            const canvas = await html2canvas(previewRef.current, {
+              useCORS: true,
+              scale: 1, // smaller scale for cart thumb
+              backgroundColor: '#05060a'
+            });
+            finalImage = canvas.toDataURL('image/jpeg', 0.8);
+            
+            setShowRuler(wasRuler);
+            setCalibrating(wasCalibrating);
+          } catch(e) {
+            console.error("Canvas error", e);
+          }
+        }
+        
         const item = {
           id: Date.now(),
           name: text || "Custom Neon",
@@ -85,7 +111,7 @@ export function ConfiguratorExperience({type="custom_neon"}){
           size: size?.name,
           color: mojo ? "Mojo Spectrum" : (color?.name || "Multi-color"),
           font: font?.name,
-          image: background
+          image: finalImage
         };
         const cart = JSON.parse(localStorage.getItem('ns_cart') || '[]');
         cart.push(item);

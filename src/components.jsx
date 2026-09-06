@@ -71,10 +71,20 @@ function Announcement(){ return <div className="announce"><Zap/> <span>SALE ENDS
 export function Header(){
     const pathname = usePathname();
     const { wishlist } = useWishlist() || { wishlist: [] };
+    const [cartCount, setCartCount] = useState(0);
     const [mobile,setMobile]=useState(false); const [shop,setShop]=useState(false);
     const shopActive = pathname.startsWith('/collections') || pathname.startsWith('/category');
     const isConfigurator = pathname === '/custom-neon' || pathname === '/mojo-mix';
     
+    useEffect(() => {
+      const updateCount = () => {
+        try { setCartCount(JSON.parse(localStorage.getItem('ns_cart') || '[]').length); } catch(e){}
+      };
+      updateCount();
+      window.addEventListener('cartUpdated', updateCount);
+      return () => window.removeEventListener('cartUpdated', updateCount);
+    }, []);
+
     return <div className={`header-wrapper ${isConfigurator ? 'configurator-header-wrapper' : ''}`} onMouseLeave={() => setShop(false)}>
       {!isConfigurator && <Announcement/>}
       <header className={`header ${isConfigurator ? 'force-mobile-header' : ''}`}>
@@ -95,7 +105,7 @@ export function Header(){
           <button><Search/></button>
           <Link href="/account" className={`account ${pathname.startsWith('/account') && pathname !== '/account/wishlist' ? 'active' : ''}`}><UserRound/></Link>
           <Link href="/account/wishlist" className={pathname === '/account/wishlist' ? 'active' : ''} style={{position:'relative'}}><Heart/>{wishlist?.length > 0 && <span style={{position:'absolute',top:-8,right:-8,background:'#ff65bf',color:'#fff',borderRadius:'50%',width:'18px',height:'18px',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'10px',fontWeight:'bold'}}>{wishlist.length}</span>}</Link>
-          <Link href="/cart" className={pathname === '/cart' ? 'active' : ''}><ShoppingCart/></Link>
+          <Link href="/cart" className={pathname === '/cart' ? 'active' : ''} style={{position:'relative'}}><ShoppingCart/>{cartCount > 0 && <span style={{position:'absolute',top:-8,right:-8,background:'#00ffbc',color:'#000',borderRadius:'50%',width:'18px',height:'18px',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'10px',fontWeight:'bold'}}>{cartCount}</span>}</Link>
         </div>
       </header>
       {shop && <MegaMenu close={()=>setShop(false)}/>} 
@@ -373,7 +383,7 @@ function NeonText({lines,colors=['pink','blue','pink']}){return <div className="
 function ProductCard({p}){
   const { toggleWishlist, isInWishlist } = useWishlist() || {};
   const inWishlist = isInWishlist ? isInWishlist(p[0]) : false;
-  return <Link className="productCard" href="/collections"><div className="productImg" style={{backgroundImage:`url("${p[2]}")`}}>{p[3] && p[3].trim() !== '' ? <span className="badge">{p[3]}</span> : null}<button onClick={e=>{e.preventDefault(); if(toggleWishlist) toggleWishlist({id:Date.now(), name: p[0], price: p[4], image: p[2], type: p[1]});}}><Heart fill={inWishlist ? "#ff65bf" : "none"} color={inWishlist ? "#ff65bf" : "currentColor"}/></button></div><div className="productInfo"><h3>{p[0]}</h3><small>{p[1]}</small><div><b>From ₹{p[4]}</b><button onClick={(e)=>{e.preventDefault(); e.stopPropagation(); try { const item = {id:Date.now(), name: p[0], type: p[1], price: p[4], image: p[2], qty: 1}; const cart = JSON.parse(localStorage.getItem('ns_cart')||'[]'); cart.push(item); localStorage.setItem('ns_cart',JSON.stringify(cart)); alert('Added to cart!'); window.dispatchEvent(new Event('cartUpdated')); }catch(err){}}} style={{background:'transparent',border:'1.5px solid #752eff',borderRadius:'50%',width:'40px',height:'40px',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',cursor:'pointer'}}><ShoppingCart size={18} /></button></div></div></Link>
+  return <div className="productCard" onClick={() => window.location.href='/collections'} style={{cursor: 'pointer'}}><div className="productImg" style={{backgroundImage:`url("${p[2]}")`}}>{p[3] && p[3].trim() !== '' ? <span className="badge">{p[3]}</span> : null}<button onClick={e=>{e.preventDefault(); e.stopPropagation(); if(toggleWishlist) toggleWishlist({id:Date.now(), name: p[0], price: p[4], image: p[2], type: p[1]});}}><Heart fill={inWishlist ? "#ff65bf" : "none"} color={inWishlist ? "#ff65bf" : "currentColor"}/></button></div><div className="productInfo"><h3>{p[0]}</h3><small>{p[1]}</small><div><b>From ₹{p[4]}</b><button onClick={(e)=>{e.preventDefault(); e.stopPropagation(); try { const item = {id:Date.now(), name: p[0], type: p[1], price: p[4], image: p[2], qty: 1}; const cart = JSON.parse(localStorage.getItem('ns_cart')||'[]'); cart.push(item); localStorage.setItem('ns_cart',JSON.stringify(cart)); window.dispatchEvent(new Event('cartUpdated')); }catch(err){}}} style={{background:'transparent',border:'1.5px solid #752eff',borderRadius:'50%',width:'40px',height:'40px',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',cursor:'pointer'}}><ShoppingCart size={18} /></button></div></div></div>
 }
 
 export function Collections(){return <><Header/><main className="catalogPage"><section className="catalogHero container" style={{'--bg':`url(${rooms.hero})`}}><div><div className="crumb">Home <ChevronRight/> All Collections</div><h1>ALL <em>NEON</em> SIGNS</h1><p>Discover our complete collection of premium LED neon signs for every space, mood and occasion.</p><div className="heroIcons"><Benefit icon={<Gem/>} title="Made in India" text=""/><Benefit icon={<Heart/>} title="Premium Quality" text=""/><Benefit icon={<WandSparkles/>} title="Custom Made" text=""/><Benefit icon={<ShieldCheck/>} title="Safe & Durable" text=""/></div></div></section><div className="container collectionFeature"><Feature title="Custom Neon Signs" text="Make it yours." icon={<WandSparkles/>}/><Feature title="Mojo Mix Signs" text="Dynamic. Colorful. Alive." icon={<Sparkles/>}/><Feature title="UV Printed Neon" text="Detailed. Vibrant. Stunning." icon={<Palette/>}/><Feature title="Business Logo Signs" text="Stand out. Get noticed." icon={<BriefcaseBusiness/>}/></div><CatalogGrid/></main><Footer/></>}
