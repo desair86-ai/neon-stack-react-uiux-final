@@ -532,3 +532,20 @@ body{font-size:var(--body-size);-webkit-font-smoothing:antialiased;text-renderin
 .force-mobile-header .desktopNav { display: none !important; } .force-mobile-header .mobileOnly { display: block !important; } .force-mobile-header { height: 70px !important; padding: 0 16px !important; justify-content: space-between !important; border-bottom: 1px solid #161a23 !important; } .force-mobile-header .logo { order: 2 !important; width: auto !important; font-size: 24px !important; } .force-mobile-header ~ .headerActions { order: 3 !important; gap: 12px !important; } .force-mobile-header .account { display: none !important; } .force-mobile-header .headerActions svg { width: 20px !important; } .configurator-header-wrapper { position: sticky; top: 0; z-index: 990; background: #05060a; border-bottom: 1px solid #161a23; }
 
 .force-mobile-header .headerActions { order: 3 !important; gap: 12px !important; }
+.desktopNav a, .desktopNav button, .headerActions a, .headerActions button {
+  position: relative;
+}
+.desktopNav .active::after, .headerActions .active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -6px;
+  height: 3px;
+  background: linear-gradient(90deg, #00ffbc, #752eff);
+  border-radius: 2px;
+}
+.footer a:hover {
+  color: #00FFBC !important;
+  text-shadow: none !important;
+}

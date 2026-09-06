@@ -91,7 +91,12 @@ export function Header(){
           <Link href="/blogs" className={pathname === '/blogs' ? 'active' : ''} onMouseEnter={()=>setShop(false)}>Blogs</Link>
           <Link href="/contact" className={pathname === '/contact' ? 'active' : ''} onMouseEnter={()=>setShop(false)}>Contact</Link>
         </nav>
-        <div className="headerActions" onMouseEnter={()=>setShop(false)}><button><Search/></button><Link href="/account" className="account"><UserRound/></Link><Link href="/account/wishlist" style={{position:'relative'}}><Heart/>{wishlist?.length > 0 && <span style={{position:'absolute',top:-8,right:-8,background:'#ff65bf',color:'#fff',borderRadius:'50%',width:'18px',height:'18px',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'10px',fontWeight:'bold'}}>{wishlist.length}</span>}</Link><Link href="/cart"><ShoppingCart/></Link></div>
+        <div className="headerActions" onMouseEnter={()=>setShop(false)}>
+          <button><Search/></button>
+          <Link href="/account" className={`account ${pathname.startsWith('/account') && pathname !== '/account/wishlist' ? 'active' : ''}`}><UserRound/></Link>
+          <Link href="/account/wishlist" className={pathname === '/account/wishlist' ? 'active' : ''} style={{position:'relative'}}><Heart/>{wishlist?.length > 0 && <span style={{position:'absolute',top:-8,right:-8,background:'#ff65bf',color:'#fff',borderRadius:'50%',width:'18px',height:'18px',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'10px',fontWeight:'bold'}}>{wishlist.length}</span>}</Link>
+          <Link href="/cart" className={pathname === '/cart' ? 'active' : ''}><ShoppingCart/></Link>
+        </div>
       </header>
       {shop && <MegaMenu close={()=>setShop(false)}/>} 
       {mobile && <MobileMenu close={()=>setMobile(false)}/>} 
