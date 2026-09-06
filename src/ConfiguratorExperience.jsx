@@ -104,20 +104,21 @@ export function ConfiguratorExperience({type="custom_neon"}){
           try {
             const html2canvas = (await import('html2canvas')).default;
             
-            // Generate full-size blob for WordPress
+            // Generate high-res blob for WordPress
             const canvas = await html2canvas(textRef.current, {
               useCORS: true,
+              scale: 4, // Higher scale for manufacturing clarity
               backgroundColor: null 
             });
             const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
             
-            // Generate tiny base64 for local cart UI only
+            // Generate crisp base64 for local cart UI
             const tinyCanvas = await html2canvas(textRef.current, {
               useCORS: true,
-              scale: 1, // Increased scale to prevent blurriness
+              scale: 4, // Increased scale for sharp UI thumbnails
               backgroundColor: null
             });
-            cartThumb = tinyCanvas.toDataURL('image/png', 0.8);
+            cartThumb = tinyCanvas.toDataURL('image/png', 1.0);
             
             const formData = new FormData();
             formData.append("screenshot", blob, "neon-preview.png");
