@@ -100,25 +100,25 @@ export function ConfiguratorExperience({type="custom_neon"}){
       try {
         let screenshotToken = null;
         let cartThumb = background;
-        if (textRef.current) {
+        if (previewRef.current) {
           try {
             const html2canvas = (await import('html2canvas')).default;
             
             // Generate high-res blob for WordPress
-            const canvas = await html2canvas(textRef.current, {
+            const canvas = await html2canvas(previewRef.current, {
               useCORS: true,
-              scale: 4, // Higher scale for manufacturing clarity
+              scale: 2, // 2x is plenty for a full-size preview
               backgroundColor: null 
             });
             const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
             
             // Generate crisp base64 for local cart UI
-            const tinyCanvas = await html2canvas(textRef.current, {
+            const tinyCanvas = await html2canvas(previewRef.current, {
               useCORS: true,
-              scale: 4, // Increased scale for sharp UI thumbnails
+              scale: 1.5, // 1.5x of the full preview box gives a great sharp thumbnail
               backgroundColor: null
             });
-            cartThumb = tinyCanvas.toDataURL('image/png', 1.0);
+            cartThumb = tinyCanvas.toDataURL('image/png', 0.9);
             
             const formData = new FormData();
             formData.append("screenshot", blob, "neon-preview.png");
