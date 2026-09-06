@@ -18,7 +18,7 @@ export function Login() {
           {/* Login Section */}
           <div className="authBox">
             <h2>Login</h2>
-            <form className="authForm" onSubmit={(e) => { e.preventDefault(); window.location.href='/account'; }}>
+            <form className="authForm" onSubmit={(e) => { e.preventDefault(); localStorage.setItem('is_logged_in', 'true'); window.location.href='/account'; }}>
               <div className="formGroup">
                 <label>Username or email address <span>*</span></label>
                 <input type="text" required />
@@ -49,7 +49,7 @@ export function Login() {
           {/* Register Section */}
           <div className="authBox">
             <h2>Register</h2>
-            <form className="authForm" onSubmit={(e) => { e.preventDefault(); window.location.href='/account'; }}>
+            <form className="authForm" onSubmit={(e) => { e.preventDefault(); localStorage.setItem('is_logged_in', 'true'); window.location.href='/account'; }}>
               <div className="formGroup">
                 <label>Email address <span>*</span></label>
                 <input type="email" required />

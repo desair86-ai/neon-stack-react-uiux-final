@@ -1,11 +1,17 @@
 "use client";
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { useWishlist } from '../../../src/context/WishlistContext';
 import { Trash2, ShoppingCart, ArrowRight } from 'lucide-react';
 
 export default function WishlistPage() {
   const { wishlist, toggleWishlist } = useWishlist() || { wishlist: [] };
+  
+  useEffect(() => {
+    if (!localStorage.getItem('is_logged_in')) {
+      window.location.href = '/login';
+    }
+  }, []);
 
   const moveToCart = (item) => {
     try {

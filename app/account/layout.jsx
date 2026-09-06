@@ -1,5 +1,5 @@
 "use client";
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Header, Footer } from '../../src/components';
@@ -7,6 +7,12 @@ import { ChevronRight, Package, Heart, MapPin, User, LogOut, PenTool, ChevronRig
 
 export default function AccountLayout({ children }) {
   const pathname = usePathname();
+  
+  useEffect(() => {
+    if (!localStorage.getItem('is_logged_in')) {
+      window.location.href = '/login';
+    }
+  }, []);
   
   return (
     <>
@@ -32,7 +38,7 @@ export default function AccountLayout({ children }) {
               <Link href="/account/wishlist" className={pathname === '/account/wishlist' ? 'active' : ''}><Heart className="icon"/> Wishlist <ArrowRight className="arrow"/></Link>
               <Link href="/account/addresses" className={pathname === '/account/addresses' ? 'active' : ''}><MapPin className="icon"/> Addresses <ArrowRight className="arrow"/></Link>
               <Link href="/account/profile" className={pathname === '/account/profile' ? 'active' : ''}><User className="icon"/> Profile & Security <ArrowRight className="arrow"/></Link>
-              <button className="logoutBtn" onClick={() => window.location.href='/login'}><LogOut className="icon"/> Logout</button>
+              <button className="logoutBtn" onClick={() => { localStorage.removeItem('is_logged_in'); window.location.href='/login'; }}><LogOut className="icon"/> Logout</button>
             </nav>
             
             <div className="sidebarPromo">
@@ -52,4 +58,3 @@ export default function AccountLayout({ children }) {
     </>
   );
 }
-
