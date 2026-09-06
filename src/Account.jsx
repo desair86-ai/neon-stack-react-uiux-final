@@ -3,8 +3,11 @@ import React from 'react';
 import Link from 'next/link';
 import { Header, Footer } from './components';
 import { ChevronRight, Package, PenTool, Heart, MapPin, User, LogOut, ChevronRight as ArrowRight, Plus } from 'lucide-react';
+import { useWishlist } from './context/WishlistContext';
 
 export function Account() {
+  const { wishlist } = useWishlist() || { wishlist: [] };
+  
   return (
     <>
       <Header />
@@ -24,7 +27,6 @@ export function Account() {
             <nav className="accountNav">
               <Link href="/account" className="active"><User className="icon"/> Overview <ArrowRight className="arrow"/></Link>
               <Link href="/account/orders"><Package className="icon"/> My Orders <ArrowRight className="arrow"/></Link>
-              <Link href="/account/designs"><PenTool className="icon"/> My Designs <ArrowRight className="arrow"/></Link>
               <Link href="/account/wishlist"><Heart className="icon"/> Wishlist <ArrowRight className="arrow"/></Link>
               <Link href="/account/addresses"><MapPin className="icon"/> Addresses <ArrowRight className="arrow"/></Link>
               <Link href="/account/profile"><User className="icon"/> Profile & Security <ArrowRight className="arrow"/></Link>
@@ -57,17 +59,9 @@ export function Account() {
                 <Link href="/account/orders" className="statLink">View orders &rarr;</Link>
               </div>
               <div className="statCard">
-                <div className="statIcon blue"><PenTool/></div>
-                <div className="statInfo">
-                  <strong>1</strong>
-                  <span>Saved Design</span>
-                </div>
-                <Link href="/account/designs" className="statLink">View designs &rarr;</Link>
-              </div>
-              <div className="statCard">
                 <div className="statIcon pink"><Heart/></div>
                 <div className="statInfo">
-                  <strong>3</strong>
+                  <strong>{wishlist.length}</strong>
                   <span>In Wishlist</span>
                 </div>
                 <Link href="/account/wishlist" className="statLink">View wishlist &rarr;</Link>
@@ -104,55 +98,27 @@ export function Account() {
                     <button className="btn outline">View Order</button>
                   </div>
                 </div>
-                <div className="orderCard">
-                  <div className="orderImg" style={{backgroundImage: 'url(/images/1.png)'}}></div>
-                  <div className="orderMeta">
-                    <small>#NS10421</small>
-                    <h4>Gaming Neon Sign</h4>
-                    <span>80 cm • Multicolor</span>
-                    <span>12 Aug 2026</span>
-                  </div>
-                  <div className="orderStatus">
-                    <span className="badge warning">● Processing</span>
-                  </div>
-                  <div className="orderAction">
-                    <b>₹6,999</b>
-                    <button className="btn outline">View Order</button>
-                  </div>
-                </div>
               </div>
             </section>
             
             <section className="accountSection">
               <div className="sectionHeader">
-                <h3>Your Saved Designs</h3>
-                <Link href="/account/designs" className="viewAll">View all designs &rarr;</Link>
+                <h3>Your Wishlist</h3>
+                <Link href="/account/wishlist" className="viewAll">View all &rarr;</Link>
               </div>
               <div className="designGrid">
-                <div className="designCard">
-                  <div className="designImg" style={{backgroundImage: 'url(/images/2.png)'}}></div>
-                  <div className="designInfo">
-                    <h4>Dream Big</h4>
-                    <small>Last edited 2 Sep 2026</small>
-                    <button className="btn outline">Continue Editing</button>
+                {wishlist.slice(0,3).map(w => (
+                  <div className="designCard" key={w.name}>
+                    <div className="designImg" style={{backgroundImage: w.image ? `url("${w.image}")` : 'none', background: !w.image ? '#111' : undefined}}>
+                      {!w.image && <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100%'}}><span style={{fontSize:'30px'}}>✨</span></div>}
+                    </div>
+                    <div className="designInfo">
+                      <h4>{w.name}</h4>
+                      <small>From ₹{w.price}</small>
+                      <Link href="/collections" className="btn outline">View Product</Link>
+                    </div>
                   </div>
-                </div>
-                <div className="designCard">
-                  <div className="designImg" style={{backgroundImage: 'url(/images/6.png)'}}></div>
-                  <div className="designInfo">
-                    <h4>Crown</h4>
-                    <small>Last edited 28 Aug 2026</small>
-                    <button className="btn outline">Continue Editing</button>
-                  </div>
-                </div>
-                <div className="designCard">
-                  <div className="designImg" style={{backgroundImage: 'url(/images/5.png)'}}></div>
-                  <div className="designInfo">
-                    <h4>Heart</h4>
-                    <small>Last edited 20 Aug 2026</small>
-                    <button className="btn outline">Continue Editing</button>
-                  </div>
-                </div>
+                ))}
                 <div className="designCard newDesign">
                   <div className="newDesignContent">
                     <div className="plusIcon"><Plus/></div>
@@ -164,7 +130,7 @@ export function Account() {
               </div>
             </section>
             
-            <div className="bottomPromo">
+            <div className="bottomPromo" style={{ backgroundImage: 'url("/images/mojo_bg_clean.webp")' }}>
               <div>
                 <h2>Still have an idea<br/>in mind?</h2>
                 <p>Our design studio is always open.</p>
