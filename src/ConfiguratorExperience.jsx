@@ -102,6 +102,13 @@ export function ConfiguratorExperience({type="custom_neon"}){
         let cartThumb = background;
         if (previewRef.current) {
           try {
+            if (mojo && textRef.current) {
+              textRef.current.classList.remove('spectrum');
+              textRef.current.style.setProperty('color', '#ff007b', 'important');
+              textRef.current.style.setProperty('background-image', 'none', 'important');
+              textRef.current.style.setProperty('-webkit-background-clip', 'initial', 'important');
+            }
+
             const html2canvas = (await import('html2canvas')).default;
             
             // Generate high-res blob for WordPress
@@ -119,6 +126,13 @@ export function ConfiguratorExperience({type="custom_neon"}){
               backgroundColor: null
             });
             cartThumb = tinyCanvas.toDataURL('image/png', 0.9);
+            
+            if (mojo && textRef.current) {
+              textRef.current.classList.add('spectrum');
+              textRef.current.style.removeProperty('color');
+              textRef.current.style.removeProperty('background-image');
+              textRef.current.style.removeProperty('-webkit-background-clip');
+            }
             
             const formData = new FormData();
             formData.append("screenshot", blob, "neon-preview.png");
