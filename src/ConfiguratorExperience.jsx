@@ -132,7 +132,9 @@ export function ConfiguratorExperience({type="custom_neon"}){
           image: cartThumb
         };
         const cart = JSON.parse(localStorage.getItem('ns_cart') || '[]');
-        cart.push(item);
+        const existing = cart.find(x => x.name === item.name && x.type === item.type && x.size === item.size && x.color === item.color && x.font === item.font && x.screenshot_token === item.screenshot_token);
+        if (existing) existing.qty = (existing.qty || 1) + 1;
+        else cart.push(item);
         localStorage.setItem('ns_cart', JSON.stringify(cart));
         window.dispatchEvent(new Event('cartUpdated'));
       } catch (err) {

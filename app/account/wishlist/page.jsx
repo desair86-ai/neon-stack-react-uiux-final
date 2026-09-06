@@ -18,8 +18,11 @@ export default function WishlistPage() {
         qty: 1
       };
       const cart = JSON.parse(localStorage.getItem('ns_cart') || '[]');
-      cart.push(cartItem);
+      const existing = cart.find(x => x.name === cartItem.name && x.type === cartItem.type);
+      if (existing) existing.qty = (existing.qty || 1) + 1;
+      else cart.push(cartItem);
       localStorage.setItem('ns_cart', JSON.stringify(cart));
+      window.dispatchEvent(new Event('cartUpdated'));
       
       // Remove from wishlist after adding to cart
       if(toggleWishlist) toggleWishlist(item);
