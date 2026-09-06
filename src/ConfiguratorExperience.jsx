@@ -75,30 +75,37 @@ export function ConfiguratorExperience({type="custom_neon"}){
  const ruler=useMemo(()=>{if(!bounds)return null;const gap=Math.max(44,Math.min(78,fontSize*.55)),left=bounds.left-leftShapes.length*gap-gap/2,right=bounds.left+bounds.width+rightShapes.length*gap+gap/2,top=bounds.top-Math.min(24,fontSize*.1),bottom=bounds.top+bounds.height+Math.min(24,fontSize*.1);return {left:Math.max(8,left),top:Math.max(8,top),width:Math.max(100,right-left),height:Math.max(70,bottom-top)}},[bounds,leftShapes.length,rightShapes.length,fontSize]);
   const handleAddToCart = async () => { 
     if (complete) {
+      // Show loading indicator on button
+      const btn = document.querySelector('.ns-add-to-cart-btn');
+      if (btn) btn.innerHTML = 'UPLOADING PREVIEW...';
       try {
-        let finalImage = background;
-        if (previewRef.current) {
+        let screenshotToken = null;
+        if (textRef.current) {
           try {
             const html2canvas = (await import('html2canvas')).default;
-            const wasRuler = showRuler;
-            const wasCalibrating = calibrating;
-            setShowRuler(false);
-            setCalibrating(false);
             
-            // wait a tick for react to hide ruler
-            await new Promise(r => setTimeout(r, 50));
-            
-            const canvas = await html2canvas(previewRef.current, {
+            const canvas = await html2canvas(textRef.current, {
               useCORS: true,
-              scale: 1, // smaller scale for cart thumb
-              backgroundColor: '#05060a'
+              backgroundColor: null // transparent background
             });
-            finalImage = canvas.toDataURL('image/jpeg', 0.8);
             
-            setShowRuler(wasRuler);
-            setCalibrating(wasCalibrating);
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+            const formData = new FormData();
+            formData.append("screenshot", blob, "neon-preview.png");
+            
+            const response = await fetch("https://lightseagreen-caterpillar-909783.hostingersite.com/wp-json/neon-stack/v2/screenshot", {
+              method: "POST",
+              body: formData
+            });
+            
+            const result = await response.json();
+            if (response.ok && result.success && result.token) {
+              screenshotToken = result.token;
+            } else {
+              console.error("Failed to save neon preview:", result);
+            }
           } catch(e) {
-            console.error("Canvas error", e);
+            console.error("Canvas/Upload error", e);
           }
         }
         
@@ -111,13 +118,16 @@ export function ConfiguratorExperience({type="custom_neon"}){
           size: size?.name,
           color: mojo ? "Mojo Spectrum" : (color?.name || "Multi-color"),
           font: font?.name,
-          image: finalImage
+          screenshot_token: screenshotToken
         };
         const cart = JSON.parse(localStorage.getItem('ns_cart') || '[]');
         cart.push(item);
         localStorage.setItem('ns_cart', JSON.stringify(cart));
         window.dispatchEvent(new Event('cartUpdated'));
-      } catch (err) {}
+      } catch (err) {
+        console.error("Cart error", err);
+      }
+      if (btn) btn.innerHTML = 'ADD TO CART';
       window.location.href='/cart';
     } else {
       const missing = STEPS.find(k => !valid[k]);
