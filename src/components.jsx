@@ -172,6 +172,9 @@ function MegaMenu({ close }) {
 }
 export function MobileMenu({ close, onMouseLeave }) { 
   const [shopOpen, setShopOpen] = useState(false);
+  const [colOpen, setColOpen] = useState(false);
+  const categories = useCategories();
+  
   return (
     <div className="mobileMenu" onMouseLeave={onMouseLeave}>
       <div className="mobileMenuTop">
@@ -187,7 +190,17 @@ export function MobileMenu({ close, onMouseLeave }) {
           {shopOpen && (
             <div className="mobAccContent">
               <Link href="/collections" onClick={close}><Sparkles/> All Neon Signs <ChevronRight/></Link>
-              <Link href="/collections" onClick={close}><Star/> Collections <ChevronRight/></Link>
+              
+              <button className="mobAccBtn" style={{padding: '15px 20px', border: 'none', background: 'transparent', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#fff', fontSize: '15px', textTransform: 'none'}} onClick={(e) => { e.preventDefault(); setColOpen(!colOpen); }}>
+                <span style={{display: 'flex', alignItems: 'center', gap: '15px'}}><Star style={{width:'20px', height:'20px', color:'#752eff'}}/> Collections</span> 
+                <ChevronDown style={{transform: colOpen ? 'rotate(180deg)' : 'none', transition: '0.2s', width: '14px', color:'#555'}}/>
+              </button>
+              {colOpen && categories.map((c) => (
+                <Link key={c.id} href={"/category/" + c.slug} onClick={close} style={{paddingLeft: '50px'}}>
+                   {c.name} <ChevronRight/>
+                </Link>
+              ))}
+
               <Link href="/custom-neon" onClick={close}><Rocket/> Custom Neon <ChevronRight/></Link>
               <Link href="/mojo-mix" onClick={close}><Music/> Mojo Mix <ChevronRight/></Link>
               <Link href="/uv-printed" onClick={close}><Zap/> UV Printed Neon <ChevronRight/></Link>
@@ -338,7 +351,11 @@ function Social(){
 export function Home(){
   const { items: products } = useCatalogData();
   return <><Header/><main>
-  <section className="homeHero" style={{'--bg':`url(${rooms.hero})`}}><div className="heroCopy"><small>PREMIUM LED NEON • MADE IN INDIA</small><h1>TURN YOUR<br/>IDEA INTO<br/><em>LIGHT.</em></h1><p>Premium LED neon signs, custom made for homes, businesses & every moment that matters.</p><div className="heroBtns"><Link className="btn primary" href="/custom-neon">CREATE YOUR NEON <ArrowRight/></Link><Link className="btn ghost" href="/collections">SHOP NEON SIGNS</Link></div><div className="heroProof"><Benefit icon={<Sparkles/>} title="Made in India" text="Proudly handcrafted"/><Benefit icon={<Gem/>} title="Premium Quality" text="Built to last"/><Benefit icon={<ShieldCheck/>} title="Safe & Efficient" text="Low voltage LED"/><Benefit icon={<Truck/>} title="7–10 Day Delivery*" text="Pan India Shipping"/></div></div></section>
+    <section className="homeHero" style={{ padding: 0, minHeight: 'auto', background: 'transparent', display: 'block' }}>
+      <Link href="/collections" style={{ display: 'block' }}>
+        <img src="/images/hero banner.webp" alt="Launch Offer - Shop Now" style={{ width: '100%', height: 'auto', display: 'block' }} />
+      </Link>
+    </section>
   <section className="section container"><SectionHead eyebrow="SHOP BY SPACE" title="Find the perfect neon for every space & occasion." link="VIEW ALL COLLECTIONS"/><div className="spaceTiles">{categories.map(([n,ic],i)=>{const I=iconByName(ic); return <Link key={n} href={`/category/${slug(n)}`} className="spaceTile" style={{"--tile-delay":`${i * 40}ms`}}><span className="spaceIcon"><I/></span><b>{n}</b></Link>})}</div></section>
   <section className="section darkSection"><div className="container"><SectionHead eyebrow="OUR SPECIAL NEON SIGNS" title="Signature neon technologies." sub="Explore the ways Neon Stack can make your space glow."/><div className="specialGrid"><Special title="CUSTOM NEON SIGN" text="Design your own text, logo or artwork." action="CUSTOMIZE NOW" bg="/images/better_together.webp" /><Special title="MOJO MIX NEON SIGN" text="Next-gen RGB neon with 200+ effects, music sync & app control." action="EXPLORE MOJO" bg="/images/mojomix.webp" /><Special title="UV PRINTED NEON" text="Intricate designs with UV printed backing for a premium finish." action="EXPLORE UV" bg="/images/UVneon.webp" /></div></div></section>
   <section className="section container"><SectionHead eyebrow="BESTSELLERS" title="Neon signs people love." link="SHOP ALL"/><div className="productStrip">{products.slice(0,6).map(p=><ProductCard key={p[0]} p={p}/>)}</div></section>

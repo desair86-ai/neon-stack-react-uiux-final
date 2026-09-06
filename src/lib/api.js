@@ -91,7 +91,7 @@ export async function getCategories() {
     }
   `);
   
-  return data?.productCategories?.nodes || [];
+  return (data?.productCategories?.nodes || []).filter(c => c.name !== "Uncategorized");
 }
 
 
@@ -108,3 +108,4 @@ export async function getConfiguratorOptions(configuratorType = 'custom_neon') {
     return null;
   }
 }
+
