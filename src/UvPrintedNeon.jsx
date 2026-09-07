@@ -3,18 +3,24 @@ import React from 'react';
 import { motion } from 'framer-motion';
 
 import { InfiniteTicker } from './InfiniteTicker';
+import { Benefit } from './Benefit';
 
 export function UvPrintedNeon() {
   return (
     <main className="uvPage" style={{ background: '#040509', color: '#fff', overflow: 'hidden', paddingBottom: '80px' }}>
-      <section style={{ paddingTop: '80px', paddingBottom: '40px', textAlign: 'center' }} className="container">
+      <section style={{ paddingTop: '80px', paddingBottom: '90px', textAlign: 'center', position: 'relative' }} className="container">
         <h1 style={{ fontSize: 'clamp(32px, 5vw, 64px)', fontWeight: 900, marginBottom: '20px', lineHeight: 1.1 }}>
           <span style={{ color: '#fff' }}>UV Print </span>
           <span style={{ background: "linear-gradient(90deg, #00e5ff, #752eff, #6eff86)", WebkitBackgroundClip: "text", color: "transparent" }}>Neon Signs</span>
         </h1>
+        <div className="heroIcons" style={{ display: 'flex', justifyContent: 'center', gap: '20px', flexWrap: 'wrap', marginTop: '40px', marginBottom: '40px' }}>
+          <Benefit icon={<Gem />} title="Intricate Details" text="" />
+          <Benefit icon={<Palette />} title="Vibrant Colors" text="" />
+          <Benefit icon={<WandSparkles />} title="Unique Design" text="" />
+          <Benefit icon={<ShieldCheck />} title="Safe & Durable" text="" />
+        </div>
+        <InfiniteTicker />
       </section>
-      
-      <InfiniteTicker />
 
       {/* Block 1 */}
       <section className="container" style={{ padding: '60px 0' }}>
