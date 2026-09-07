@@ -8,6 +8,7 @@ export default function CheckoutPage() {
   const [cart, setCart] = useState([]);
   const [isClient, setIsClient] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
+  const [showCoupon, setShowCoupon] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -67,10 +68,20 @@ export default function CheckoutPage() {
       
       <main className="container" style={{ minHeight: '60vh', padding: '60px 20px' }}>
         
-        <div style={{ background: '#0a121d', border: '1px solid #1a273b', borderRadius: '8px', padding: '15px 20px', color: '#66a3ff', display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '40px' }}>
+        <div onClick={() => setShowCoupon(!showCoupon)} style={{ background: '#0a121d', border: '1px solid #1a273b', borderRadius: '8px', padding: '15px 20px', color: '#66a3ff', display: 'flex', alignItems: 'center', gap: '10px', marginBottom: showCoupon ? '20px' : '40px', cursor: 'pointer', transition: '0.2s' }}>
           <Info size={20} />
           <span>Have a coupon? Click here to enter your code</span>
         </div>
+
+        {showCoupon && (
+          <div style={{ background: '#0a0d14', border: '1px solid #1c212e', borderRadius: '8px', padding: '20px', marginBottom: '40px', display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <p style={{ margin: 0, color: '#b8bfd8', fontSize: '14px', width: '100%' }}>If you have a coupon code, please apply it below.</p>
+            <div style={{ display: 'flex', gap: '10px', width: '100%', maxWidth: '450px' }}>
+              <input type="text" placeholder="Coupon code" style={{ width: '100%', padding: '12px 15px', background: '#11151f', border: '1px solid #2a3040', color: '#fff', borderRadius: '6px', outline: 'none' }} />
+              <button type="button" className="btn ghost" style={{ borderRadius: '6px', whiteSpace: 'nowrap' }}>Apply coupon</button>
+            </div>
+          </div>
+        )}
 
         <form id="checkout-form" onSubmit={handlePlaceOrder}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px' }} className="checkout-grid">
