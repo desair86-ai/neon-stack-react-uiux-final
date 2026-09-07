@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const type = searchParams.get('configurator') || 'custom_neon';
@@ -18,8 +20,7 @@ export async function GET(request) {
         headers: {
             'Accept': 'application/json'
         },
-        // Revalidate every 60 seconds (or 0 to always fetch fresh in dev)
-        next: { revalidate: 60 }
+      cache: 'no-store'
     });
     
     if (!res.ok) {
