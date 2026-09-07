@@ -27,18 +27,19 @@ const rateLimitMap = new Map();
 const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
 const MAX_REQUESTS_PER_WINDOW = 5;
 
-// Cleanup old entries every 5 minutes to prevent memory leak
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, record] of rateLimitMap.entries()) {
-    if (now - record.firstRequest > RATE_LIMIT_WINDOW_MS) {
-      rateLimitMap.delete(key);
-    }
-  }
-}, 5 * 60 * 1000);
+
 
 function checkRateLimit(req, payload) {
   const now = Date.now();
+
+  // Opportunistic cleanup
+  if (Math.random() < 0.1) {
+    for (const [k, r] of rateLimitMap.entries()) {
+      if (now - r.firstRequest > RATE_LIMIT_WINDOW_MS) {
+        rateLimitMap.delete(k);
+      }
+    }
+  }
 
   // Parse true client IP correctly
   const forwarded = req.headers.get('x-forwarded-for');
