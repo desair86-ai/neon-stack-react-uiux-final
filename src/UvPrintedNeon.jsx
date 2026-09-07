@@ -2,8 +2,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
+import { Gem, Palette, WandSparkles, ShieldCheck } from 'lucide-react';
 import { InfiniteTicker } from './InfiniteTicker';
-import { Benefit } from './Benefit';
+import { Benefit } from './components';
 
 export function UvPrintedNeon() {
   return (

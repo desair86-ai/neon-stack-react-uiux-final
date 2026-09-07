@@ -253,7 +253,7 @@ export function MobileMenu({ close, onMouseLeave }) {
     </div>
   );
 }
-function Benefit({icon,title,text}){return <div className="benefit"><span>{icon}</span><div><b>{title}</b><small>{text}</small></div></div>}
+export function Benefit({icon,title,text}){return <div className="benefit"><span>{icon}</span><div><b>{title}</b><small>{text}</small></div></div>}
 function CTA({title='YOUR IDEA DESERVES TO GLOW.',text="Let's create something amazing together."}){return <section className="ctaBand container"><div><Sparkles/><div><h3>{title}</h3><p>{text}</p></div></div><Link className="btn primary" href="/custom-neon">CREATE YOUR NEON <ArrowRight/></Link></section>}
 export function Footer() {
   return (

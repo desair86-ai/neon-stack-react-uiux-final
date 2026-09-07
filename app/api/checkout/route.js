@@ -12,14 +12,14 @@ export async function POST(req) {
       return NextResponse.json({ message: 'WooCommerce API keys are missing on the server.' }, { status: 500 });
     }
 
-    const wcUrl = \\/wc/v3/orders\;
-    const auth = Buffer.from(\\:\\).toString('base64');
+    const wcUrl = `${siteUrl.replace(/\/$/, '')}/wc/v3/orders`;
+    const auth = Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64');
 
     const response = await fetch(wcUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': \Basic \\
+        'Authorization': `Basic ${auth}`
       },
       body: JSON.stringify(payload)
     });
