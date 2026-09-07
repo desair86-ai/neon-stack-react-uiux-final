@@ -3,7 +3,7 @@ import React from 'react';
 import Link from 'next/link';
 
 export function Account() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = React.useState(null);
   
   React.useEffect(() => {
     try {
