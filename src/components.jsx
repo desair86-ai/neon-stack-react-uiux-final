@@ -157,7 +157,7 @@ function MegaMenu({ close }) {
             <b>{sub.name}</b>
           </Link>
         )) : (
-          <p style={{fontSize: "12px", color: "var(--muted)", gridColumn: "1/-1"}}>No subcategories found.</p>
+          <MegaCatProducts category={displayCat} close={close} />
         )}
       </div>
     </div>
@@ -185,6 +185,24 @@ function MegaMenu({ close }) {
       <Benefit icon={<BadgeCheck/>} title="1 Year Warranty" text="We've got you covered"/>
     </div>
   </div>
+}
+
+function MegaCatProducts({ category, close }) {
+  const { items } = useCatalogData(category?.slug);
+  
+  if (!items || items.length === 0) {
+    return <p style={{fontSize: "12px", color: "var(--muted)", gridColumn: "1/-1"}}>Loading products...</p>;
+  }
+
+  return items.slice(0, 6).map((p, i) => (
+    <Link href="/collections" key={p[0] + i} onClick={close}>
+      <img src={p[2]} alt={p[0]} className="miniPic" style={{objectFit: 'cover'}} />
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <b style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '140px' }}>{p[0]}</b>
+        <small style={{ fontSize: '13px', color: '#00ffbc', marginTop: '2px', fontWeight: 'bold' }}>From ₹{p[4]}</small>
+      </div>
+    </Link>
+  ));
 }
 export function MobileMenu({ close, onMouseLeave }) { 
   const [shopOpen, setShopOpen] = useState(false);
