@@ -50,12 +50,19 @@ export default function CheckoutPage() {
     };
     const notes = formData.get('notes');
     
+    let customer_id = 0;
+    try {
+      const u = JSON.parse(localStorage.getItem('ns_user'));
+      if (u && u.databaseId) customer_id = u.databaseId;
+    } catch(e) {}
+    
     const payload = {
       payment_method: 'cod',
       payment_method_title: 'Cash on Delivery',
       set_paid: false,
       billing,
       shipping: billing,
+      customer_id,
       customer_note: notes,
       line_items: cart.map(item => ({
         name: item.name + (item.type ? ` (${item.type})` : ''),

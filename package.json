@@ -8,6 +8,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "dotenv": "^17.4.2",
     "framer-motion": "^13.2.0",
     "html2canvas": "^1.4.1",
     "lucide-react": "latest",
