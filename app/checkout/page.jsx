@@ -4,11 +4,15 @@ import { Header, Footer } from "../../src/components";
 import Link from "next/link";
 import { Info, CheckCircle } from "lucide-react";
 
+import { stateCityMap } from "../../src/lib/cities";
+
 export default function CheckoutPage() {
   const [cart, setCart] = useState([]);
   const [isClient, setIsClient] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [showCoupon, setShowCoupon] = useState(false);
+  const [selectedState, setSelectedState] = useState('');
+  const [selectedCity, setSelectedCity] = useState('');
 
   useEffect(() => {
     setIsClient(true);
@@ -114,50 +118,22 @@ export default function CheckoutPage() {
               </div>
 
               <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#b8bfd8' }}>Town / City <span style={{ color: '#ff65bf' }}>*</span></label>
-                <input type="text" required style={{ width: '100%', padding: '12px', background: '#11151f', border: '1px solid #2a3040', color: '#fff', borderRadius: '6px', outline: 'none' }} />
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#b8bfd8' }}>State <span style={{ color: '#ff65bf' }}>*</span></label>
+                <select required value={selectedState} onChange={(e) => { setSelectedState(e.target.value); setSelectedCity(''); }} style={{ width: '100%', padding: '12px', background: '#11151f', border: '1px solid #2a3040', color: '#fff', borderRadius: '6px', outline: 'none', appearance: 'none' }}>
+                  <option value="">Select a state...</option>
+                  {Object.keys(stateCityMap).sort().map(state => (
+                    <option key={state} value={state}>{state}</option>
+                  ))}
+                </select>
               </div>
 
               <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#b8bfd8' }}>State <span style={{ color: '#ff65bf' }}>*</span></label>
-                <select required style={{ width: '100%', padding: '12px', background: '#11151f', border: '1px solid #2a3040', color: '#fff', borderRadius: '6px', outline: 'none', appearance: 'none' }}>
-                  <option value="">Select a state...</option>
-                  <option value="Andaman and Nicobar Islands">Andaman and Nicobar Islands</option>
-                  <option value="Andhra Pradesh">Andhra Pradesh</option>
-                  <option value="Arunachal Pradesh">Arunachal Pradesh</option>
-                  <option value="Assam">Assam</option>
-                  <option value="Bihar">Bihar</option>
-                  <option value="Chandigarh">Chandigarh</option>
-                  <option value="Chhattisgarh">Chhattisgarh</option>
-                  <option value="Dadra and Nagar Haveli and Daman and Diu">Dadra and Nagar Haveli and Daman and Diu</option>
-                  <option value="Delhi">Delhi</option>
-                  <option value="Goa">Goa</option>
-                  <option value="Gujarat">Gujarat</option>
-                  <option value="Haryana">Haryana</option>
-                  <option value="Himachal Pradesh">Himachal Pradesh</option>
-                  <option value="Jammu and Kashmir">Jammu and Kashmir</option>
-                  <option value="Jharkhand">Jharkhand</option>
-                  <option value="Karnataka">Karnataka</option>
-                  <option value="Kerala">Kerala</option>
-                  <option value="Ladakh">Ladakh</option>
-                  <option value="Lakshadweep">Lakshadweep</option>
-                  <option value="Madhya Pradesh">Madhya Pradesh</option>
-                  <option value="Maharashtra">Maharashtra</option>
-                  <option value="Manipur">Manipur</option>
-                  <option value="Meghalaya">Meghalaya</option>
-                  <option value="Mizoram">Mizoram</option>
-                  <option value="Nagaland">Nagaland</option>
-                  <option value="Odisha">Odisha</option>
-                  <option value="Puducherry">Puducherry</option>
-                  <option value="Punjab">Punjab</option>
-                  <option value="Rajasthan">Rajasthan</option>
-                  <option value="Sikkim">Sikkim</option>
-                  <option value="Tamil Nadu">Tamil Nadu</option>
-                  <option value="Telangana">Telangana</option>
-                  <option value="Tripura">Tripura</option>
-                  <option value="Uttar Pradesh">Uttar Pradesh</option>
-                  <option value="Uttarakhand">Uttarakhand</option>
-                  <option value="West Bengal">West Bengal</option>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#b8bfd8' }}>Town / City <span style={{ color: '#ff65bf' }}>*</span></label>
+                <select required value={selectedCity} onChange={(e) => setSelectedCity(e.target.value)} disabled={!selectedState} style={{ width: '100%', padding: '12px', background: !selectedState ? '#0a0d14' : '#11151f', border: '1px solid #2a3040', color: !selectedState ? '#666' : '#fff', borderRadius: '6px', outline: 'none', appearance: 'none', opacity: !selectedState ? 0.6 : 1, cursor: !selectedState ? 'not-allowed' : 'pointer' }}>
+                  <option value="">{selectedState ? "Select a city..." : "Select a state first..."}</option>
+                  {selectedState && stateCityMap[selectedState]?.map(city => (
+                    <option key={city} value={city}>{city}</option>
+                  ))}
                 </select>
               </div>
 
