@@ -82,18 +82,26 @@ export default function CheckoutPage() {
       shipping: billing,
       customer_id,
       customer_note: notes,
-      line_items: cart.map(item => ({
-        ...(item.product_id ? { product_id: Number(item.product_id) } : {}),
-        name: item.name + (item.type ? ` (${item.type})` : ''),
-        total: String(((parseFloat(String(item.price).replace(/[^0-9.-]+/g,"")) || 0) * (item.qty || 1))),
-        quantity: item.qty || 1,
-        ...(item.neon_stack ? {
-          meta_data: [{
-            key: 'neon_stack',
-            value: JSON.stringify(item.neon_stack)
-          }]
-        } : {})
-      }))
+      line_items: cart.map(item => {
+        // Fallback: If screenshot_token was saved at the root of the cart item but not in neon_stack, merge it in.
+        const mergedNeonStack = item.neon_stack ? { ...item.neon_stack } : null;
+        if (mergedNeonStack && !mergedNeonStack.screenshot_token && item.screenshot_token) {
+          mergedNeonStack.screenshot_token = item.screenshot_token;
+        }
+
+        return {
+          ...(item.product_id ? { product_id: Number(item.product_id) } : {}),
+          name: item.name + (item.type ? ` (${item.type})` : ''),
+          total: String(((parseFloat(String(item.price).replace(/[^0-9.-]+/g,"")) || 0) * (item.qty || 1))),
+          quantity: item.qty || 1,
+          ...(mergedNeonStack ? {
+            meta_data: [{
+              key: 'neon_stack',
+              value: JSON.stringify(mergedNeonStack)
+            }]
+          } : {})
+        };
+      })
     };
 
     try {
