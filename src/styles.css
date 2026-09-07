@@ -685,3 +685,41 @@ footer a:hover {
   color: #fff !important;
 }
 
+
+
+/* React Country State City Library Dark Theme Fix */
+.dark-location-select .stdropdown-container {
+  background: #11151f !important;
+  border: 1px solid #2a3040 !important;
+  color: #fff !important;
+  border-radius: 6px !important;
+}
+
+.dark-location-select .stdropdown-input input {
+  color: #fff !important;
+  background: transparent !important;
+}
+
+.dark-location-select .stdropdown-menu {
+  background-color: #0a0d14 !important;
+  border: 1px solid #2a3040 !important;
+}
+
+.dark-location-select .stdropdown-item {
+  color: #b8bfd8 !important;
+}
+
+.dark-location-select .stdropdown-item:hover {
+  background-color: #1a273b !important;
+  color: #fff !important;
+}
+
+.dark-location-select .stsearch-box {
+  background-color: #0a0d14 !important;
+}
+
+.dark-location-select .stsearch-box input {
+  background-color: #11151f !important;
+  border: 1px solid #2a3040 !important;
+  color: #fff !important;
+}
