@@ -167,8 +167,11 @@ export default function CheckoutPage() {
               </div>
 
               <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#b8bfd8' }}>Phone (optional)</label>
-                <input type="tel" style={{ width: '100%', padding: '12px', background: '#11151f', border: '1px solid #2a3040', color: '#fff', borderRadius: '6px', outline: 'none' }} />
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#b8bfd8' }}>Phone <span style={{ color: '#ff65bf' }}>*</span></label>
+                <div style={{ display: 'flex', background: '#11151f', border: '1px solid #2a3040', borderRadius: '6px' }}>
+                  <span style={{ padding: '12px 16px', color: '#fff', borderRight: '1px solid #2a3040', background: '#0a121d', borderTopLeftRadius: '6px', borderBottomLeftRadius: '6px', fontWeight: '500' }}>+91</span>
+                  <input type="tel" required style={{ width: '100%', padding: '12px', background: 'transparent', border: 'none', color: '#fff', outline: 'none' }} />
+                </div>
               </div>
 
               <div style={{ marginBottom: '20px' }}>
