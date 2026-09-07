@@ -98,12 +98,11 @@ export default function CartPage() {
                   ))}
                   <tr>
                     <td colSpan="6" style={{ padding: '20px 15px 5px' }}>
-                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
+                       <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
                          <div style={{ display: 'flex', gap: '10px' }}>
                            <input type="text" placeholder="Coupon code" style={{ padding: '10px 15px', background: '#11151f', border: '1px solid #2a3040', color: '#fff', borderRadius: '6px', outline: 'none' }} />
                            <button className="btn ghost" style={{ borderRadius: '6px' }}>Apply coupon</button>
                          </div>
-                         <button className="btn ghost" style={{ borderRadius: '6px', opacity: 0.7, cursor: 'not-allowed' }}>Update cart</button>
                        </div>
                     </td>
                   </tr>
