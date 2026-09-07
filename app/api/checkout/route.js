@@ -1,5 +1,22 @@
 import { NextResponse } from 'next/server';
 
+function getProductId(config) {
+  const productId = Number(config?.woocommerce?.product_id);
+  return Number.isInteger(productId) && productId > 0 ? productId : null;
+}
+
+async function getConfiguratorProduct(siteUrl, configurator) {
+  if (!['custom_neon', 'mojo_mix'].includes(configurator)) return null;
+
+  const response = await fetch(
+    `${siteUrl.replace(/\/$/, '')}/neon-stack/v2/config?configurator=${encodeURIComponent(configurator)}`,
+    { headers: { Accept: 'application/json' }, cache: 'no-store' }
+  );
+  if (!response.ok) return null;
+
+  return getProductId(await response.json());
+}
+
 export async function POST(req) {
   try {
     const payload = await req.json();
@@ -12,6 +29,52 @@ export async function POST(req) {
       return NextResponse.json({ message: 'WooCommerce API keys are missing on the server.' }, { status: 500 });
     }
 
+    if (!payload || !Array.isArray(payload.line_items) || payload.line_items.length === 0) {
+      return NextResponse.json({ message: 'At least one order item is required.' }, { status: 400 });
+    }
+
+    const lineItems = [];
+    for (const item of payload.line_items) {
+      const productId = Number(item?.product_id);
+      const quantity = Number(item?.quantity);
+      if (!Number.isInteger(productId) || productId < 1 || !Number.isInteger(quantity) || quantity < 1 || quantity > 99) {
+        return NextResponse.json({ message: 'Each order item must contain a valid product and quantity.' }, { status: 400 });
+      }
+
+      let metaData = Array.isArray(item.meta_data) ? item.meta_data : [];
+      const neonMetadata = metaData.find(entry => entry?.key === 'neon_stack');
+      if (neonMetadata) {
+        let neonStack;
+        try {
+          neonStack = typeof neonMetadata.value === 'string' ? JSON.parse(neonMetadata.value) : neonMetadata.value;
+        } catch {
+          return NextResponse.json({ message: 'Invalid configurator metadata.' }, { status: 400 });
+        }
+
+        const expectedProductId = await getConfiguratorProduct(siteUrl, neonStack?.configurator);
+        if (!expectedProductId || expectedProductId !== productId) {
+          return NextResponse.json({ message: 'Invalid configurator product.' }, { status: 400 });
+        }
+
+        metaData = [{ key: 'neon_stack', value: JSON.stringify(neonStack) }];
+      } else {
+        metaData = [];
+      }
+
+      // Do not forward browser-supplied name, subtotal, total, or price.
+      lineItems.push({ product_id: productId, quantity, meta_data: metaData });
+    }
+
+    const orderPayload = {
+      payment_method: 'cod',
+      payment_method_title: 'Cash on Delivery',
+      set_paid: false,
+      billing: payload.billing,
+      shipping: payload.shipping || payload.billing,
+      customer_note: payload.customer_note,
+      line_items: lineItems
+    };
+
     const wcUrl = `${siteUrl.replace(/\/$/, '')}/wc/v3/orders`;
     const auth = Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64');
 
@@ -21,7 +84,7 @@ export async function POST(req) {
         'Content-Type': 'application/json',
         'Authorization': `Basic ${auth}`
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(orderPayload)
     });
 
     const data = await response.json();

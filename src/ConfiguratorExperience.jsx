@@ -94,6 +94,13 @@ export function ConfiguratorExperience({type="custom_neon"}){
  const ruler=useMemo(()=>{if(!bounds)return null;const gap=Math.max(44,Math.min(78,fontSize*.55)),left=bounds.left-leftShapes.length*gap-gap/2,right=bounds.left+bounds.width+rightShapes.length*gap+gap/2,top=bounds.top-Math.min(24,fontSize*.1),bottom=bounds.top+bounds.height+Math.min(24,fontSize*.1);return {left:Math.max(8,left),top:Math.max(8,top),width:Math.max(100,right-left),height:Math.max(70,bottom-top)}},[bounds,leftShapes.length,rightShapes.length,fontSize]);
   const handleAddToCart = async () => { 
     if (complete) {
+      const woocommerce = config?.woocommerce;
+      const productId = Number(woocommerce?.product_id);
+      if (!Number.isInteger(productId) || productId < 1) {
+        alert("This configurator is not connected to a WooCommerce product yet.");
+        return;
+      }
+
       // Show loading indicator on button
       const btn = document.querySelector('.ns-add-to-cart-btn');
       if (btn) btn.innerHTML = 'UPLOADING PREVIEW...';
@@ -157,14 +164,28 @@ export function ConfiguratorExperience({type="custom_neon"}){
           id: Date.now(),
           name: text || "Custom Neon",
           type: type === "mojo_mix" ? "Mojo Mix" : "Custom Neon",
+          configurator: type,
+          product_id: productId,
+          product_sku: woocommerce?.sku || null,
           price: price,
           qty: 1,
           size: size?.name,
           color: mojo ? "Mojo Spectrum" : (color?.name || "Multi-color"),
           font: font?.name,
+          neon_stack: {
+            configurator: type,
+            text,
+            font: font?.id || font?.name,
+            size: size?.id || size?.name,
+            color: mojo ? "mojo_mix" : (color?.id || color?.name),
+            shapes,
+            backboard: backboard?.id || backboard?.name,
+            hardware: hardware?.id || hardware?.name,
+          },
           screenshot_token: screenshotToken,
           image: cartThumb
         };
+        item.neon_stack.screenshot_token = screenshotToken;
         const cart = JSON.parse(localStorage.getItem('ns_cart') || '[]');
         const existing = cart.find(x => x.name === item.name && x.type === item.type && x.size === item.size && x.color === item.color && x.font === item.font && x.screenshot_token === item.screenshot_token);
         if (existing) existing.qty = (existing.qty || 1) + 1;

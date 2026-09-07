@@ -15,6 +15,7 @@
     "next": "^16.3.4",
     "puppeteer": "^25.9.0",
     "react": "latest",
+    "react-country-state-city": "^1.1.13",
     "react-dom": "latest"
   }
 }

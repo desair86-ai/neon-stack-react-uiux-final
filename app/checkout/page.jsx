@@ -3,6 +3,8 @@ import React, { useEffect, useState } from "react";
 import { Header, Footer } from "../../src/components";
 import Link from "next/link";
 import { Info, CheckCircle } from "lucide-react";
+import { StateSelect, CitySelect } from 'react-country-state-city';
+import "react-country-state-city/dist/react-country-state-city.css";
 
 import { stateCityMap } from "../../src/lib/cities";
 
@@ -35,14 +37,20 @@ export default function CheckoutPage() {
     setLoading(true);
     setError('');
 
+    if (!selectedState || !selectedCity) {
+      setError('Please select your state and city.');
+      setLoading(false);
+      return;
+    }
+
     const formData = new FormData(e.target);
     const billing = {
       first_name: formData.get('firstName'),
       last_name: formData.get('lastName'),
       address_1: formData.get('address1'),
       address_2: formData.get('address2'),
-      city: selectedCity,
-      state: selectedState,
+      city: selectedCity.name,
+      state: selectedState.name,
       postcode: formData.get('postcode'),
       country: 'IN',
       email: formData.get('email'),
@@ -65,9 +73,16 @@ export default function CheckoutPage() {
       customer_id,
       customer_note: notes,
       line_items: cart.map(item => ({
+        ...(item.product_id ? { product_id: Number(item.product_id) } : {}),
         name: item.name + (item.type ? ` (${item.type})` : ''),
         total: String(((parseFloat(String(item.price).replace(/[^0-9.-]+/g,"")) || 0) * (item.qty || 1))),
-        quantity: item.qty || 1
+        quantity: item.qty || 1,
+        ...(item.neon_stack ? {
+          meta_data: [{
+            key: 'neon_stack',
+            value: JSON.stringify(item.neon_stack)
+          }]
+        } : {})
       }))
     };
 
@@ -178,22 +193,30 @@ export default function CheckoutPage() {
 
               <div style={{ marginBottom: '20px' }}>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#b8bfd8' }}>State <span style={{ color: '#ff65bf' }}>*</span></label>
-                <select required value={selectedState} onChange={(e) => { setSelectedState(e.target.value); setSelectedCity(''); }} style={{ width: '100%', padding: '12px', background: '#11151f', border: '1px solid #2a3040', color: '#fff', borderRadius: '6px', outline: 'none', appearance: 'none' }}>
-                  <option value="">Select a state...</option>
-                  {Object.keys(stateCityMap).sort().map(state => (
-                    <option key={state} value={state}>{state}</option>
-                  ))}
-                </select>
+                <div className="dark-location-select">
+                  <StateSelect 
+                    countryid={101}
+                    onChange={(e) => { 
+                      setSelectedState(e); 
+                      setSelectedCity(null); 
+                    }} 
+                    placeHolder="Select State" 
+                  />
+                </div>
               </div>
 
               <div style={{ marginBottom: '20px' }}>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#b8bfd8' }}>Town / City <span style={{ color: '#ff65bf' }}>*</span></label>
-                <select required value={selectedCity} onChange={(e) => setSelectedCity(e.target.value)} disabled={!selectedState} style={{ width: '100%', padding: '12px', background: !selectedState ? '#0a0d14' : '#11151f', border: '1px solid #2a3040', color: !selectedState ? '#666' : '#fff', borderRadius: '6px', outline: 'none', appearance: 'none', opacity: !selectedState ? 0.6 : 1, cursor: !selectedState ? 'not-allowed' : 'pointer' }}>
-                  <option value="">{selectedState ? "Select a city..." : "Select a state first..."}</option>
-                  {selectedState && stateCityMap[selectedState]?.map(city => (
-                    <option key={city} value={city}>{city}</option>
-                  ))}
-                </select>
+                <div className="dark-location-select">
+                  <CitySelect 
+                    countryid={101} 
+                    stateid={selectedState?.id || 0}
+                    onChange={(e) => {
+                      setSelectedCity(e);
+                    }} 
+                    placeHolder="Select City" 
+                  />
+                </div>
               </div>
 
               <div style={{ marginBottom: '20px' }}>

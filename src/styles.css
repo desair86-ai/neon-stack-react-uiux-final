@@ -649,3 +649,39 @@ footer a:hover {
   100% { transform: translateX(-50%); }
 }
 
+
+/* Location Select Overrides */
+.dark-location-select .stsearch-box, 
+.dark-location-select .citysearch-box, 
+.dark-location-select .countrysearch-box {
+  background: #11151f !important;
+  border: 1px solid #2a3040 !important;
+  color: #fff !important;
+  border-radius: 6px !important;
+  padding: 12px !important;
+  min-height: 46px !important;
+}
+
+.dark-location-select .stsearch-box input, 
+.dark-location-select .citysearch-box input, 
+.dark-location-select .countrysearch-box input {
+  color: #fff !important;
+  background: transparent !important;
+}
+
+.dark-location-select .dropdown {
+  background: #0a0d14 !important;
+  border: 1px solid #2a3040 !important;
+  border-radius: 6px !important;
+}
+
+.dark-location-select .dropdown li {
+  color: #b8bfd8 !important;
+  padding: 10px 15px !important;
+}
+
+.dark-location-select .dropdown li:hover {
+  background: #11151f !important;
+  color: #fff !important;
+}
+

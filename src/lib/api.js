@@ -50,7 +50,7 @@ export async function getProducts(categorySlug = null) {
     query GetProducts {
       products(first: 100, ${whereArg}) {
         nodes {
-          id name slug image { sourceUrl }
+          id databaseId name slug image { sourceUrl }
           productCategories { nodes { slug name } }
           ... on SimpleProduct { regularPrice salePrice attributes { nodes { name options } } }
           ... on VariableProduct { regularPrice salePrice attributes { nodes { name options } } }
@@ -96,7 +96,8 @@ export async function getProducts(categorySlug = null) {
       p.image?.sourceUrl || '/images/products/product_01.png',
       badge,
       price,
-      rawPrice
+      rawPrice,
+      p.databaseId
     ];
   });
   
