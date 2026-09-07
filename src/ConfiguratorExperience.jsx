@@ -94,7 +94,11 @@ export function ConfiguratorExperience({type="custom_neon"}){
  const ruler=useMemo(()=>{if(!bounds)return null;const gap=Math.max(44,Math.min(78,fontSize*.55)),left=bounds.left-leftShapes.length*gap-gap/2,right=bounds.left+bounds.width+rightShapes.length*gap+gap/2,top=bounds.top-Math.min(24,fontSize*.1),bottom=bounds.top+bounds.height+Math.min(24,fontSize*.1);return {left:Math.max(8,left),top:Math.max(8,top),width:Math.max(100,right-left),height:Math.max(70,bottom-top)}},[bounds,leftShapes.length,rightShapes.length,fontSize]);
   const handleAddToCart = async () => { 
     if (complete) {
-      const woocommerce = config?.woocommerce;
+      const woocommerce = {
+        product_id: config?.product_id,
+        sku: config?.sku,
+        ...(config?.woocommerce || {})
+      };
       const productId = Number(woocommerce?.product_id);
       if (!Number.isInteger(productId) || productId < 1) {
         alert("This configurator is not connected to a WooCommerce product yet.");

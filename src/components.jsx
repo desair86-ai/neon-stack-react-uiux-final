@@ -34,12 +34,12 @@ const categories = [
   ['Bar & Nightlife','Martini'],['Events & Weddings','Heart'],['Fitness & Sports','Dumbbell']
 ];
 const defaultProducts = [
-  ['Gaming Controller','Gaming','/images/1.webp','','1,499'],['Astronaut On Moon','Astronaut & Space','/images/astro_with_full_moon.webp','','1,999'],
-  ['Good Vibes Only','Quotes','/images/2.webp','','1,199'],['Coffee Time','Café & Restaurant','/images/3.webp','','1,399'],
-  ['Rahul','Custom Neon','/images/4.webp','','1,599'],['Love You','Love & Romance','/images/5.webp','','1,199'],
-  ['Buddha','Gods & Spiritual','/images/6.webp','','1,799'],['Google Logo','Business','/images/7.webp','','2,499'],
-  ['Game Room','Gaming','/images/8.webp','MOJO MIX','1,899'],['Motorcycle','Motorbikes','/images/9.webp','','1,999'],
-  ['Hakuna Matata','Quotes','/images/10.webp','','1,399'],['Cocktail','Bars','/images/wings_and_drinks.webp','','1,599']
+  ['Gaming Controller','Gaming','/images/jeep_led_neon_sign.webp','','1,499'],['Astronaut On Moon','Astronaut & Space','/images/mojomix.webp','','1,999'],
+  ['Good Vibes Only','Quotes','/images/better_together.webp','','1,199'],['Coffee Time','Café & Restaurant','/images/pizza_and_drink.webp','','1,399'],
+  ['Rahul','Custom Neon','/images/remote_details_01.webp','','1,599'],['Love You','Love & Romance','/images/wings_and_drinks.webp','','1,199'],
+  ['Buddha','Gods & Spiritual','/images/planet_uv_printed_led_neon_light.webp','','1,799'],['Google Logo','Business','/images/whats_in_the_box.webp','','2,499'],
+  ['Game Room','Gaming','/images/mojomix.webp','MOJO MIX','1,899'],['Motorcycle','Motorbikes','/images/jeep_led_neon_sign.webp','','1,999'],
+  ['Hakuna Matata','Quotes','/images/remote-details.webp','','1,399'],['Cocktail','Bars','/images/wings_and_drinks.webp','','1,599']
 ];
 
 function useCatalogData(categorySlug = null) {

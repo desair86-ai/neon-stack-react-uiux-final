@@ -43,6 +43,16 @@ export default function CheckoutPage() {
       return;
     }
 
+    const staleCartItem = cart.find(item => {
+      const productId = Number(item?.product_id);
+      return !Number.isInteger(productId) || productId < 1;
+    });
+    if (staleCartItem) {
+      setError('One or more cart items are outdated. Remove them and add the products again.');
+      setLoading(false);
+      return;
+    }
+
     const formData = new FormData(e.target);
     const billing = {
       first_name: formData.get('firstName'),

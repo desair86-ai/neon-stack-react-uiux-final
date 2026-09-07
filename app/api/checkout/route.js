@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
 
 function getProductId(config) {
-  const productId = Number(config?.woocommerce?.product_id);
-  return Number.isInteger(productId) && productId > 0 ? productId : null;
+  const productIds = [config?.woocommerce?.product_id, config?.product_id];
+  for (const value of productIds) {
+    const productId = Number(value);
+    if (Number.isInteger(productId) && productId > 0) return productId;
+  }
+  return null;
 }
 
 async function getConfiguratorProduct(siteUrl, configurator) {
