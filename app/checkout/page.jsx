@@ -27,12 +27,64 @@ export default function CheckoutPage() {
     return acc + (p * (item.qty || 1));
   }, 0);
 
-  const handlePlaceOrder = (e) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handlePlaceOrder = async (e) => {
     e.preventDefault();
-    localStorage.removeItem('ns_cart');
-    setCart([]);
-    window.dispatchEvent(new Event('cartUpdated'));
-    setOrderPlaced(true);
+    setLoading(true);
+    setError('');
+
+    const formData = new FormData(e.target);
+    const billing = {
+      first_name: formData.get('firstName'),
+      last_name: formData.get('lastName'),
+      address_1: formData.get('address1'),
+      address_2: formData.get('address2'),
+      city: selectedCity,
+      state: selectedState,
+      postcode: formData.get('postcode'),
+      country: 'IN',
+      email: formData.get('email'),
+      phone: '+91' + formData.get('phone')
+    };
+    const notes = formData.get('notes');
+    
+    const payload = {
+      payment_method: 'cod',
+      payment_method_title: 'Cash on Delivery',
+      set_paid: false,
+      billing,
+      shipping: billing,
+      customer_note: notes,
+      line_items: cart.map(item => ({
+        name: item.name + (item.type ? ` (${item.type})` : ''),
+        total: String(((parseFloat(String(item.price).replace(/[^0-9.-]+/g,"")) || 0) * (item.qty || 1))),
+        quantity: item.qty || 1
+      }))
+    };
+
+    try {
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.message || 'Failed to place order');
+      }
+      
+      localStorage.removeItem('ns_cart');
+      setCart([]);
+      window.dispatchEvent(new Event('cartUpdated'));
+      setOrderPlaced(true);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!isClient) return null;
@@ -96,11 +148,11 @@ export default function CheckoutPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
                 <div>
                   <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#b8bfd8' }}>First name <span style={{ color: '#ff65bf' }}>*</span></label>
-                  <input type="text" required style={{ width: '100%', padding: '12px', background: '#11151f', border: '1px solid #2a3040', color: '#fff', borderRadius: '6px', outline: 'none' }} />
+                  <input type="text" name="firstName" required style={{ width: '100%', padding: '12px', background: '#11151f', border: '1px solid #2a3040', color: '#fff', borderRadius: '6px', outline: 'none' }} />
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#b8bfd8' }}>Last name <span style={{ color: '#ff65bf' }}>*</span></label>
-                  <input type="text" required style={{ width: '100%', padding: '12px', background: '#11151f', border: '1px solid #2a3040', color: '#fff', borderRadius: '6px', outline: 'none' }} />
+                  <input type="text" name="lastName" required style={{ width: '100%', padding: '12px', background: '#11151f', border: '1px solid #2a3040', color: '#fff', borderRadius: '6px', outline: 'none' }} />
                 </div>
               </div>
 
@@ -113,8 +165,8 @@ export default function CheckoutPage() {
 
               <div style={{ marginBottom: '20px' }}>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#b8bfd8' }}>Street address <span style={{ color: '#ff65bf' }}>*</span></label>
-                <input type="text" required placeholder="House number and street name" style={{ width: '100%', padding: '12px', background: '#11151f', border: '1px solid #2a3040', color: '#fff', borderRadius: '6px', outline: 'none', marginBottom: '10px' }} />
-                <input type="text" placeholder="Apartment, suite, unit, etc. (optional)" style={{ width: '100%', padding: '12px', background: '#11151f', border: '1px solid #2a3040', color: '#fff', borderRadius: '6px', outline: 'none' }} />
+                <input type="text" name="address1" required placeholder="House number and street name" style={{ width: '100%', padding: '12px', background: '#11151f', border: '1px solid #2a3040', color: '#fff', borderRadius: '6px', outline: 'none', marginBottom: '10px' }} />
+                <input type="text" name="address2" placeholder="Apartment, suite, unit, etc. (optional)" style={{ width: '100%', padding: '12px', background: '#11151f', border: '1px solid #2a3040', color: '#fff', borderRadius: '6px', outline: 'none' }} />
               </div>
 
               <div style={{ marginBottom: '20px' }}>
@@ -139,20 +191,20 @@ export default function CheckoutPage() {
 
               <div style={{ marginBottom: '20px' }}>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#b8bfd8' }}>PIN Code <span style={{ color: '#ff65bf' }}>*</span></label>
-                <input type="text" required style={{ width: '100%', padding: '12px', background: '#11151f', border: '1px solid #2a3040', color: '#fff', borderRadius: '6px', outline: 'none' }} />
+                <input type="text" name="postcode" required style={{ width: '100%', padding: '12px', background: '#11151f', border: '1px solid #2a3040', color: '#fff', borderRadius: '6px', outline: 'none' }} />
               </div>
 
               <div style={{ marginBottom: '20px' }}>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#b8bfd8' }}>Phone <span style={{ color: '#ff65bf' }}>*</span></label>
                 <div style={{ display: 'flex', background: '#11151f', border: '1px solid #2a3040', borderRadius: '6px' }}>
                   <span style={{ padding: '12px 16px', color: '#fff', borderRight: '1px solid #2a3040', background: '#0a121d', borderTopLeftRadius: '6px', borderBottomLeftRadius: '6px', fontWeight: '500' }}>+91</span>
-                  <input type="tel" required style={{ width: '100%', padding: '12px', background: 'transparent', border: 'none', color: '#fff', outline: 'none' }} />
+                  <input type="tel" name="phone" required style={{ width: '100%', padding: '12px', background: 'transparent', border: 'none', color: '#fff', outline: 'none' }} />
                 </div>
               </div>
 
               <div style={{ marginBottom: '20px' }}>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#b8bfd8' }}>Email address <span style={{ color: '#ff65bf' }}>*</span></label>
-                <input type="email" required style={{ width: '100%', padding: '12px', background: '#11151f', border: '1px solid #2a3040', color: '#fff', borderRadius: '6px', outline: 'none' }} />
+                <input type="email" name="email" required style={{ width: '100%', padding: '12px', background: '#11151f', border: '1px solid #2a3040', color: '#fff', borderRadius: '6px', outline: 'none' }} />
               </div>
             </div>
 
@@ -160,7 +212,7 @@ export default function CheckoutPage() {
               <div style={{ marginBottom: '40px' }}>
                 <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '25px', fontFamily: "'Space Grotesk', sans-serif", color: '#fff' }}>Additional information</h2>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#b8bfd8' }}>Order notes (optional)</label>
-                <textarea placeholder="Notes about your order, e.g. special notes for delivery." style={{ width: '100%', padding: '12px', background: '#11151f', border: '1px solid #2a3040', color: '#fff', borderRadius: '6px', outline: 'none', minHeight: '100px', resize: 'vertical' }}></textarea>
+                <textarea name="notes" placeholder="Notes about your order, e.g. special notes for delivery." style={{ width: '100%', padding: '12px', background: '#11151f', border: '1px solid #2a3040', color: '#fff', borderRadius: '6px', outline: 'none', minHeight: '100px', resize: 'vertical' }}></textarea>
               </div>
 
               <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '25px', fontFamily: "'Space Grotesk', sans-serif", color: '#fff' }}>Your order</h2>
@@ -197,9 +249,11 @@ export default function CheckoutPage() {
               </div>
 
               <div style={{ background: '#09121d', padding: '25px', borderRadius: '12px', border: '1px solid #253448' }}>
+                {error && <div style={{ background: '#3b1a1a', border: '1px solid #e03131', padding: '15px', borderRadius: '6px', color: '#ffb3b3', marginBottom: '20px' }}>{error}</div>}
+                
                 <div style={{ background: '#0a121d', border: '1px solid #1a273b', padding: '15px', borderRadius: '6px', color: '#66a3ff', display: 'flex', gap: '10px', alignItems: 'flex-start', marginBottom: '20px' }}>
                   <Info size={20} style={{ flexShrink: 0, marginTop: '2px' }} />
-                  <span style={{ fontSize: '14px', lineHeight: '1.5' }}>Sorry, it seems that there are no available payment methods. Please contact us if you require assistance or wish to make alternate arrangements.</span>
+                  <span style={{ fontSize: '14px', lineHeight: '1.5' }}>Currently processing Cash on Delivery orders. Online payments will be available soon.</span>
                 </div>
                 
                 <p style={{ fontSize: '14px', color: '#9699a5', lineHeight: '1.6', marginBottom: '30px' }}>
@@ -207,8 +261,8 @@ export default function CheckoutPage() {
                 </p>
 
                 <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                  <button type="submit" className="btn primary" style={{ padding: '15px 30px', borderRadius: '50px', fontSize: '15px', width: '100%', justifyContent: 'center' }}>
-                    PLACE ORDER
+                  <button type="submit" disabled={loading} className="btn primary" style={{ padding: '15px 30px', borderRadius: '50px', fontSize: '15px', width: '100%', justifyContent: 'center', opacity: loading ? 0.7 : 1 }}>
+                    {loading ? 'PROCESSING...' : 'PLACE ORDER'}
                   </button>
                 </div>
               </div>
