@@ -273,7 +273,7 @@ export function ConfiguratorExperience({type="custom_neon"}){
                   <ChevronDown size={18} color="#b8bfd8" style={{transform: fontPickerOpen?'rotate(180deg)':'none', transition:'0.2s'}}/>
                </div>
                {fontPickerOpen && (
-                 <div className="ns-custom-scroll" style={{position:'absolute',top:'100%',left:0,right:0,zIndex:200,background:'#0a0d14',border:'1px solid #752eff',borderRadius:'6px',marginTop:'4px',padding:'12px',maxHeight:'340px',overflowY:'auto',display:'grid',gridTemplateColumns:'repeat(3, 1fr)',gap:'8px',boxShadow:'0 10px 30px rgba(0,0,0,0.5)'}}>
+                 <div className="ns-custom-scroll" style={{position:'absolute',top:'100%',left:0,right:0,zIndex:200,background:'#0a0d14',border:'1px solid #752eff',borderRadius:'6px',marginTop:'4px',padding:'12px',maxHeight:'340px',overflowY:'auto',overflowX:'hidden',display:'grid',gridTemplateColumns:'repeat(3, 1fr)',gap:'8px',boxShadow:'0 10px 30px rgba(0,0,0,0.5)'}}>
                    {fonts.map(f => (
                       <button key={f.id||f.name} onClick={()=>{setFont(f);setFontPickerOpen(false);}} style={{background:font?.name===f.name?'#161a23':'#05060a',border:font?.name===f.name?'1px solid #8b4cff':'1px solid #161a23',borderRadius:'4px',padding:'14px 4px',cursor:'pointer',color:font?.name===f.name?'#00ffbc':'#fff',textAlign:'center',transition:'0.2s',display:'flex',alignItems:'center',justifyContent:'center',minHeight:'55px'}}>
                          <span style={{fontFamily: fontFamily(f), fontSize:'18px'}}>{f.name}</span>
