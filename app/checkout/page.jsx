@@ -13,6 +13,9 @@ export default function CheckoutPage() {
   const [showCoupon, setShowCoupon] = useState(false);
   const [selectedState, setSelectedState] = useState(null);
   const [selectedCity, setSelectedCity] = useState(null);
+  const [createAccount, setCreateAccount] = useState(false);
+  const [password, setPassword] = useState('');
+  const [isDropdownActive, setIsDropdownActive] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -80,6 +83,7 @@ export default function CheckoutPage() {
       billing,
       shipping: billing,
       customer_note: notes,
+      ...(createAccount ? { create_account: true, password } : {}),
       line_items: cart.map(item => {
         const productId = getProductId(item);
 
@@ -190,7 +194,10 @@ export default function CheckoutPage() {
         )}
 
         <form id="checkout-form" onSubmit={handlePlaceOrder}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px' }} className="checkout-grid">
+          {isDropdownActive && (
+             <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 8, backdropFilter: 'blur(3px)' }}></div>
+          )}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', position: 'relative', zIndex: isDropdownActive ? 9 : 1 }} className="checkout-grid">
             
             <div>
               <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '25px', fontFamily: "'Space Grotesk', sans-serif", color: '#fff' }}>Billing details</h2>
@@ -219,28 +226,38 @@ export default function CheckoutPage() {
                 <input type="text" name="address2" placeholder="Apartment, suite, unit, etc. (optional)" style={{ width: '100%', padding: '12px', background: '#11151f', border: '1px solid #2a3040', color: '#fff', borderRadius: '6px', outline: 'none' }} />
               </div>
 
-              <div style={{ marginBottom: '20px' }}>
+              <div style={{ marginBottom: '20px', position: 'relative', zIndex: 10 }}>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#b8bfd8' }}>State <span style={{ color: '#ff65bf' }}>*</span></label>
-                <div className="dark-location-select">
+                <div className="dark-location-select" onFocus={() => setIsDropdownActive(true)} onBlur={(e) => {
+                  if (!e.currentTarget.contains(e.relatedTarget)) {
+                    setIsDropdownActive(false);
+                  }
+                }}>
                   <StateSelect 
                     countryid={101}
                     onChange={(e) => { 
                       setSelectedState(e); 
                       setSelectedCity(null); 
+                      setIsDropdownActive(false);
                     }} 
                     placeHolder="Select State" 
                   />
                 </div>
               </div>
 
-              <div style={{ marginBottom: '20px' }}>
+              <div style={{ marginBottom: '20px', position: 'relative', zIndex: 9 }}>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#b8bfd8' }}>Town / City <span style={{ color: '#ff65bf' }}>*</span></label>
-                <div className="dark-location-select">
+                <div className="dark-location-select" onFocus={() => setIsDropdownActive(true)} onBlur={(e) => {
+                  if (!e.currentTarget.contains(e.relatedTarget)) {
+                    setIsDropdownActive(false);
+                  }
+                }}>
                   <CitySelect 
                     countryid={101} 
                     stateid={selectedState?.id || 0}
                     onChange={(e) => {
                       setSelectedCity(e);
+                      setIsDropdownActive(false);
                     }} 
                     placeHolder="Select City" 
                   />
@@ -264,6 +281,21 @@ export default function CheckoutPage() {
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#b8bfd8' }}>Email address <span style={{ color: '#ff65bf' }}>*</span></label>
                 <input type="email" name="email" required style={{ width: '100%', padding: '12px', background: '#11151f', border: '1px solid #2a3040', color: '#fff', borderRadius: '6px', outline: 'none' }} />
               </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#fff', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={createAccount} onChange={(e) => setCreateAccount(e.target.checked)} style={{ width: '18px', height: '18px', accentColor: '#ff65bf', cursor: 'pointer' }} />
+                  Create an account?
+                </label>
+              </div>
+
+              {createAccount && (
+                <div style={{ marginBottom: '20px', padding: '20px', background: '#0a0d14', border: '1px solid #1c212e', borderRadius: '8px' }}>
+                  <p style={{ margin: '0 0 15px 0', color: '#b8bfd8', fontSize: '14px' }}>Create an account by entering the information below. If you are a returning customer please login at the top of the page.</p>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#b8bfd8' }}>Account password <span style={{ color: '#ff65bf' }}>*</span></label>
+                  <input type="password" required={createAccount} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" style={{ width: '100%', padding: '12px', background: '#11151f', border: '1px solid #2a3040', color: '#fff', borderRadius: '6px', outline: 'none' }} />
+                </div>
+              )}
             </div>
 
             <div>

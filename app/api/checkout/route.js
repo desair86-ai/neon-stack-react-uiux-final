@@ -79,6 +79,42 @@ export async function POST(req) {
       line_items: lineItems
     };
 
+    if (payload.create_account && payload.password) {
+        // WordPress/WooCommerce API does not handle `create_account` natively via order creation endpoint.
+        // For headless checkouts, a separate endpoint or user creation step would be needed.
+        // For now, we will forward it, but real account creation will require hitting /wp-json/wp/v2/users.
+        // Let's create the user first if requested.
+        const userUrl = `${siteUrl.replace(/\/$/, '')}/wp/v2/users`;
+        const userAuth = Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64');
+        const userRes = await fetch(userUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Basic ${userAuth}`
+            },
+            body: JSON.stringify({
+                username: payload.billing.email,
+                email: payload.billing.email,
+                password: payload.password,
+                first_name: payload.billing.first_name,
+                last_name: payload.billing.last_name,
+                roles: ['customer']
+            })
+        });
+
+        if (userRes.ok) {
+            const userData = await userRes.json();
+            orderPayload.customer_id = userData.id;
+        } else {
+            const errData = await userRes.json();
+            // Ignore existing email errors, just attach if they exist?
+            // We'll let WooCommerce attempt to map it via email or throw if strict.
+            if (errData.code !== 'existing_user_email' && errData.code !== 'existing_user_login') {
+                console.error("Account creation failed:", errData);
+            }
+        }
+    }
+
     const wcUrl = `${siteUrl.replace(/\/$/, '')}/wc/v3/orders`;
     const auth = Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64');
 
