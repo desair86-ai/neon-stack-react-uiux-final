@@ -1,0 +1,92 @@
+
+> neon-stack-react@0.1.1 dev
+> next dev
+
+▲ Next.js 16.3.4 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.2:3000
+✓ Ready in 530ms
+✓ Running next.config took 16ms
+
+○ Compiling /custom-neon ...
+ GET /custom-neon 200 in 6.0s (next.js: 5.2s, application-code: 741ms)
+ GET /api/wishlist?share_key=pi5qnwh7jtg 200 in 952ms (next.js: 896ms, application-code: 55ms)
+ GET /api/config?configurator=mojo_mix 500 in 1102ms (next.js: 1089ms, application-code: 13ms)
+ GET /api/config?configurator=custom_neon 500 in 1118ms (next.js: 1108ms, application-code: 10ms)
+ GET /api/config?configurator=custom_neon 500 in 1149ms (next.js: 1140ms, application-code: 9ms)
+ GET /api/config?configurator=mojo_mix 500 in 1085ms (next.js: 1078ms, application-code: 7ms)
+ GET /api/config?configurator=custom_neon 500 in 1112ms (next.js: 1103ms, application-code: 10ms)
+ GET /api/wishlist?share_key=pi5qnwh7jtg 200 in 19ms (next.js: 8ms, application-code: 11ms)
+ GET /api/config?configurator=custom_neon 500 in 32ms (next.js: 23ms, application-code: 9ms)
+[browser] Failed to fetch configurator via proxy {"error":"Missing WP REST URL"}
+    at getConfiguratorOptions (src/lib/api.js:131:15)
+  129 |     const res = await fetch(`/api/config?configurator=${configuratorType}`);
+  130 |     if (!res.ok) {
+> 131 |       console.error('Failed to fetch configurator via proxy', await res.text());
+      |               ^
+  132 |       return null;
+  133 |     }
+  134 |     return res.json(); (src/lib/api.js:131:15)
+[browser] Failed to fetch configurator via proxy {"error":"Missing WP REST URL"}
+    at getConfiguratorOptions (src/lib/api.js:131:15)
+  129 |     const res = await fetch(`/api/config?configurator=${configuratorType}`);
+  130 |     if (!res.ok) {
+> 131 |       console.error('Failed to fetch configurator via proxy', await res.text());
+      |               ^
+  132 |       return null;
+  133 |     }
+  134 |     return res.json(); (src/lib/api.js:131:15)
+ GET /custom-neon 200 in 61ms (next.js: 6ms, application-code: 55ms)
+ GET /api/config?configurator=custom_neon 500 in 13ms (next.js: 4ms, application-code: 9ms)
+ GET /api/config?configurator=mojo_mix 500 in 21ms (next.js: 16ms, application-code: 5ms)
+ GET /api/config?configurator=custom_neon 500 in 9ms (next.js: 5ms, application-code: 4ms)
+ GET /api/wishlist?share_key=x7a7zs9duf 200 in 17ms (next.js: 13ms, application-code: 4ms)
+ GET /api/config?configurator=custom_neon 500 in 22ms (next.js: 19ms, application-code: 4ms)
+ GET /api/config?configurator=mojo_mix 500 in 27ms (next.js: 24ms, application-code: 4ms)
+ GET /api/config?configurator=custom_neon 500 in 11ms (next.js: 7ms, application-code: 4ms)
+[browser] Failed to fetch configurator via proxy {"error":"Missing WP REST URL"}
+    at getConfiguratorOptions (src/lib/api.js:131:15)
+  129 |     const res = await fetch(`/api/config?configurator=${configuratorType}`);
+  130 |     if (!res.ok) {
+> 131 |       console.error('Failed to fetch configurator via proxy', await res.text());
+      |               ^
+  132 |       return null;
+  133 |     }
+  134 |     return res.json(); (src/lib/api.js:131:15)
+ GET /api/wishlist?share_key=x7a7zs9duf 200 in 14ms (next.js: 10ms, application-code: 4ms)
+[browser] Failed to fetch configurator via proxy {"error":"Missing WP REST URL"}
+    at getConfiguratorOptions (src/lib/api.js:131:15)
+  129 |     const res = await fetch(`/api/config?configurator=${configuratorType}`);
+  130 |     if (!res.ok) {
+> 131 |       console.error('Failed to fetch configurator via proxy', await res.text());
+      |               ^
+  132 |       return null;
+  133 |     }
+  134 |     return res.json(); (src/lib/api.js:131:15)
+ GET /custom-neon 200 in 50ms (next.js: 3ms, application-code: 47ms)
+ GET /api/config?configurator=custom_neon 500 in 12ms (next.js: 7ms, application-code: 6ms)
+ GET /api/config?configurator=mojo_mix 500 in 21ms (next.js: 17ms, application-code: 4ms)
+ GET /api/config?configurator=custom_neon 500 in 21ms (next.js: 16ms, application-code: 6ms)
+ GET /api/wishlist?share_key=ie8qecivsif 200 in 8ms (next.js: 4ms, application-code: 4ms)
+ GET /api/config?configurator=custom_neon 500 in 14ms (next.js: 10ms, application-code: 4ms)
+ GET /api/config?configurator=mojo_mix 500 in 19ms (next.js: 15ms, application-code: 4ms)
+[browser] Failed to fetch configurator via proxy {"error":"Missing WP REST URL"}
+    at getConfiguratorOptions (src/lib/api.js:131:15)
+  129 |     const res = await fetch(`/api/config?configurator=${configuratorType}`);
+  130 |     if (!res.ok) {
+> 131 |       console.error('Failed to fetch configurator via proxy', await res.text());
+      |               ^
+  132 |       return null;
+  133 |     }
+  134 |     return res.json(); (src/lib/api.js:131:15)
+ GET /api/config?configurator=custom_neon 500 in 8ms (next.js: 4ms, application-code: 4ms)
+ GET /api/wishlist?share_key=ie8qecivsif 200 in 15ms (next.js: 11ms, application-code: 4ms)
+[browser] Failed to fetch configurator via proxy {"error":"Missing WP REST URL"}
+    at getConfiguratorOptions (src/lib/api.js:131:15)
+  129 |     const res = await fetch(`/api/config?configurator=${configuratorType}`);
+  130 |     if (!res.ok) {
+> 131 |       console.error('Failed to fetch configurator via proxy', await res.text());
+      |               ^
+  132 |       return null;
+  133 |     }
+  134 |     return res.json(); (src/lib/api.js:131:15)

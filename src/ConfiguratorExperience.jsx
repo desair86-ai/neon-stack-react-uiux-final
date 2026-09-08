@@ -213,10 +213,20 @@ export function ConfiguratorExperience({type="custom_neon"}){
     }
   };
 
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [fontPickerOpen, setFontPickerOpen] = useState(false);
   
+  const neonContent = (
+    <div ref={textRef} className={`ns-neon-text${mojo?" spectrum":""}`} style={{...textStyle,position:"relative",pointerEvents:"auto",cursor:isMulti?"inherit":"grab",userSelect:"none"}} onPointerDown={e=>{if(!isMulti) dragSign(e)}}>
+      {leftShapes.map((s,i)=><span key={s.uid} style={shapePosition(s,"left",i)}>{shapeIcon(s.name,"1em")}</span>)}
+      {renderText()}
+      {rightShapes.map((s,i)=><span key={s.uid} style={shapePosition(s,"right",i)}>{shapeIcon(s.name,"1em")}</span>)}
+    </div>
+  );
+
   if(loading)return <main className="ns-config-loading">Loading your neon builder…</main>;
+
   return <main className={`ns-configurator${mojo?" ns-mojo":""}`}>
     {mobileMenuOpen && <MobileMenu close={()=>setMobileMenuOpen(false)} onMouseLeave={()=>setMobileMenuOpen(false)}/>}
     <div className="ns-builder-sticky-header" style={{position:'sticky',top:0,zIndex:990,background:'#05060a',borderBottom:'1px solid #161a23',padding:'10px 42px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
@@ -362,7 +372,26 @@ export function ConfiguratorExperience({type="custom_neon"}){
                 
                 {showRuler&&ruler&&<div className="ns-sign-ruler" style={{left:ruler.left,top:ruler.top,width:ruler.width,height:ruler.height}}><div className="ns-sign-ruler-h"><i/><b>{signW.toFixed(2)}&quot;</b><i/></div><div className="ns-sign-ruler-v"><i/><b>{signH.toFixed(2)}&quot;</b><i/></div></div>}
                 <div className="ns-neon-art" style={{left:`${signPos.x*100}%`,top:`${signPos.y*100}%`,transform:"translate(-50%,-50%)",width:"100%",height:"100%",position:"absolute",pointerEvents:"none",display:"flex",alignItems:"center",justifyContent:"center"}}>
-                   <div ref={textRef} className={`ns-neon-text${mojo?" spectrum":""}`} style={{...textStyle,position:"relative",pointerEvents:"auto",cursor:isMulti?"inherit":"grab",userSelect:"none"}} onPointerDown={e=>{if(!isMulti) dragSign(e)}}>{leftShapes.map((s,i)=><span key={s.uid} style={shapePosition(s,"left",i)}>{shapeIcon(s.name,"1em")}</span>)}{renderText()}{rightShapes.map((s,i)=><span key={s.uid} style={shapePosition(s,"right",i)}>{shapeIcon(s.name,"1em")}</span>)}</div>
+                   <svg width="0" height="0" style={{ position: 'absolute', pointerEvents: 'none' }}>
+                      <filter id="ns-cut-to-shape" x="-50%" y="-50%" width="200%" height="200%">
+                         <feMorphology in="SourceAlpha" operator="dilate" radius={Math.max(1.5, fontSize * 0.15)} result="DILATED" />
+                         <feGaussianBlur in="DILATED" stdDeviation={Math.max(1, fontSize * 0.08)} result="BLURRED" />
+                         <feComponentTransfer in="BLURRED" result="OPAQUE">
+                            <feFuncA type="linear" intercept="0.4" slope="1" />
+                         </feComponentTransfer>
+                         <feMerge>
+                            <feMergeNode in="OPAQUE" />
+                         </feMerge>
+                      </filter>
+                   </svg>
+                   {backboard?.id === "cut" && (
+                     <div style={{color: "#ffffff", filter: "url(#ns-cut-to-shape)", position: "absolute", zIndex: 0, pointerEvents: "none", textShadow: "none"}}>
+                       {neonContent}
+                     </div>
+                   )}
+                   <div style={{position: "relative", zIndex: 10, pointerEvents: "none", display: "flex", alignItems: "center", justifyContent: "center"}}>
+                     {neonContent}
+                   </div>
                 </div>
                 {calibrating&&<div className="ns-calibration-live" style={{position:"absolute",inset:0,zIndex:50,pointerEvents:"none"}}><div onPointerDown={dragCalibration} style={{position:"absolute",left:`${calibrationPos.x*100}%`,top:`${calibrationPos.y*100}%`,width:calibrationWidth,height:6,transform:"translate(-50%,-50%)",background:"#ff3355",boxShadow:"0 0 16px rgba(255,51,85,.8)",cursor:"move",pointerEvents:"auto"}}><span style={{position:"absolute",left:"50%",top:-24,transform:"translateX(-50%)",color:"#fff",fontWeight:800,whiteSpace:"nowrap"}}>{Math.round(calibrationWidth)} px — drag over a known object</span><i style={{position:"absolute",left:-8,top:-8,width:22,height:22,borderRadius:"50%",background:"#ff3355"}}/><i style={{position:"absolute",right:-8,top:-8,width:22,height:22,borderRadius:"50%",background:"#ff3355"}}/></div><div style={{position:"absolute",left:12,bottom:12,zIndex:51,padding:12,background:"rgba(5,6,10,.94)",border:"1px solid #752eff",borderRadius:12,pointerEvents:"auto",display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}><b style={{color:"#a8f2cc",fontSize:11}}>CALIBRATE ROOM SIZE</b><span style={{color:"#8992a5",fontSize:10}}>Place red line over a real object, then enter its width.</span><input value={calibrationInches} onChange={e=>setCalibrationInches(e.target.value)} type="number" min="1" style={{height:38,width:110,background:"#111",color:"#fff",border:"1px solid #444",borderRadius:7,padding:"0 10px"}}/><button onClick={setCalibration} style={{height:38,background:"#752eff",color:"#fff",border:0,borderRadius:7,padding:"0 15px",fontWeight:800}}>SET SCALE</button><button onClick={()=>setCalibrating(false)} style={{height:38,background:"#161a24",color:"#fff",border:"1px solid #333",borderRadius:7,padding:"0 12px"}}>CANCEL</button></div></div>}
              </div>
