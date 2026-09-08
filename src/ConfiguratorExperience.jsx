@@ -96,10 +96,10 @@ export function ConfiguratorExperience({type="custom_neon"}){
     if (complete) {
       const woocommerce = {
         product_id: config?.product_id,
-        sku: config?.sku,
+        sku: config?.product_sku,
         ...(config?.woocommerce || {})
       };
-      const productId = Number(woocommerce?.product_id);
+      const productId = Number(config?.product_id) || Number(woocommerce?.product_id);
       if (!Number.isInteger(productId) || productId < 1) {
         alert("This configurator is not connected to a WooCommerce product yet.");
         return;
