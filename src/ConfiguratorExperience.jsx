@@ -361,6 +361,28 @@ export function ConfiguratorExperience({type="custom_neon"}){
                 </div>
                 
                 {showRuler&&ruler&&<div className="ns-sign-ruler" style={{left:ruler.left,top:ruler.top,width:ruler.width,height:ruler.height}}><div className="ns-sign-ruler-h"><i/><b>{signW.toFixed(2)}&quot;</b><i/></div><div className="ns-sign-ruler-v"><i/><b>{signH.toFixed(2)}&quot;</b><i/></div></div>}
+                                {/* Backboard Layer */}
+                {backboard && backboard.id !== 'no_backing' && backboard.name !== 'No Backing' && ruler && (
+                    <div
+                        className="ns-backboard-visualizer"
+                        style={{
+                            position: 'absolute',
+                            left: ruler.left,
+                            top: ruler.top,
+                            width: ruler.width,
+                            height: ruler.height,
+                            background: 'rgba(255, 255, 255, 0.1)',
+                            borderRadius: backboard.id === 'whole_board' || backboard.name === 'Whole Board' || backboard.name === 'Square' ? '0' : '40px',
+                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                            boxShadow: 'inset 0 0 10px rgba(255,255,255,0.05), 0 4px 15px rgba(0,0,0,0.1)',
+                            pointerEvents: 'none',
+                            zIndex: 1,
+                            transition: 'all 0.2s',
+                            backdropFilter: 'blur(2px) contrast(0.9)',
+                            WebkitBackdropFilter: 'blur(2px) contrast(0.9)'
+                        }}
+                    />
+                )}
                 <div className="ns-neon-art" style={{left:`${signPos.x*100}%`,top:`${signPos.y*100}%`,transform:"translate(-50%,-50%)",width:"100%",height:"100%",position:"absolute",pointerEvents:"none",display:"flex",alignItems:"center",justifyContent:"center"}}>
                    <div ref={textRef} className={`ns-neon-text${mojo?" spectrum":""}`} style={{...textStyle,position:"relative",pointerEvents:"auto",cursor:isMulti?"inherit":"grab",userSelect:"none"}} onPointerDown={e=>{if(!isMulti) dragSign(e)}}>{leftShapes.map((s,i)=><span key={s.uid} style={shapePosition(s,"left",i)}>{shapeIcon(s.name,"1em")}</span>)}{renderText()}{rightShapes.map((s,i)=><span key={s.uid} style={shapePosition(s,"right",i)}>{shapeIcon(s.name,"1em")}</span>)}</div>
                 </div>
