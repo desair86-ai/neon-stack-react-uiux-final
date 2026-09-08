@@ -651,6 +651,16 @@ footer a:hover {
 
 
 /* Location Select Overrides */
+.dark-location-select .stdropdown-container {
+  background: #11151f !important;
+  border: 1px solid #2a3040 !important;
+  color: #fff !important;
+  border-radius: 6px !important;
+  min-height: 46px !important;
+}
+.dark-location-select .stdropdown-input input {
+  color: #fff !important;
+}
 .dark-location-select .stsearch-box, 
 .dark-location-select .citysearch-box, 
 .dark-location-select .countrysearch-box {
@@ -669,19 +679,49 @@ footer a:hover {
   background: transparent !important;
 }
 
+.dark-location-select .stdropdown-menu {
+  background-color: #0a0d14 !important;
+  background: #0a0d14 !important;
+  background: #0a0d14 !important;
+  border: 1px solid #2a3040 !important;
+  border-radius: 6px !important;
+}
 .dark-location-select .dropdown {
   background: #0a0d14 !important;
   border: 1px solid #2a3040 !important;
   border-radius: 6px !important;
 }
 
+.dark-location-select .stdropdown-item {
+  color: #b8bfd8 !important;
+  padding: 10px 15px !important;
+}
 .dark-location-select .dropdown li {
   color: #b8bfd8 !important;
   padding: 10px 15px !important;
 }
 
+.dark-location-select .stdropdown-item:hover, .dark-location-select .stdropdown-item.selected {
+  background: #11151f !important;
+  color: #fff !important;
+}
 .dark-location-select .dropdown li:hover {
   background: #11151f !important;
   color: #fff !important;
 }
 
+
+.dark-location-select .stdropdown-menu {
+  background-color: #0a0d14 !important;
+}
+
+.dark-location-select .stdropdown-item {
+  color: #b8bfd8 !important;
+  background-color: transparent !important;
+}
+
+.dark-location-select .stdropdown-item:hover,
+.dark-location-select .stdropdown-item.selected {
+  background-color: #11151f !important;
+  color: #fff !important;
+}

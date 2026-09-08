@@ -246,7 +246,7 @@ export default function CheckoutPage() {
 
               <div style={{ marginBottom: '20px', position: 'relative', zIndex: isDropdownActive ? 9 : 1 }}>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#b8bfd8' }}>Town / City <span style={{ color: '#ff65bf' }}>*</span></label>
-                <div className="dark-location-select" onFocus={() => setIsDropdownActive(true)} onBlur={(e) => {
+                <div style={{ opacity: selectedState ? 1 : 0.5, pointerEvents: selectedState ? 'auto' : 'none' }} className="dark-location-select" onFocus={() => setIsDropdownActive(true)} onBlur={(e) => {
                   if (!e.currentTarget.contains(e.relatedTarget)) {
                     setIsDropdownActive(false);
                   }
