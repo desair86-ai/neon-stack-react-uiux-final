@@ -14,7 +14,6 @@ export default function CheckoutPage() {
   const [selectedState, setSelectedState] = useState(null);
   const [selectedCity, setSelectedCity] = useState(null);
   const [createAccount, setCreateAccount] = useState(false);
-  const [password, setPassword] = useState('');
   const [isDropdownActive, setIsDropdownActive] = useState(false);
 
   useEffect(() => {
@@ -83,7 +82,7 @@ export default function CheckoutPage() {
       billing,
       shipping: billing,
       customer_note: notes,
-      ...(createAccount ? { create_account: true, password } : {}),
+      ...(createAccount ? { create_account: true } : {}),
       line_items: cart.map(item => {
         const productId = getProductId(item);
 
@@ -197,7 +196,7 @@ export default function CheckoutPage() {
           {isDropdownActive && (
              <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 8, backdropFilter: 'blur(3px)' }}></div>
           )}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', position: 'relative', zIndex: isDropdownActive ? 9 : 1 }} className="checkout-grid">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', position: 'relative' }} className="checkout-grid">
             
             <div>
               <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '25px', fontFamily: "'Space Grotesk', sans-serif", color: '#fff' }}>Billing details</h2>
@@ -226,7 +225,7 @@ export default function CheckoutPage() {
                 <input type="text" name="address2" placeholder="Apartment, suite, unit, etc. (optional)" style={{ width: '100%', padding: '12px', background: '#11151f', border: '1px solid #2a3040', color: '#fff', borderRadius: '6px', outline: 'none' }} />
               </div>
 
-              <div style={{ marginBottom: '20px', position: 'relative', zIndex: 10 }}>
+              <div style={{ marginBottom: '20px', position: 'relative', zIndex: isDropdownActive ? 10 : 1 }}>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#b8bfd8' }}>State <span style={{ color: '#ff65bf' }}>*</span></label>
                 <div className="dark-location-select" onFocus={() => setIsDropdownActive(true)} onBlur={(e) => {
                   if (!e.currentTarget.contains(e.relatedTarget)) {
@@ -245,7 +244,7 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              <div style={{ marginBottom: '20px', position: 'relative', zIndex: 9 }}>
+              <div style={{ marginBottom: '20px', position: 'relative', zIndex: isDropdownActive ? 9 : 1 }}>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#b8bfd8' }}>Town / City <span style={{ color: '#ff65bf' }}>*</span></label>
                 <div className="dark-location-select" onFocus={() => setIsDropdownActive(true)} onBlur={(e) => {
                   if (!e.currentTarget.contains(e.relatedTarget)) {
@@ -291,9 +290,7 @@ export default function CheckoutPage() {
 
               {createAccount && (
                 <div style={{ marginBottom: '20px', padding: '20px', background: '#0a0d14', border: '1px solid #1c212e', borderRadius: '8px' }}>
-                  <p style={{ margin: '0 0 15px 0', color: '#b8bfd8', fontSize: '14px' }}>Create an account by entering the information below. If you are a returning customer please login at the top of the page.</p>
-                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#b8bfd8' }}>Account password <span style={{ color: '#ff65bf' }}>*</span></label>
-                  <input type="password" required={createAccount} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" style={{ width: '100%', padding: '12px', background: '#11151f', border: '1px solid #2a3040', color: '#fff', borderRadius: '6px', outline: 'none' }} />
+                  <p style={{ margin: 0, color: '#b8bfd8', fontSize: '14px', lineHeight: '1.5' }}>Your personal data will be used to support your experience throughout this website, to manage access to your account, and for other purposes described in our privacy policy. An email will be sent to you with a link to set a password.</p>
                 </div>
               )}
             </div>

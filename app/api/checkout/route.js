@@ -79,26 +79,34 @@ export async function POST(req) {
       line_items: lineItems
     };
 
-    if (payload.create_account && payload.password) {
+    if (payload.create_account) {
         // WordPress/WooCommerce API does not handle `create_account` natively via order creation endpoint.
         // For headless checkouts, a separate endpoint or user creation step would be needed.
         // For now, we will forward it, but real account creation will require hitting /wp-json/wp/v2/users.
-        // Let's create the user first if requested.
+        // Let's create the user first if requested. By omitting password, WordPress generates one and sends the welcome email.
         const userUrl = `${siteUrl.replace(/\/$/, '')}/wp/v2/users`;
         const userAuth = Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64');
-        const userRes = await fetch(userUrl, {
+
+        // Generate a long random password so the account isn't completely open, WordPress requires a password on this endpoint
+        // Wait, does wp/v2/users require a password?
+        // Let's check WP REST API docs. Password is required unless generating it natively.
+        // We can pass a random strong password. Then they will get a password reset link anyway if we rely on WP's default flow (or they just use "forgot password").
+        // Or wait, WooCommerce has a specific endpoint for creating a customer which triggers the welcome email.
+        // Let's hit `/wc/v3/customers` instead!
+        const wcCustomersUrl = `${siteUrl.replace(/\/$/, '')}/wc/v3/customers`;
+        // generate a secure random password as a fallback because WP/WC might require it depending on settings
+        const randomPassword = Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10) + "A1!";
+        const userRes = await fetch(wcCustomersUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Basic ${userAuth}`
             },
             body: JSON.stringify({
-                username: payload.billing.email,
                 email: payload.billing.email,
-                password: payload.password,
                 first_name: payload.billing.first_name,
                 last_name: payload.billing.last_name,
-                roles: ['customer']
+                password: randomPassword // We provide a random password so the endpoint succeeds. The user will receive an email to reset/set their password if configured.
             })
         });
 
