@@ -6,15 +6,15 @@ import { Info, CheckCircle } from "lucide-react";
 import { StateSelect, CitySelect } from 'react-country-state-city';
 import "react-country-state-city/dist/react-country-state-city.css";
 
-import { stateCityMap } from "../../src/lib/cities";
-
 export default function CheckoutPage() {
   const [cart, setCart] = useState([]);
   const [isClient, setIsClient] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [showCoupon, setShowCoupon] = useState(false);
-  const [selectedState, setSelectedState] = useState('');
-  const [selectedCity, setSelectedCity] = useState('');
+  const [selectedState, setSelectedState] = useState(null);
+  const [selectedCity, setSelectedCity] = useState(null);
+  const [createAccount, setCreateAccount] = useState(false);
+  const [isDropdownActive, setIsDropdownActive] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -43,8 +43,15 @@ export default function CheckoutPage() {
       return;
     }
 
+    const getProductId = (item) =>
+      Number(
+        item?.product_id ??
+        item?.woocommerce?.product_id ??
+        0
+      );
+
     const staleCartItem = cart.find(item => {
-      const productId = Number(item?.product_id);
+      const productId = getProductId(item);
       return !Number.isInteger(productId) || productId < 1;
     });
     if (staleCartItem) {
@@ -68,32 +75,46 @@ export default function CheckoutPage() {
     };
     const notes = formData.get('notes');
     
-    let customer_id = 0;
-    try {
-      const u = JSON.parse(localStorage.getItem('ns_user'));
-      if (u && u.databaseId) customer_id = u.databaseId;
-    } catch(e) {}
-    
     const payload = {
       payment_method: 'cod',
       payment_method_title: 'Cash on Delivery',
       set_paid: false,
       billing,
       shipping: billing,
-      customer_id,
       customer_note: notes,
-      line_items: cart.map(item => ({
-        ...(item.product_id ? { product_id: Number(item.product_id) } : {}),
-        name: item.name + (item.type ? ` (${item.type})` : ''),
-        total: String(((parseFloat(String(item.price).replace(/[^0-9.-]+/g,"")) || 0) * (item.qty || 1))),
-        quantity: item.qty || 1,
-        ...(item.neon_stack ? {
-          meta_data: [{
-            key: 'neon_stack',
-            value: JSON.stringify(item.neon_stack)
-          }]
-        } : {})
-      }))
+      ...(createAccount ? { create_account: true } : {}),
+      line_items: cart.map(item => {
+        const productId = getProductId(item);
+
+        const mergedNeonStack = {
+          ...(item.neon_stack || {}),
+        };
+
+        if (!mergedNeonStack.screenshot_token && item.screenshot_token) {
+          mergedNeonStack.screenshot_token = item.screenshot_token;
+        }
+
+        return {
+          product_id: productId,
+          name: item.name + (item.type ? ` (${item.type})` : ''),
+          total: String(
+            ((parseFloat(String(item.price).replace(/[^0-9.-]+/g, "")) || 0) *
+              (item.qty || 1))
+          ),
+          quantity: item.qty || 1,
+
+          ...(item.neon_stack || item.screenshot_token
+            ? {
+                meta_data: [
+                  {
+                    key: 'neon_stack',
+                    value: JSON.stringify(mergedNeonStack),
+                  },
+                ],
+              }
+            : {}),
+        };
+      })
     };
 
     try {
@@ -166,13 +187,16 @@ export default function CheckoutPage() {
             <p style={{ margin: 0, color: '#b8bfd8', fontSize: '14px', width: '100%' }}>If you have a coupon code, please apply it below.</p>
             <div style={{ display: 'flex', gap: '10px', width: '100%', maxWidth: '450px' }}>
               <input type="text" placeholder="Coupon code" style={{ width: '100%', padding: '12px 15px', background: '#11151f', border: '1px solid #2a3040', color: '#fff', borderRadius: '6px', outline: 'none' }} />
-              <button type="button" className="btn ghost" style={{ borderRadius: '6px', whiteSpace: 'nowrap' }}>Apply coupon</button>
+              <button type="button" className="btn ghost" disabled style={{ borderRadius: '6px', whiteSpace: 'nowrap', opacity: 0.5, cursor: 'not-allowed' }}>Apply coupon</button>
             </div>
           </div>
         )}
 
         <form id="checkout-form" onSubmit={handlePlaceOrder}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px' }} className="checkout-grid">
+          {isDropdownActive && (
+             <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 8, backdropFilter: 'blur(3px)' }}></div>
+          )}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', position: 'relative' }} className="checkout-grid">
             
             <div>
               <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '25px', fontFamily: "'Space Grotesk', sans-serif", color: '#fff' }}>Billing details</h2>
@@ -201,28 +225,38 @@ export default function CheckoutPage() {
                 <input type="text" name="address2" placeholder="Apartment, suite, unit, etc. (optional)" style={{ width: '100%', padding: '12px', background: '#11151f', border: '1px solid #2a3040', color: '#fff', borderRadius: '6px', outline: 'none' }} />
               </div>
 
-              <div style={{ marginBottom: '20px' }}>
+              <div style={{ marginBottom: '20px', position: 'relative', zIndex: isDropdownActive ? 10 : 1 }}>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#b8bfd8' }}>State <span style={{ color: '#ff65bf' }}>*</span></label>
-                <div className="dark-location-select">
+                <div className="dark-location-select" onFocus={() => setIsDropdownActive(true)} onBlur={(e) => {
+                  if (!e.currentTarget.contains(e.relatedTarget)) {
+                    setIsDropdownActive(false);
+                  }
+                }}>
                   <StateSelect 
                     countryid={101}
                     onChange={(e) => { 
                       setSelectedState(e); 
                       setSelectedCity(null); 
+                      setIsDropdownActive(false);
                     }} 
                     placeHolder="Select State" 
                   />
                 </div>
               </div>
 
-              <div style={{ marginBottom: '20px' }}>
+              <div style={{ marginBottom: '20px', position: 'relative', zIndex: isDropdownActive ? 9 : 1 }}>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#b8bfd8' }}>Town / City <span style={{ color: '#ff65bf' }}>*</span></label>
-                <div className="dark-location-select">
+                <div style={{ opacity: selectedState ? 1 : 0.5, pointerEvents: selectedState ? 'auto' : 'none' }} className="dark-location-select" onFocus={() => setIsDropdownActive(true)} onBlur={(e) => {
+                  if (!e.currentTarget.contains(e.relatedTarget)) {
+                    setIsDropdownActive(false);
+                  }
+                }}>
                   <CitySelect 
                     countryid={101} 
                     stateid={selectedState?.id || 0}
                     onChange={(e) => {
                       setSelectedCity(e);
+                      setIsDropdownActive(false);
                     }} 
                     placeHolder="Select City" 
                   />
@@ -246,6 +280,19 @@ export default function CheckoutPage() {
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#b8bfd8' }}>Email address <span style={{ color: '#ff65bf' }}>*</span></label>
                 <input type="email" name="email" required style={{ width: '100%', padding: '12px', background: '#11151f', border: '1px solid #2a3040', color: '#fff', borderRadius: '6px', outline: 'none' }} />
               </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#fff', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={createAccount} onChange={(e) => setCreateAccount(e.target.checked)} style={{ width: '18px', height: '18px', accentColor: '#ff65bf', cursor: 'pointer' }} />
+                  Create an account?
+                </label>
+              </div>
+
+              {createAccount && (
+                <div style={{ marginBottom: '20px', padding: '20px', background: '#0a0d14', border: '1px solid #1c212e', borderRadius: '8px' }}>
+                  <p style={{ margin: 0, color: '#b8bfd8', fontSize: '14px', lineHeight: '1.5' }}>Your personal data will be used to support your experience throughout this website, to manage access to your account, and for other purposes described in our privacy policy. An email will be sent to you with a link to set a password.</p>
+                </div>
+              )}
             </div>
 
             <div>
