@@ -95,7 +95,6 @@ export async function POST(req) {
         // Let's hit `/wc/v3/customers` instead!
         const wcCustomersUrl = `${siteUrl.replace(/\/$/, '')}/wc/v3/customers`;
         // generate a secure random password as a fallback because WP/WC might require it depending on settings
-        const randomPassword = Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10) + "A1!";
         const userRes = await fetch(wcCustomersUrl, {
             method: 'POST',
             headers: {
@@ -105,8 +104,7 @@ export async function POST(req) {
             body: JSON.stringify({
                 email: payload.billing.email,
                 first_name: payload.billing.first_name,
-                last_name: payload.billing.last_name,
-                password: randomPassword // We provide a random password so the endpoint succeeds. The user will receive an email to reset/set their password if configured.
+                last_name: payload.billing.last_name
             })
         });
 

@@ -2799,23 +2799,56 @@ add_action('plugins_loaded',function(){
  * It also registers a REST API endpoint to actually reset the password.
  */
 
-// 1. Change WooCommerce 'New Account' password link
-add_filter( 'woocommerce_get_reset_password_url', 'headless_reset_password_url', 10, 2 );
-function headless_reset_password_url( $url, $user_login = '' ) {
-    $frontend_url = get_option('neon_stack_cors_origin', 'http://localhost:3000'); // Or define a constant
-    if ( empty( $user_login ) && isset( $_GET['login'] ) ) {
-        $user_login = sanitize_text_field( $_GET['login'] );
+// Helper to get frontend URL
+function neon_stack_get_frontend_url() {
+    $options = get_option('neon_stack_config_v2');
+    $frontend_url = isset($options['cors_origins']) ? $options['cors_origins'] : 'http://localhost:3000';
+    // If multiple origins, take the first one
+    $origins = array_map('trim', explode(',', $frontend_url));
+    return !empty($origins[0]) ? $origins[0] : 'http://localhost:3000';
+}
+
+// 1. Change WooCommerce 'New Account' password link and general reset password link
+add_filter( 'lostpassword_url', 'headless_woocommerce_reset_password_url', 10, 2 );
+add_filter( 'woocommerce_email_setup_new_account_set_password_url', 'headless_woocommerce_reset_password_url', 10, 2 );
+add_filter( 'woocommerce_email_reset_password_url', 'headless_woocommerce_reset_password_url', 10, 2 );
+function headless_woocommerce_reset_password_url( $url, $user_login = '' ) {
+    $frontend_url = neon_stack_get_frontend_url();
+    // Try to extract key and login from standard url
+    $parsed_url = wp_parse_url($url);
+    $query_params = array();
+    if (isset($parsed_url['query'])) {
+        wp_parse_str($parsed_url['query'], $query_params);
     }
 
-    // In WC context, it usually generates a key. Let's pull from global if needed or rely on WP's default retrieve_password_key
-    // Better to filter the WP core retrieve_password_message as well
-    return $url;
+    $key = isset($query_params['key']) ? $query_params['key'] : '';
+    $login = isset($query_params['id']) ? $query_params['id'] : $user_login;
+    if ( empty( $login ) && isset( $_GET['login'] ) ) {
+        $login = sanitize_text_field( $_GET['login'] );
+    }
+
+    if ($key && $login) {
+        return trailingslashit( $frontend_url ) . 'reset-password?key=' . rawurlencode($key) . '&login=' . rawurlencode( $login );
+    }
+
+    // Fallback if we can't parse it (though WooCommerce usually includes them or uses endpoints)
+    // WooCommerce endpoints normally look like /my-account/lost-password/?key=XXX&id=YYY
+    if (strpos($url, 'key=') !== false && (strpos($url, 'id=') !== false || strpos($url, 'login=') !== false)) {
+         // It's likely a query string format
+         preg_match('/key=([^&]+)/', $url, $key_match);
+         preg_match('/(?:id|login)=([^&]+)/', $url, $id_match);
+         if (!empty($key_match[1]) && !empty($id_match[1])) {
+             return trailingslashit( $frontend_url ) . 'reset-password?key=' . rawurlencode($key_match[1]) . '&login=' . rawurlencode( $id_match[1] );
+         }
+    }
+
+    return trailingslashit( $frontend_url ) . 'reset-password';
 }
 
 // 2. Change WP core retrieve password link (used by standard WP emails and some WC emails depending on settings)
 add_filter( 'retrieve_password_message', 'headless_retrieve_password_message', 10, 4 );
 function headless_retrieve_password_message( $message, $key, $user_login, $user_data ) {
-    $frontend_url = get_option('neon_stack_cors_origin', 'http://localhost:3000'); // Fallback to localhost if not set
+    $frontend_url = neon_stack_get_frontend_url();
 
     $reset_link = trailingslashit( $frontend_url ) . 'reset-password?key=' . $key . '&login=' . rawurlencode( $user_login );
 
