@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Neon Stack Configurator Engine
  * Description: Reusable WooCommerce configurator engine for headless React frontends. Provides polished WordPress administration for configurators, option sets, fonts, languages, CORS, secure cart/order metadata and a private sign-only customer preview lifecycle.
- * Version: 2.3.5
+ * Version: 2.4.0
  * Requires at least: 6.3
  * Requires PHP: 8.1
  * Requires Plugins: woocommerce
@@ -14,7 +14,7 @@
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 final class Neon_Stack_Configurator {
-    const VERSION = '2.3.5';
+    const VERSION = '2.4.0';
     const PRODUCT_CONFIG_META = '_neon_stack_configurator';
     const PRODUCT_SYNC_LOCK = 'neon_stack_product_sync_lock';
     const PRODUCT_SYNC_META = '_neon_stack_managed_configurator';
@@ -23,6 +23,7 @@ final class Neon_Stack_Configurator {
     const META_KEY = '_neon_stack_design';
     const SCREENSHOT_META_KEY = '_neon_stack_screenshot_id';
     const SCREENSHOT_URL_META_KEY = '_neon_stack_screenshot_url';
+    const SCREENSHOT_TOKEN_META_KEY = '_neon_stack_screenshot_token';
     const TEMP_SCREENSHOT_TTL = 6 * HOUR_IN_SECONDS;
     const MAX_SCREENSHOT_BYTES = 1572864;
     const MAX_SCREENSHOT_PIXELS = 25000000;
@@ -34,14 +35,23 @@ final class Neon_Stack_Configurator {
     const MAX_HEADLESS_META_ENTRIES = 50;
     const SCREENSHOT_RATE_LIMIT = 30;
     const SCREENSHOT_RATE_WINDOW = HOUR_IN_SECONDS;
+    const DESIGN_RATE_LIMIT = 30;
+    const ARTWORK_RATE_LIMIT = 15;
     const API_NAMESPACE = 'neon-stack/v2';
+    const DESIGN_POST_TYPE = 'neon_stack_design';
+    const DESIGN_SCHEMA_VERSION = 1;
+    const DESIGN_TTL_DAYS = 30;
+    const MAX_ARTWORK_BYTES = 5242880;
+    const MAX_ARTWORK_PDF_BYTES = 26214400;
 
     public static function init() {
         add_action( 'before_woocommerce_init', [ __CLASS__, 'declare_hpos_compatibility' ] );
+        add_action( 'init', [ __CLASS__, 'register_design_post_type' ], 4 );
         add_action( 'init', [ __CLASS__, 'ensure_configurator_products' ], 5 );
         add_filter( 'rest_pre_dispatch', [ __CLASS__, 'prepare_headless_order_request' ], 5, 3 );
         add_action( 'woocommerce_new_order_item', [ __CLASS__, 'process_headless_order_item' ], 20, 3 );
         add_action( 'woocommerce_new_order', [ __CLASS__, 'retry_pending_screenshots_for_order' ], 30, 2 );
+        add_action( 'added_order_item_meta', [ __CLASS__, 'capture_headless_screenshot_meta' ], 20, 4 );
         add_filter( 'woocommerce_add_to_cart_validation', [ __CLASS__, 'validate_add_to_cart_request' ], 5, 6 );
         add_filter( 'woocommerce_add_cart_item_data', [ __CLASS__, 'capture_cart_data' ], 20, 4 );
         add_filter( 'woocommerce_get_cart_item_from_session', [ __CLASS__, 'restore_cart_data' ], 20, 2 );
@@ -60,13 +70,19 @@ final class Neon_Stack_Configurator {
         add_action( 'woocommerce_product_options_general_product_data', [ __CLASS__, 'product_configurator_field' ] );
         add_action( 'woocommerce_process_product_meta', [ __CLASS__, 'save_product_configurator_field' ], 20, 1 );
         add_action( 'admin_post_neon_stack_preview', [ __CLASS__, 'serve_private_preview' ] );
+        add_action( 'admin_post_neon_stack_artwork', [ __CLASS__, 'serve_private_artwork' ] );
 
         add_action( 'rest_api_init', [ __CLASS__, 'register_rest_routes' ] );
         add_filter( 'rest_pre_serve_request', [ __CLASS__, 'cors_headers' ], 10, 4 );
 
         add_action( 'neon_stack_cleanup_temp', [ __CLASS__, 'cleanup_temp_screenshots' ] );
+        add_action( 'neon_stack_cleanup_designs', [ __CLASS__, 'cleanup_expired_designs' ] );
+        add_action( 'template_redirect', [ __CLASS__, 'serve_shared_preview' ], 1 );
         if ( ! wp_next_scheduled( 'neon_stack_cleanup_temp' ) ) {
             wp_schedule_event( time() + HOUR_IN_SECONDS, 'twicedaily', 'neon_stack_cleanup_temp' );
+        }
+        if ( ! wp_next_scheduled( 'neon_stack_cleanup_designs' ) ) {
+            wp_schedule_event( time() + 2 * HOUR_IN_SECONDS, 'daily', 'neon_stack_cleanup_designs' );
         }
     }
 
@@ -77,11 +93,15 @@ final class Neon_Stack_Configurator {
         if ( ! wp_next_scheduled( 'neon_stack_cleanup_temp' ) ) {
             wp_schedule_event( time() + HOUR_IN_SECONDS, 'twicedaily', 'neon_stack_cleanup_temp' );
         }
+        if ( ! wp_next_scheduled( 'neon_stack_cleanup_designs' ) ) {
+            wp_schedule_event( time() + 2 * HOUR_IN_SECONDS, 'daily', 'neon_stack_cleanup_designs' );
+        }
         self::ensure_configurator_products();
     }
 
     public static function deactivate() {
         wp_clear_scheduled_hook( 'neon_stack_cleanup_temp' );
+        wp_clear_scheduled_hook( 'neon_stack_cleanup_designs' );
     }
 
     public static function declare_hpos_compatibility() {
@@ -548,6 +568,17 @@ final class Neon_Stack_Configurator {
 
         $token = ! empty( $design['screenshot_token'] ) ? sanitize_key( $design['screenshot_token'] ) : '';
         if ( ! $token ) {
+            $raw_token = self::extract_screenshot_token_from_item( $item );
+            if ( $raw_token ) $token = $raw_token;
+        }
+        if ( $token ) {
+            // Persist the token independently before attempting promotion so a
+            // transient attachment/filesystem failure can never lose the only
+            // reference needed for a later retry.
+            $item->update_meta_data( self::SCREENSHOT_TOKEN_META_KEY, $token );
+            $item->save();
+        }
+        if ( ! $token ) {
             $item->update_meta_data( self::META_KEY, wp_json_encode( $design, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) );
             $item->delete_meta_data( 'neon_stack' );
             $item->save();
@@ -564,11 +595,47 @@ final class Neon_Stack_Configurator {
 
         $item->add_meta_data( self::SCREENSHOT_META_KEY, (string) $attachment_id, true );
         $item->add_meta_data( self::SCREENSHOT_URL_META_KEY, '', true );
+        $item->delete_meta_data( self::SCREENSHOT_TOKEN_META_KEY );
         $item->update_meta_data( self::META_KEY, wp_json_encode( $design, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) );
         $item->delete_meta_data( 'neon_stack' );
         $item->save();
     }
 
+
+    /**
+     * Capture the screenshot token at the moment WooCommerce persists order-item
+     * metadata. This is a second safety net for REST-created orders where the
+     * item metadata may be committed after woocommerce_new_order_item fires.
+     */
+    public static function capture_headless_screenshot_meta( $meta_id, $item_id, $meta_key, $meta_value ) {
+        if ( ! in_array( (string) $meta_key, [ 'neon_stack', self::META_KEY ], true ) ) return;
+        $item = class_exists( 'WC_Order_Item_Product' ) ? new WC_Order_Item_Product( $item_id ) : null;
+        if ( ! $item instanceof WC_Order_Item_Product ) return;
+        $token = '';
+        $design = self::sanitize_design( $meta_value );
+        if ( is_array( $design ) && ! empty( $design['screenshot_token'] ) ) {
+            $token = sanitize_key( (string) $design['screenshot_token'] );
+        }
+        if ( ! $token ) return;
+        $item->update_meta_data( self::SCREENSHOT_TOKEN_META_KEY, $token );
+        $item->save();
+
+        $order_id = absint( $item->get_order_id() );
+        if ( ! $order_id ) return;
+        self::process_headless_order_item( $item_id, $item, $order_id );
+    }
+
+    private static function extract_screenshot_token_from_item( $item ) {
+        if ( ! $item instanceof WC_Order_Item_Product ) return '';
+        foreach ( [ 'neon_stack', self::META_KEY ] as $key ) {
+            $raw = $item->get_meta( $key, true );
+            $design = self::sanitize_design( $raw );
+            if ( is_array( $design ) && ! empty( $design['screenshot_token'] ) ) {
+                return sanitize_key( (string) $design['screenshot_token'] );
+            }
+        }
+        return sanitize_key( (string) $item->get_meta( self::SCREENSHOT_TOKEN_META_KEY, true ) );
+    }
 
     /**
      * Retry screenshot promotion after the complete REST order exists.
@@ -588,10 +655,15 @@ final class Neon_Stack_Configurator {
             if ( $attachment_id ) continue;
 
             $pending = sanitize_key( (string) $item->get_meta( '_neon_stack_pending_screenshot_token', true ) );
+            if ( ! $pending ) $pending = sanitize_key( (string) $item->get_meta( self::SCREENSHOT_TOKEN_META_KEY, true ) );
 
             // If the token was not retained as pending, recover it from the
             // stored sanitized design snapshot. This supports both normal
             // checkout and headless REST-created orders.
+            if ( ! $pending ) {
+                $pending = self::extract_screenshot_token_from_item( $item );
+            }
+
             if ( ! $pending ) {
                 $raw = $item->get_meta( self::META_KEY, true );
                 $design = self::sanitize_design( $raw );
@@ -631,6 +703,7 @@ final class Neon_Stack_Configurator {
             }
 
             $item->add_meta_data( self::SCREENSHOT_META_KEY, (string) $attachment_id, true );
+            $item->delete_meta_data( self::SCREENSHOT_TOKEN_META_KEY );
             $item->delete_meta_data( '_neon_stack_pending_screenshot_token' );
             $item->delete_meta_data( '_neon_stack_screenshot_status' );
             $item->save();
@@ -719,10 +792,44 @@ final class Neon_Stack_Configurator {
                         [ 'id'=>'flash', 'name'=>'Flash', 'description'=>'Flashing effect', 'price'=>0, 'enabled'=>true ],
                         [ 'id'=>'chase', 'name'=>'Chase', 'description'=>'Chasing effect', 'price'=>0, 'enabled'=>true ],
                     ],
+                    // Optional feature libraries. Prices here use the same existing
+                    // option-surcharge engine; the built-in size/width/height pricing
+                    // above is intentionally untouched.
+                    'backboard_materials' => [],
+                    'icons' => [],
+                    'mountings' => [],
                 ],
                 'mojo_mix' => [
                     'sizes'=>[], 'colors'=>[], 'shapes'=>[], 'backboards'=>[], 'hardware'=>[], 'effects'=>[],
                 ],
+            ],
+            'backboard_assets' => [],
+            // Feature configuration mirrors the useful capability model of
+            // modern sign customisers, while intentionally leaving the existing
+            // Neon Stack pricing and sizing engine authoritative.
+            'features' => [
+                'share_save' => [ 'enabled' => true, 'location' => 'options_review', 'track_source' => true ],
+                'autosave' => [ 'enabled' => true, 'ttl_days' => 30 ],
+                'review_screen' => [ 'enabled' => false ],
+                'measurements' => [ 'show_width' => true, 'show_height' => true ],
+                'scene' => [ 'scale_visualization_with_size' => false ],
+                'backboards' => [
+                    'custom_shapes' => true,
+                    'materials_textures' => true,
+                    'customer_images' => true,
+                    'multi_layer' => true,
+                ],
+                'mountings' => [ 'enabled' => true, 'restrict_by_backboard' => true, 'restrict_by_colour' => true ],
+                'artwork' => [
+                    'logo_upload' => true,
+                    'customer_backboard_upload' => true,
+                    'ai_designer' => [ 'enabled' => false, 'provider' => '', 'endpoint' => '' ],
+                    'max_image_mb' => 5,
+                    'max_pdf_mb' => 25,
+                ],
+                'icons' => [ 'enabled' => true ],
+                'multi_style' => [ 'enabled' => true ],
+                'transform' => [ 'enabled' => true, 'drag' => true, 'scale' => true, 'rotate' => true, 'layering' => true ],
             ],
         ];
     }
@@ -734,8 +841,34 @@ final class Neon_Stack_Configurator {
         $config = array_replace_recursive( $defaults, $stored );
         $config = self::ensure_mojo_mix_config( $config, $stored );
         $config['version'] = 2;
+        $config['features'] = self::normalise_feature_config( $config['features'] ?? [] );
         if ( ! isset( $config['settings']['cors_origins'] ) ) $config['settings']['cors_origins'] = '';
         return $config;
+    }
+
+    private static function normalise_feature_config( $features ) {
+        $defaults = self::default_config()['features'];
+        if ( ! is_array( $features ) ) $features = [];
+        $out = array_replace_recursive( $defaults, $features );
+        $out['share_save']['enabled'] = ! empty( $out['share_save']['enabled'] );
+        $out['autosave']['enabled'] = ! empty( $out['autosave']['enabled'] );
+        $out['autosave']['ttl_days'] = max( 1, min( 365, absint( $out['autosave']['ttl_days'] ?? self::DESIGN_TTL_DAYS ) ) );
+        $out['review_screen']['enabled'] = ! empty( $out['review_screen']['enabled'] );
+        $out['measurements']['show_width'] = ! empty( $out['measurements']['show_width'] );
+        $out['measurements']['show_height'] = ! empty( $out['measurements']['show_height'] );
+        foreach ( [ 'custom_shapes', 'materials_textures', 'customer_images', 'multi_layer' ] as $k ) $out['backboards'][$k] = ! empty( $out['backboards'][$k] );
+        foreach ( [ 'enabled', 'restrict_by_backboard', 'restrict_by_colour' ] as $k ) $out['mountings'][$k] = ! empty( $out['mountings'][$k] );
+        $out['artwork']['logo_upload'] = ! empty( $out['artwork']['logo_upload'] );
+        $out['artwork']['customer_backboard_upload'] = ! empty( $out['artwork']['customer_backboard_upload'] );
+        $out['artwork']['max_image_mb'] = max( 1, min( 10, absint( $out['artwork']['max_image_mb'] ?? 5 ) ) );
+        $out['artwork']['max_pdf_mb'] = max( 1, min( 50, absint( $out['artwork']['max_pdf_mb'] ?? 25 ) ) );
+        $out['artwork']['ai_designer']['enabled'] = ! empty( $out['artwork']['ai_designer']['enabled'] );
+        $out['artwork']['ai_designer']['provider'] = sanitize_key( $out['artwork']['ai_designer']['provider'] ?? '' );
+        $out['artwork']['ai_designer']['endpoint'] = esc_url_raw( $out['artwork']['ai_designer']['endpoint'] ?? '' );
+        $out['icons']['enabled'] = ! empty( $out['icons']['enabled'] );
+        $out['multi_style']['enabled'] = ! empty( $out['multi_style']['enabled'] );
+        foreach ( [ 'enabled','drag','scale','rotate','layering' ] as $k ) $out['transform'][$k] = ! empty( $out['transform'][$k] );
+        return $out;
     }
 
     /**
@@ -747,6 +880,11 @@ final class Neon_Stack_Configurator {
      */
     private static function ensure_mojo_mix_config( $config, $stored ) {
         if ( ! empty( $stored['mojo_mix_initialized'] ) ) {
+            foreach ( [ 'backboard_materials', 'icons', 'mountings' ] as $group ) {
+                if ( ! isset( $config['options']['mojo_mix'][ $group ] ) || ! is_array( $config['options']['mojo_mix'][ $group ] ) ) {
+                    $config['options']['mojo_mix'][ $group ] = [];
+                }
+            }
             return $config;
         }
 
@@ -766,7 +904,7 @@ final class Neon_Stack_Configurator {
             [ 'id'=>'extra_large', 'name'=>'Extra Large (17" Height)', 'description'=>'7.50" × 17.00"', 'price'=>9300, 'enabled'=>true ],
         ];
 
-        foreach ( [ 'backboards', 'hardware', 'shapes' ] as $group ) {
+        foreach ( [ 'backboards', 'hardware', 'shapes', 'backboard_materials', 'icons', 'mountings' ] as $group ) {
             $mojo[ $group ] = [];
             foreach ( (array) ( $custom[ $group ] ?? [] ) as $item ) {
                 if ( is_array( $item ) ) {
@@ -789,6 +927,7 @@ final class Neon_Stack_Configurator {
 
     private static function save_config( $config ) {
         $config['version'] = 2;
+        $config['features'] = self::normalise_feature_config( $config['features'] ?? [] );
         update_option( self::CONFIG_OPTION, $config, false );
     }
 
@@ -1045,6 +1184,9 @@ private static function validate_design_for_product( $design, $product_id, $vari
             'hardware'  => 'hardware',
             'glowStyle' => 'glow_styles',
             'effects'   => 'effects',
+            'backboardMaterial' => 'backboard_materials',
+            'mounting' => 'mountings',
+            'icons' => 'icons',
         ];
 
         foreach ( $selection_map as $payload_key => $group_key ) {
@@ -1060,6 +1202,34 @@ private static function validate_design_for_product( $design, $product_id, $vari
                             esc_html( $id )
                         )
                     );
+                }
+            }
+        }
+
+        // Optional compatibility rules for mountings/hardware. These are
+        // server-side constraints only; the visual React UI may hide an
+        // incompatible option, but the backend remains authoritative.
+        foreach ( [ 'hardware' => 'hardware', 'mounting' => 'mountings' ] as $payload_key => $group_key ) {
+            if ( empty( $design[ $payload_key ] ) || empty( $groups[ $group_key ] ) ) continue;
+            foreach ( self::extract_selection_ids( $design[ $payload_key ] ) as $selected_id ) {
+                $selected = self::find_enabled_option( $groups[ $group_key ], $selected_id );
+                if ( ! is_array( $selected ) ) continue;
+                $backboard_id = '';
+                if ( isset( $design['backboard'] ) ) {
+                    $backboard_ids = self::extract_selection_ids( $design['backboard'] );
+                    $backboard_id = $backboard_ids[0] ?? '';
+                }
+                $colour_ids = [];
+                foreach ( [ 'textColor', 'colors', 'shapeColors', 'letterColors' ] as $colour_key ) {
+                    if ( isset( $design[ $colour_key ] ) ) $colour_ids = array_merge( $colour_ids, self::extract_selection_ids( $design[ $colour_key ] ) );
+                }
+                $allowed_boards = isset( $selected['compatible_backboards'] ) && is_array( $selected['compatible_backboards'] ) ? array_values( array_filter( array_map( 'sanitize_key', $selected['compatible_backboards'] ) ) ) : [];
+                if ( $allowed_boards && ( ! $backboard_id || ! in_array( $backboard_id, $allowed_boards, true ) ) ) {
+                    return new WP_Error( 'neon_mounting_incompatible', __( 'The selected mounting is not compatible with the chosen backboard.', 'neon-stack-configurator' ) );
+                }
+                $allowed_colours = isset( $selected['compatible_colours'] ) && is_array( $selected['compatible_colours'] ) ? array_values( array_filter( array_map( 'sanitize_key', $selected['compatible_colours'] ) ) ) : [];
+                if ( $allowed_colours && ! array_intersect( $colour_ids, $allowed_colours ) ) {
+                    return new WP_Error( 'neon_mounting_colour_incompatible', __( 'The selected mounting is not compatible with the chosen colour.', 'neon-stack-configurator' ) );
                 }
             }
         }
@@ -1103,6 +1273,34 @@ private static function validate_design_for_product( $design, $product_id, $vari
             if ( null === self::find_enabled_option( $config['languages'], $language_id ) ) {
                 return new WP_Error( 'neon_invalid_language', __( 'The selected language is no longer available.', 'neon-stack-configurator' ) );
             }
+        }
+
+        // Frontend visual state is accepted only as structured, sanitized data.
+        // Business rules remain the configured option library. New visual features
+        // do not introduce a second pricing or sizing model.
+        if ( isset( $design['backboardLayers'] ) && is_array( $design['backboardLayers'] ) ) {
+            if ( count( $design['backboardLayers'] ) > 10 ) return new WP_Error( 'neon_backboard_layers', __( 'Too many backboard layers were selected.', 'neon-stack-configurator' ) );
+            $board_ids = self::extract_selection_ids( $design['backboard'] ?? '' );
+            $board_id = $board_ids[0] ?? '';
+            if ( count( $design['backboardLayers'] ) > 0 && ! in_array( $board_id, [ 'cut_to_shape', 'cut_to_letter' ], true ) ) {
+                return new WP_Error( 'neon_backboard_layers_type', __( 'Multi-layer backboards are only available for cut-to-shape and cut-to-letter boards.', 'neon-stack-configurator' ) );
+            }
+            $previous_extension = -1.0;
+            foreach ( $design['backboardLayers'] as $layer ) {
+                if ( ! is_array( $layer ) ) return new WP_Error( 'neon_backboard_layer_invalid', __( 'Invalid backboard layer data.', 'neon-stack-configurator' ) );
+                if ( isset( $layer['extension'] ) ) {
+                    $extension = (float) $layer['extension'];
+                    if ( $extension < 0 || $extension <= $previous_extension ) return new WP_Error( 'neon_backboard_layer_extension', __( 'Backboard layer extensions must increase from the previous layer.', 'neon-stack-configurator' ) );
+                    $previous_extension = $extension;
+                }
+            }
+        }
+        if ( isset( $design['transforms'] ) && is_array( $design['transforms'] ) && count( $design['transforms'] ) > 100 ) {
+            return new WP_Error( 'neon_transform_nodes', __( 'Too many visual transform nodes were supplied.', 'neon-stack-configurator' ) );
+        }
+
+        if ( isset( $design['font'] ) && '' !== (string) $design['font'] && empty( $design['fontId'] ) ) {
+            $design['fontId'] = sanitize_key( (string) $design['font'] );
         }
 
         if ( isset( $design['screenshot_token'] ) && '' !== (string) $design['screenshot_token'] ) {
@@ -1181,7 +1379,7 @@ private static function validate_design_for_product( $design, $product_id, $vari
 private static function calculate_option_surcharge( $design, $groups ) {
         $total = 0.0;
 
-        foreach ( [ 'colors'=>'colors', 'backboard'=>'backboards', 'hardware'=>'hardware', 'glowStyle'=>'glow_styles', 'effects'=>'effects' ] as $payload_key => $group_key ) {
+        foreach ( [ 'colors'=>'colors', 'backboard'=>'backboards', 'hardware'=>'hardware', 'glowStyle'=>'glow_styles', 'effects'=>'effects', 'backboardMaterial'=>'backboard_materials', 'mounting'=>'mountings', 'icons'=>'icons' ] as $payload_key => $group_key ) {
             if ( ! array_key_exists( $payload_key, $design ) || empty( $groups[ $group_key ] ) ) continue;
             foreach ( self::extract_selection_ids( $design[ $payload_key ] ) as $id ) {
                 $price = self::lookup_option_price( $groups[ $group_key ], $id );
@@ -1290,6 +1488,15 @@ private static function calculate_option_surcharge( $design, $groups ) {
                         '_neon_stack_' . self::meta_slug( $design_key ),
                         sanitize_text_field( $value )
                     );
+                }
+            }
+        }
+
+        foreach ( [ 'backboardLayers', 'backboardMaterial', 'backboardTexture', 'mounting', 'logo', 'artwork', 'icons' ] as $design_key ) {
+            if ( isset( $design[ $design_key ] ) ) {
+                $value = self::summarize_value( $design[ $design_key ] );
+                if ( '' !== $value ) {
+                    $item->update_meta_data( '_neon_stack_' . self::meta_slug( $design_key ), sanitize_text_field( $value ) );
                 }
             }
         }
@@ -1447,6 +1654,9 @@ public static function save_order_item_data( $item, $cart_item_key, $values, $or
         unset( $d['screenshot_token'] );
 
         $item->add_meta_data( self::META_KEY, wp_json_encode( $d, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ), true );
+        if ( ! empty( $d['design_id'] ) ) $item->add_meta_data( '_neon_stack_design_id', sanitize_key( (string) $d['design_id'] ), true );
+        if ( ! empty( $d['share_token'] ) ) $item->add_meta_data( '_neon_stack_share_token', sanitize_key( (string) $d['share_token'] ), true );
+        if ( ! empty( $d['design_source'] ) ) $item->add_meta_data( '_neon_stack_design_source', sanitize_text_field( (string) $d['design_source'] ), true );
 
         // Store the human-readable server-derived snapshot used by the production team.
         $product = $values['data'] ?? null;
@@ -1459,6 +1669,11 @@ public static function save_order_item_data( $item, $cart_item_key, $values, $or
             if ( $breakdown ) {
                 $item->add_meta_data( '_neon_stack_price_snapshot', wp_json_encode( $breakdown, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ), true );
             }
+        }
+
+        $artwork_token = ! empty( $d['logo_asset_token'] ) ? sanitize_key( $d['logo_asset_token'] ) : ( ! empty( $d['backboard_image_token'] ) ? sanitize_key( $d['backboard_image_token'] ) : ( ! empty( $d['artwork_token'] ) ? sanitize_key( $d['artwork_token'] ) : '' ) );
+        if ( $artwork_token && self::private_artwork_exists( $artwork_token ) ) {
+            $item->add_meta_data( '_neon_stack_artwork_token', $artwork_token, true );
         }
 
         if ( $screenshot_token ) {
@@ -1597,9 +1812,11 @@ public static function save_order_item_data( $item, $cart_item_key, $values, $or
         self::write_private_directory_rules( $private_dir );
         $filename = sanitize_file_name('neon-preview-' . ($order ? $order->get_id() : 0) . '-' . wp_generate_password(8,false) . '.' . $ext);
         $dest = trailingslashit($private_dir) . $filename;
-        if ( ! @rename($path,$dest) ) {
-            if ( ! @copy($path,$dest) ) { self::delete_temp($token,$info); return 0; }
-            @unlink($path);
+        // Copy first and keep the temporary source until the attachment has
+        // been successfully created. A transient Media/DB failure must not
+        // destroy the only copy and make the screenshot unrecoverable.
+        if ( ! @copy( $path, $dest ) ) {
+            return 0;
         }
         $attachment = [
             'post_mime_type'=>$mime,
@@ -1608,10 +1825,15 @@ public static function save_order_item_data( $item, $cart_item_key, $values, $or
             'post_status'=>'private',
         ];
         $attachment_id = wp_insert_attachment($attachment,$dest,$order ? $order->get_id() : 0);
-        if ( is_wp_error($attachment_id) || ! $attachment_id ) { @unlink($dest); self::delete_temp($token,$info); return 0; }
+        if ( is_wp_error($attachment_id) || ! $attachment_id ) {
+            @unlink( $dest );
+            return 0;
+        }
         require_once ABSPATH . 'wp-admin/includes/image.php';
         $metadata = wp_generate_attachment_metadata($attachment_id,$dest);
         if ( ! empty($metadata) && ! is_wp_error($metadata) ) wp_update_attachment_metadata($attachment_id,$metadata);
+        // Only now remove the temporary source and token index.
+        self::delete_temp( $token, $info );
         update_post_meta($attachment_id,'_neon_stack_private_preview','1');
         update_post_meta($attachment_id,'_neon_stack_order_id',$order ? $order->get_id() : 0);
         @unlink($index);
@@ -1689,6 +1911,8 @@ public static function save_order_item_data( $item, $cart_item_key, $values, $or
             'Shapes'       => $item->get_meta( '_neon_stack_shapes', true ),
             'Shape colours'=> $item->get_meta( '_neon_stack_shape_colors', true ),
             'Effects'      => $item->get_meta( '_neon_stack_effects', true ),
+            'Artwork'      => $item->get_meta( '_neon_stack_artwork_token', true ),
+            'Design ID'    => $item->get_meta( '_neon_stack_design_id', true ),
         ];
 
         // Backfill display values directly from the stored sanitized design when
@@ -1745,6 +1969,12 @@ public static function save_order_item_data( $item, $cart_item_key, $values, $or
             echo '</details>';
         }
 
+        $artwork_token = sanitize_key( (string) $item->get_meta( '_neon_stack_artwork_token', true ) );
+        if ( $artwork_token && self::private_artwork_exists( $artwork_token ) ) {
+            $artwork_url = wp_nonce_url( admin_url( 'admin-post.php?action=neon_stack_artwork&token=' . rawurlencode( $artwork_token ) ), 'neon_stack_artwork_' . $artwork_token );
+            echo '<div style="margin-top:12px;"><strong style="display:block;margin-bottom:7px;">Customer artwork</strong><a href="' . esc_url( $artwork_url ) . '" target="_blank" rel="noopener">Open original artwork ↗</a></div>';
+        }
+
         $attachment_id = (int) $item->get_meta( self::SCREENSHOT_META_KEY, true );
         if ( $attachment_id ) {
             $preview_url = wp_nonce_url(
@@ -1772,7 +2002,7 @@ public static function save_order_item_data( $item, $cart_item_key, $values, $or
 
     public static function hide_internal_meta($formatted_meta,$item){
         foreach($formatted_meta as $key=>$meta){
-            if(in_array($meta->key,[self::META_KEY,self::SCREENSHOT_META_KEY,self::SCREENSHOT_URL_META_KEY,'_neon_stack_pending_screenshot_token','_neon_stack_screenshot_status'],true)) unset($formatted_meta[$key]);
+            if(in_array($meta->key,[self::META_KEY,self::SCREENSHOT_META_KEY,self::SCREENSHOT_URL_META_KEY,'_neon_stack_pending_screenshot_token','_neon_stack_screenshot_status',self::SCREENSHOT_TOKEN_META_KEY,'_neon_stack_design_id','_neon_stack_share_token','_neon_stack_design_source','_neon_stack_artwork_token'],true)) unset($formatted_meta[$key]);
         }
         return $formatted_meta;
     }
@@ -1829,6 +2059,8 @@ public static function save_order_item_data( $item, $cart_item_key, $values, $or
                             return is_array($x) && (!isset($x['enabled']) || !empty($x['enabled']));
                         })),
                         'options'       => $config['options'][$type],
+                        'features'      => self::frontend_feature_config( $config['features'] ?? [] ),
+                        'backboard_assets' => array_values( array_filter( (array) ( $config['backboard_assets'] ?? [] ), function( $asset ) { return is_array( $asset ) && ! empty( $asset['enabled'] ); } ) ),
                     ];
 
                     // Mojo Mix has a deliberately different customer experience:
@@ -1871,6 +2103,39 @@ public static function save_order_item_data( $item, $cart_item_key, $values, $or
             }
         ]);
 
+        register_rest_route( self::API_NAMESPACE, '/designs', [
+            'methods' => WP_REST_Server::CREATABLE,
+            'permission_callback' => '__return_true',
+            'callback' => [ __CLASS__, 'rest_save_design' ],
+        ] );
+
+        register_rest_route( self::API_NAMESPACE, '/designs/(?P<token>[a-f0-9]{32})', [
+            'methods' => WP_REST_Server::READABLE,
+            'permission_callback' => '__return_true',
+            'callback' => [ __CLASS__, 'rest_get_shared_design' ],
+        ] );
+
+        register_rest_route( self::API_NAMESPACE, '/designs/(?P<token>[a-f0-9]{32})', [
+            'methods' => WP_REST_Server::DELETABLE,
+            'permission_callback' => [ __CLASS__, 'rest_design_owner_permission' ],
+            'callback' => [ __CLASS__, 'rest_delete_design' ],
+        ] );
+
+        register_rest_route( self::API_NAMESPACE, '/artwork/upload', [
+            'methods' => WP_REST_Server::CREATABLE,
+            'permission_callback' => [ __CLASS__, 'rest_screenshot_permission' ],
+            'callback' => [ __CLASS__, 'rest_upload_artwork' ],
+        ] );
+
+        register_rest_route( self::API_NAMESPACE, '/feature-config', [
+            'methods' => WP_REST_Server::READABLE,
+            'permission_callback' => '__return_true',
+            'callback' => function() {
+                $config = self::config();
+                return rest_ensure_response( self::frontend_feature_config( $config['features'] ?? [] ) );
+            },
+        ] );
+
         register_rest_route( self::API_NAMESPACE, '/screenshot', [
             'methods' => WP_REST_Server::CREATABLE,
             'permission_callback' => [ __CLASS__, 'rest_screenshot_permission' ],
@@ -1890,6 +2155,286 @@ public static function save_order_item_data( $item, $cart_item_key, $values, $or
                 ]);
             }
         ]);
+    }
+
+    private static function register_design_post_type() {
+        if ( post_type_exists( self::DESIGN_POST_TYPE ) ) return;
+        register_post_type( self::DESIGN_POST_TYPE, [
+            'labels' => [ 'name' => 'Neon Designs', 'singular_name' => 'Neon Design' ],
+            'public' => false,
+            'show_ui' => false,
+            'show_in_rest' => false,
+            'supports' => [ 'title' ],
+            'capability_type' => 'post',
+            'map_meta_cap' => true,
+        ] );
+    }
+
+    private static function frontend_feature_config( $features ) {
+        $f = self::normalise_feature_config( $features );
+        // Never expose provider endpoints or operational secrets.
+        unset( $f['artwork']['ai_designer']['endpoint'], $f['artwork']['ai_designer']['provider'] );
+        return $f;
+    }
+
+    private static function design_frontend_origin() {
+        $allowed = array_filter( array_map( 'trim', preg_split( '/[\r\n,]+/', (string) ( self::config()['settings']['cors_origins'] ?? '' ) ) ) );
+        foreach ( $allowed as $origin ) {
+            if ( '*' !== $origin && filter_var( $origin, FILTER_VALIDATE_URL ) ) return untrailingslashit( $origin );
+        }
+        return '';
+    }
+
+    private static function design_expiry_timestamp( $autosave = false ) {
+        $days = absint( self::config()['features']['autosave']['ttl_days'] ?? self::DESIGN_TTL_DAYS );
+        $days = max( 1, min( 365, $days ) );
+        return time() + $days * DAY_IN_SECONDS;
+    }
+
+    private static function design_token() {
+        try { return strtolower( bin2hex( random_bytes( 16 ) ) ); }
+        catch ( Exception $e ) { return strtolower( wp_generate_password( 32, false, false ) ); }
+    }
+
+    private static function design_owner_matches( $post_id, $request ) {
+        $owner = absint( get_post_meta( $post_id, '_neon_stack_design_owner', true ) );
+        if ( $owner > 0 && is_user_logged_in() ) return $owner === get_current_user_id();
+        $access = sanitize_text_field( (string) $request->get_header( 'X-Neon-Design-Token' ) );
+        $stored = (string) get_post_meta( $post_id, '_neon_stack_design_access', true );
+        return $access !== '' && $stored !== '' && hash_equals( $stored, $access );
+    }
+
+    public static function rest_design_owner_permission( $request ) {
+        $token = sanitize_key( (string) $request['token'] );
+        $posts = get_posts([ 'post_type' => self::DESIGN_POST_TYPE, 'post_status' => 'private', 'numberposts' => 1, 'meta_key' => '_neon_stack_design_share', 'meta_value' => $token, 'fields' => 'ids' ]);
+        if ( empty( $posts[0] ) ) return new WP_Error( 'neon_design_not_found', __( 'Design not found.', 'neon-stack-configurator' ), [ 'status' => 404 ] );
+        return self::design_owner_matches( absint( $posts[0] ), $request );
+    }
+
+    private static function allow_public_write( $prefix, $limit ) {
+        $ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : 'unknown';
+        $key = 'neon_stack_' . sanitize_key( $prefix ) . '_' . substr( md5( $ip ), 0, 24 );
+        $count = absint( get_transient( $key ) );
+        if ( $count >= absint( $limit ) ) return false;
+        set_transient( $key, $count + 1, HOUR_IN_SECONDS );
+        return true;
+    }
+
+    public static function rest_save_design( $request ) {
+        if ( ! self::allow_public_write( 'design', self::DESIGN_RATE_LIMIT ) ) return new WP_Error( 'neon_design_rate_limited', __( 'Too many design saves were attempted. Please try again later.', 'neon-stack-configurator' ), [ 'status' => 429 ] );
+        $features = self::config()['features'] ?? [];
+        if ( empty( $features['share_save']['enabled'] ) && empty( $features['autosave']['enabled'] ) ) {
+            return new WP_Error( 'neon_designs_disabled', __( 'Saved designs are currently disabled.', 'neon-stack-configurator' ), [ 'status' => 403 ] );
+        }
+        $body = $request->get_json_params();
+        if ( ! is_array( $body ) ) return new WP_Error( 'neon_design_invalid_request', __( 'Invalid design request.', 'neon-stack-configurator' ), [ 'status' => 400 ] );
+        $design = self::sanitize_design( $body['design'] ?? $body );
+        if ( empty( $design ) ) return new WP_Error( 'neon_design_invalid', __( 'The design data is invalid.', 'neon-stack-configurator' ), [ 'status' => 400 ] );
+        $type = sanitize_key( $design['configurator'] ?? '' );
+        $product_id = absint( $design['product_id'] ?? self::authoritative_product_id( $type ) );
+        if ( ! $product_id ) return new WP_Error( 'neon_design_product', __( 'A valid configurator product is required.', 'neon-stack-configurator' ), [ 'status' => 400 ] );
+        $validation = self::validate_design_for_product( $design, $product_id, 0 );
+        if ( is_wp_error( $validation ) ) return $validation;
+
+        $requested_share = sanitize_key( (string) ( $body['share_token'] ?? $design['share_token'] ?? '' ) );
+        $post_id = 0;
+        if ( $requested_share ) {
+            $posts = get_posts([ 'post_type' => self::DESIGN_POST_TYPE, 'post_status' => 'private', 'numberposts' => 1, 'meta_key' => '_neon_stack_design_share', 'meta_value' => $requested_share, 'fields' => 'ids' ]);
+            if ( ! empty( $posts[0] ) && self::design_owner_matches( absint( $posts[0] ), $request ) ) $post_id = absint( $posts[0] );
+        }
+
+        $is_new = ! $post_id;
+        $share_token = $is_new ? self::design_token() : (string) get_post_meta( $post_id, '_neon_stack_design_share', true );
+        $access_token = $is_new ? self::design_token() : (string) get_post_meta( $post_id, '_neon_stack_design_access', true );
+        $mode = sanitize_key( (string) ( $body['mode'] ?? 'save' ) );
+        $title = sanitize_text_field( $body['title'] ?? '' );
+        if ( '' === $title ) $title = sanitize_text_field( $design['text'] ?? 'Untitled Neon Design' );
+
+        if ( $is_new ) {
+            $post_id = wp_insert_post([ 'post_type' => self::DESIGN_POST_TYPE, 'post_status' => 'private', 'post_title' => $title ], true );
+            if ( is_wp_error( $post_id ) ) return $post_id;
+            update_post_meta( $post_id, '_neon_stack_design_share', $share_token );
+            update_post_meta( $post_id, '_neon_stack_design_access', $access_token );
+            update_post_meta( $post_id, '_neon_stack_design_owner', is_user_logged_in() ? get_current_user_id() : 0 );
+        } else {
+            wp_update_post([ 'ID' => $post_id, 'post_title' => $title ]);
+        }
+
+        unset( $design['share_token'], $design['design_id'], $design['screenshot_token'] );
+        $design['schema_version'] = self::DESIGN_SCHEMA_VERSION;
+        update_post_meta( $post_id, '_neon_stack_design_json', wp_json_encode( $design, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) );
+        update_post_meta( $post_id, '_neon_stack_design_mode', $mode );
+        update_post_meta( $post_id, '_neon_stack_design_updated', time() );
+        update_post_meta( $post_id, '_neon_stack_design_expires', self::design_expiry_timestamp( 'autosave' === $mode ) );
+        update_post_meta( $post_id, '_neon_stack_design_source', $request->get_header( 'Origin' ) ?: '' );
+
+        // Promote the existing sign-only preview into a public share preview.
+        // The customer's wall/background image never enters this endpoint.
+        $screenshot_token = sanitize_key( (string) ( $design['screenshot_token'] ?? '' ) );
+        if ( $screenshot_token && self::temp_screenshot_exists( $screenshot_token ) ) {
+            $shared = self::promote_temp_screenshot_to_shared( $screenshot_token );
+            if ( $shared ) update_post_meta( $post_id, '_neon_stack_design_preview', $shared );
+        }
+
+        $origin = self::design_frontend_origin();
+        $share_url = $origin ? $origin . '/design/' . $share_token : '';
+        return rest_ensure_response([ 'success' => true, 'design_id' => $share_token, 'share_token' => $share_token, 'access_token' => $access_token, 'mode' => $mode, 'share_url' => $share_url, 'updated_at' => gmdate( 'c' ) ]);
+    }
+
+    public static function rest_get_shared_design( $request ) {
+        $token = sanitize_key( (string) $request['token'] );
+        $posts = get_posts([ 'post_type' => self::DESIGN_POST_TYPE, 'post_status' => 'private', 'numberposts' => 1, 'meta_key' => '_neon_stack_design_share', 'meta_value' => $token ]);
+        if ( empty( $posts[0] ) ) return new WP_Error( 'neon_design_not_found', __( 'Design not found or no longer available.', 'neon-stack-configurator' ), [ 'status' => 404 ] );
+        $post = $posts[0];
+        $expires = absint( get_post_meta( $post->ID, '_neon_stack_design_expires', true ) );
+        if ( $expires && time() > $expires ) return new WP_Error( 'neon_design_expired', __( 'This shared design has expired.', 'neon-stack-configurator' ), [ 'status' => 410 ] );
+        $design = self::decode_json( get_post_meta( $post->ID, '_neon_stack_design_json', true ) );
+        if ( ! is_array( $design ) ) return new WP_Error( 'neon_design_corrupt', __( 'This design could not be loaded.', 'neon-stack-configurator' ), [ 'status' => 500 ] );
+        $preview = sanitize_key( (string) get_post_meta( $post->ID, '_neon_stack_design_preview', true ) );
+        $editable = self::design_owner_matches( $post->ID, $request );
+        $response = [ 'success' => true, 'design_id' => $token, 'title' => sanitize_text_field( $post->post_title ), 'design' => $design, 'preview_url' => $preview ? home_url( '/?neon_stack_shared_preview=' . rawurlencode( $preview ) ) : '', 'editable' => $editable, 'updated_at' => gmdate( 'c', absint( get_post_meta( $post->ID, '_neon_stack_design_updated', true ) ?: current_time( 'timestamp', true ) ) ) ];
+        if ( $editable ) $response['access_token'] = (string) get_post_meta( $post->ID, '_neon_stack_design_access', true );
+        return rest_ensure_response( $response );
+    }
+
+    public static function rest_delete_design( $request ) {
+        $token = sanitize_key( (string) $request['token'] );
+        $posts = get_posts([ 'post_type' => self::DESIGN_POST_TYPE, 'post_status' => 'private', 'numberposts' => 1, 'meta_key' => '_neon_stack_design_share', 'meta_value' => $token, 'fields' => 'ids' ]);
+        if ( empty( $posts[0] ) ) return new WP_Error( 'neon_design_not_found', __( 'Design not found.', 'neon-stack-configurator' ), [ 'status' => 404 ] );
+        $post_id = absint( $posts[0] );
+        $preview = sanitize_key( (string) get_post_meta( $post_id, '_neon_stack_design_preview', true ) );
+        if ( $preview ) self::delete_shared_preview( $preview );
+        wp_delete_post( $post_id, true );
+        return rest_ensure_response([ 'success' => true ]);
+    }
+
+    private static function shared_preview_dir() {
+        $upload = wp_upload_dir();
+        return trailingslashit( $upload['basedir'] ) . 'neon-stack-shared';
+    }
+
+    private static function promote_temp_screenshot_to_shared( $token ) {
+        $token = strtolower( (string) $token );
+        if ( ! self::temp_screenshot_exists( $token ) ) return '';
+        $upload = wp_upload_dir();
+        if ( ! empty( $upload['error'] ) ) return '';
+        $temp_dir = trailingslashit( $upload['basedir'] ) . 'neon-stack-temp';
+        $info = self::decode_json( @file_get_contents( trailingslashit( $temp_dir ) . $token . '.json' ) );
+        if ( ! is_array( $info ) || empty( $info['file'] ) ) return '';
+        $source = trailingslashit( $temp_dir ) . basename( $info['file'] );
+        if ( ! is_file( $source ) ) return '';
+        $dir = self::shared_preview_dir();
+        if ( ! wp_mkdir_p( $dir ) ) return '';
+        self::write_temp_directory_rules( $dir );
+        $shared = self::design_token();
+        $ext = strtolower( pathinfo( $source, PATHINFO_EXTENSION ) );
+        if ( ! in_array( $ext, [ 'png', 'jpg', 'jpeg' ], true ) ) $ext = 'png';
+        if ( ! @copy( $source, trailingslashit( $dir ) . $shared . '.' . $ext ) ) return '';
+        file_put_contents( trailingslashit( $dir ) . $shared . '.json', wp_json_encode([ 'file' => $shared . '.' . $ext, 'created' => time() ]), LOCK_EX );
+        return $shared;
+    }
+
+    private static function delete_shared_preview( $token ) {
+        if ( ! preg_match( '/^[a-f0-9]{32}$/', (string) $token ) ) return;
+        $dir = self::shared_preview_dir();
+        $info = self::decode_json( @file_get_contents( trailingslashit( $dir ) . $token . '.json' ) );
+        if ( is_array( $info ) && ! empty( $info['file'] ) ) @unlink( trailingslashit( $dir ) . basename( $info['file'] ) );
+        @unlink( trailingslashit( $dir ) . $token . '.json' );
+    }
+
+    public static function serve_shared_preview() {
+        $token = isset( $_GET['neon_stack_shared_preview'] ) ? sanitize_key( wp_unslash( $_GET['neon_stack_shared_preview'] ) ) : '';
+        if ( ! $token ) return;
+        $posts = get_posts([ 'post_type' => self::DESIGN_POST_TYPE, 'post_status' => 'private', 'numberposts' => 1, 'meta_key' => '_neon_stack_design_preview', 'meta_value' => $token, 'fields' => 'ids' ]);
+        if ( empty( $posts[0] ) ) { status_header( 404 ); exit; }
+        $expires = absint( get_post_meta( $posts[0], '_neon_stack_design_expires', true ) );
+        if ( $expires && time() > $expires ) { status_header( 410 ); exit; }
+        $dir = self::shared_preview_dir();
+        $info = self::decode_json( @file_get_contents( trailingslashit( $dir ) . $token . '.json' ) );
+        if ( ! is_array( $info ) || empty( $info['file'] ) ) { status_header( 404 ); exit; }
+        $file = trailingslashit( $dir ) . basename( $info['file'] );
+        if ( ! is_file( $file ) ) { status_header( 404 ); exit; }
+        $mime = 'image/png';
+        if ( preg_match( '/\.jpe?g$/i', $file ) ) $mime = 'image/jpeg';
+        nocache_headers();
+        header( 'Content-Type: ' . $mime );
+        header( 'Content-Length: ' . filesize( $file ) );
+        readfile( $file );
+        exit;
+    }
+
+    public static function cleanup_expired_designs() {
+        $posts = get_posts([ 'post_type' => self::DESIGN_POST_TYPE, 'post_status' => 'private', 'numberposts' => 200, 'meta_key' => '_neon_stack_design_expires', 'meta_compare' => '<', 'meta_value' => time(), 'fields' => 'ids' ]);
+        foreach ( (array) $posts as $post_id ) {
+            $preview = sanitize_key( (string) get_post_meta( $post_id, '_neon_stack_design_preview', true ) );
+            if ( $preview ) self::delete_shared_preview( $preview );
+            wp_delete_post( absint( $post_id ), true );
+        }
+    }
+
+    private static function private_artwork_dir() {
+        $upload = wp_upload_dir();
+        return trailingslashit( $upload['basedir'] ) . 'neon-stack-artwork';
+    }
+
+    private static function private_artwork_exists( $token ) {
+        if ( ! preg_match( '/^[a-f0-9]{32}$/', (string) $token ) ) return false;
+        $dir = self::private_artwork_dir();
+        $info = self::decode_json( @file_get_contents( trailingslashit( $dir ) . $token . '.json' ) );
+        if ( ! is_array( $info ) || empty( $info['file'] ) ) return false;
+        $expires = absint( $info['expires'] ?? 0 );
+        if ( $expires && time() > $expires ) return false;
+        return is_file( trailingslashit( $dir ) . basename( $info['file'] ) );
+    }
+
+    public static function serve_private_artwork() {
+        if ( ! is_user_logged_in() || ! current_user_can( 'manage_woocommerce' ) ) wp_die( esc_html__( 'You are not allowed to access this artwork.', 'neon-stack-configurator' ), 403 );
+        $token = sanitize_key( wp_unslash( $_GET['token'] ?? '' ) );
+        if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ?? '' ) ), 'neon_stack_artwork_' . $token ) ) wp_die( esc_html__( 'Invalid artwork request.', 'neon-stack-configurator' ), 403 );
+        if ( ! self::private_artwork_exists( $token ) ) wp_die( esc_html__( 'Artwork not found or expired.', 'neon-stack-configurator' ), 404 );
+        $dir = self::private_artwork_dir();
+        $info = self::decode_json( @file_get_contents( trailingslashit( $dir ) . $token . '.json' ) );
+        $file = trailingslashit( $dir ) . basename( $info['file'] );
+        $mime = sanitize_text_field( $info['mime'] ?? 'application/octet-stream' );
+        nocache_headers();
+        header( 'Content-Type: ' . $mime );
+        header( 'Content-Disposition: inline; filename="' . basename( $file ) . '"' );
+        header( 'Content-Length: ' . filesize( $file ) );
+        readfile( $file );
+        exit;
+    }
+
+    public static function rest_upload_artwork( $request ) {
+        if ( ! self::allow_public_write( 'artwork', self::ARTWORK_RATE_LIMIT ) ) return new WP_Error( 'neon_artwork_rate_limited', __( 'Too many artwork uploads were attempted. Please try again later.', 'neon-stack-configurator' ), [ 'status' => 429 ] );
+        $features = self::config()['features']['artwork'] ?? [];
+        if ( empty( $features['logo_upload'] ) && empty( $features['customer_backboard_upload'] ) ) return new WP_Error( 'neon_artwork_disabled', __( 'Artwork uploads are currently disabled.', 'neon-stack-configurator' ), [ 'status' => 403 ] );
+        if ( empty( $_FILES['artwork'] ) || ! is_array( $_FILES['artwork'] ) ) return new WP_Error( 'neon_artwork_missing', __( 'No artwork file was uploaded.', 'neon-stack-configurator' ), [ 'status' => 400 ] );
+        $file = $_FILES['artwork'];
+        if ( ! empty( $file['error'] ) || empty( $file['tmp_name'] ) || ! is_uploaded_file( $file['tmp_name'] ) ) return new WP_Error( 'neon_artwork_upload', __( 'The artwork upload is invalid.', 'neon-stack-configurator' ), [ 'status' => 400 ] );
+        $size = absint( $file['size'] ?? 0 );
+        $name = sanitize_file_name( $file['name'] ?? '' );
+        $ext = strtolower( pathinfo( $name, PATHINFO_EXTENSION ) );
+        $limit = 'pdf' === $ext ? self::MAX_ARTWORK_PDF_BYTES : self::MAX_ARTWORK_BYTES;
+        if ( $size < 1 || $size > $limit ) return new WP_Error( 'neon_artwork_size', __( 'The artwork file is too large.', 'neon-stack-configurator' ), [ 'status' => 413 ] );
+        $allowed = [ 'png'=>'image/png', 'jpg'=>'image/jpeg', 'jpeg'=>'image/jpeg', 'webp'=>'image/webp', 'svg'=>'image/svg+xml', 'pdf'=>'application/pdf' ];
+        if ( ! isset( $allowed[$ext] ) ) return new WP_Error( 'neon_artwork_type', __( 'Allowed artwork formats are PNG, JPEG, WebP, SVG and PDF.', 'neon-stack-configurator' ), [ 'status' => 415 ] );
+        if ( 'svg' === $ext ) {
+            $raw = @file_get_contents( $file['tmp_name'] );
+            if ( false === $raw || strlen( $raw ) > self::MAX_ARTWORK_BYTES || false === strpos( strtolower( $raw ), '<svg' ) ) return new WP_Error( 'neon_artwork_svg', __( 'The SVG artwork could not be validated.', 'neon-stack-configurator' ), [ 'status' => 415 ] );
+            if ( preg_match( '/<\s*(script|foreignObject|iframe|object|embed)\b/i', $raw ) ) return new WP_Error( 'neon_artwork_svg', __( 'The SVG contains unsupported content.', 'neon-stack-configurator' ), [ 'status' => 415 ] );
+        } elseif ( 'pdf' !== $ext ) {
+            $info = @getimagesize( $file['tmp_name'] );
+            if ( ! $info || empty( $info['mime'] ) || ! in_array( $info['mime'], [ 'image/png','image/jpeg','image/webp' ], true ) ) return new WP_Error( 'neon_artwork_image', __( 'The uploaded artwork is not a valid supported image.', 'neon-stack-configurator' ), [ 'status' => 415 ] );
+        }
+        $upload = wp_upload_dir();
+        $dir = self::private_artwork_dir();
+        if ( ! wp_mkdir_p( $dir ) ) return new WP_Error( 'neon_artwork_storage', __( 'Artwork storage is temporarily unavailable.', 'neon-stack-configurator' ), [ 'status' => 500 ] );
+        self::write_temp_directory_rules( $dir );
+        $token = self::design_token();
+        $filename = $token . '.' . $ext;
+        if ( ! @move_uploaded_file( $file['tmp_name'], trailingslashit( $dir ) . $filename ) ) return new WP_Error( 'neon_artwork_storage', __( 'The artwork could not be stored.', 'neon-stack-configurator' ), [ 'status' => 500 ] );
+        file_put_contents( trailingslashit( $dir ) . $token . '.json', wp_json_encode([ 'file'=>$filename, 'mime'=>$allowed[$ext], 'created'=>time(), 'expires'=>time()+30*DAY_IN_SECONDS ]), LOCK_EX );
+        return rest_ensure_response([ 'success'=>true, 'token'=>$token, 'format'=>$ext, 'expires_in'=>30*DAY_IN_SECONDS ]);
     }
 
     public static function rest_screenshot_permission( $request ) {
@@ -2272,6 +2817,71 @@ public static function save_order_item_data( $item, $cart_item_key, $values, $or
             self::redirect_admin('saved','Font removed from the configurator.');
         }
 
+        if ( 'upload_backboard_asset' === $action ) {
+            if ( empty( $_FILES['backboard_asset'] ) || ! is_array( $_FILES['backboard_asset'] ) ) self::redirect_admin( 'error', 'Choose an SVG, PNG, JPEG or WebP backboard asset.' );
+            $file = $_FILES['backboard_asset'];
+            if ( ! empty( $file['error'] ) || empty( $file['tmp_name'] ) || ! is_uploaded_file( $file['tmp_name'] ) ) self::redirect_admin( 'error', 'The backboard asset upload is invalid.' );
+            $size = absint( $file['size'] ?? 0 );
+            if ( $size < 1 || $size > self::MAX_ARTWORK_BYTES ) self::redirect_admin( 'error', 'Backboard assets must be 5 MB or smaller.' );
+            $name = sanitize_file_name( $file['name'] ?? '' );
+            $ext = strtolower( pathinfo( $name, PATHINFO_EXTENSION ) );
+            $allowed = [ 'svg'=>'image/svg+xml', 'png'=>'image/png', 'jpg'=>'image/jpeg', 'jpeg'=>'image/jpeg', 'webp'=>'image/webp' ];
+            if ( ! isset( $allowed[ $ext ] ) ) self::redirect_admin( 'error', 'Allowed backboard assets: SVG, PNG, JPEG and WebP.' );
+            if ( 'svg' === $ext ) {
+                $raw = @file_get_contents( $file['tmp_name'] );
+                if ( false === $raw || false === stripos( $raw, '<svg' ) || preg_match( '/<\s*(script|foreignObject|iframe|object|embed)\b/i', $raw ) ) self::redirect_admin( 'error', 'The SVG contains unsupported content.' );
+            } else {
+                $info = @getimagesize( $file['tmp_name'] );
+                if ( ! $info || empty( $info['mime'] ) || ! in_array( $info['mime'], [ 'image/png','image/jpeg','image/webp' ], true ) ) self::redirect_admin( 'error', 'The uploaded backboard asset is not a valid supported image.' );
+            }
+            require_once ABSPATH . 'wp-admin/includes/file.php';
+            $mime_filter = static function( $mimes ) use ( $allowed ) { foreach ( $allowed as $e => $m ) $mimes[$e] = $m; return $mimes; };
+            add_filter( 'upload_mimes', $mime_filter, 20 );
+            $upload = wp_handle_upload( $file, [ 'test_form'=>false, 'mimes'=>$allowed ] );
+            remove_filter( 'upload_mimes', $mime_filter, 20 );
+            if ( isset( $upload['error'] ) ) self::redirect_admin( 'error', $upload['error'] );
+            $id = sanitize_key( wp_unslash( $_POST['asset_id'] ?? pathinfo( $name, PATHINFO_FILENAME ) ) );
+            if ( '' === $id ) $id = self::design_token();
+            $asset = [ 'id'=>$id, 'name'=>sanitize_text_field( wp_unslash( $_POST['asset_name'] ?? pathinfo( $name, PATHINFO_FILENAME ) ) ), 'url'=>esc_url_raw( $upload['url'] ), 'type'=>sanitize_key( $_POST['asset_type'] ?? 'shape' ), 'mime'=>sanitize_text_field( $upload['type'] ?? $allowed[$ext] ), 'enabled'=>true, 'description'=>sanitize_textarea_field( wp_unslash( $_POST['asset_description'] ?? '' ) ) ];
+            $config['backboard_assets'][] = $asset;
+            self::save_config( $config );
+            self::redirect_admin( 'saved', 'Backboard asset uploaded.' );
+        }
+
+        if ( 'delete_backboard_asset' === $action ) {
+            $id = sanitize_key( wp_unslash( $_POST['asset_id'] ?? '' ) );
+            $config['backboard_assets'] = array_values( array_filter( (array) ( $config['backboard_assets'] ?? [] ), static function( $asset ) use ( $id ) { return ! is_array( $asset ) || sanitize_key( $asset['id'] ?? '' ) !== $id; } ) );
+            self::save_config( $config );
+            self::redirect_admin( 'saved', 'Backboard asset removed from the configurator library.' );
+        }
+
+        if ( 'save_feature_settings' === $action ) {
+            $f = self::normalise_feature_config( $config['features'] ?? [] );
+            if ( array_key_exists( 'share_enabled', $_POST ) ) $f['share_save']['enabled'] = isset( $_POST['share_enabled'] );
+            if ( array_key_exists( 'track_share_source', $_POST ) ) $f['share_save']['track_source'] = isset( $_POST['track_share_source'] );
+            if ( array_key_exists( 'autosave_enabled', $_POST ) ) $f['autosave']['enabled'] = isset( $_POST['autosave_enabled'] );
+            if ( array_key_exists( 'autosave_ttl_days', $_POST ) ) $f['autosave']['ttl_days'] = max( 1, min( 365, absint( $_POST['autosave_ttl_days'] ?? 30 ) ) );
+            if ( array_key_exists( 'review_enabled', $_POST ) ) $f['review_screen']['enabled'] = isset( $_POST['review_enabled'] );
+            if ( array_key_exists( 'backboard_custom_shapes', $_POST ) ) $f['backboards']['custom_shapes'] = isset( $_POST['backboard_custom_shapes'] );
+            if ( array_key_exists( 'backboard_materials', $_POST ) ) $f['backboards']['materials_textures'] = isset( $_POST['backboard_materials'] );
+            if ( array_key_exists( 'backboard_customer_images', $_POST ) ) $f['backboards']['customer_images'] = isset( $_POST['backboard_customer_images'] );
+            if ( array_key_exists( 'backboard_multi_layer', $_POST ) ) $f['backboards']['multi_layer'] = isset( $_POST['backboard_multi_layer'] );
+            if ( array_key_exists( 'mountings_enabled', $_POST ) ) $f['mountings']['enabled'] = isset( $_POST['mountings_enabled'] );
+            if ( array_key_exists( 'mountings_restrict', $_POST ) ) $f['mountings']['restrict_by_backboard'] = isset( $_POST['mountings_restrict'] );
+            if ( array_key_exists( 'icons_enabled', $_POST ) ) $f['icons']['enabled'] = isset( $_POST['icons_enabled'] );
+            if ( array_key_exists( 'multi_style_enabled', $_POST ) ) $f['multi_style']['enabled'] = isset( $_POST['multi_style_enabled'] );
+            if ( array_key_exists( 'transform_enabled', $_POST ) ) $f['transform']['enabled'] = isset( $_POST['transform_enabled'] );
+            if ( array_key_exists( 'scene_scale', $_POST ) ) $f['scene']['scale_visualization_with_size'] = isset( $_POST['scene_scale'] );
+            if ( array_key_exists( 'logo_upload', $_POST ) ) $f['artwork']['logo_upload'] = isset( $_POST['logo_upload'] );
+            if ( array_key_exists( 'customer_backboard_upload', $_POST ) ) $f['artwork']['customer_backboard_upload'] = isset( $_POST['customer_backboard_upload'] );
+            if ( array_key_exists( 'max_image_mb', $_POST ) ) $f['artwork']['max_image_mb'] = max( 1, min( 10, absint( $_POST['max_image_mb'] ?? 5 ) ) );
+            if ( array_key_exists( 'max_pdf_mb', $_POST ) ) $f['artwork']['max_pdf_mb'] = max( 1, min( 50, absint( $_POST['max_pdf_mb'] ?? 25 ) ) );
+            if ( array_key_exists( 'ai_enabled', $_POST ) ) $f['artwork']['ai_designer']['enabled'] = isset( $_POST['ai_enabled'] );
+            $config['features'] = $f;
+            self::save_config( $config );
+            self::redirect_admin( 'saved', 'Visual feature settings saved.' );
+        }
+
         if ( 'save_json_direct' === $action ) {
             $json=wp_unslash($_POST['config_json']??'');
             $decoded=json_decode($json,true);
@@ -2287,6 +2897,7 @@ public static function save_order_item_data( $item, $cart_item_key, $values, $or
         $clean['settings']['cors_origins']=sanitize_textarea_field($config['settings']['cors_origins']??'');
         $clean['settings']['screenshot_ttl_hours']=max(1,min(48,absint($config['settings']['screenshot_ttl_hours']??6)));
         $clean['mojo_mix_initialized'] = ! empty( $config['mojo_mix_initialized'] );
+        $clean['features'] = self::normalise_feature_config( $config['features'] ?? [] );
 
         $clean['configurators']=[];
         foreach((array)($config['configurators']??[]) as $id=>$c){
@@ -2325,10 +2936,23 @@ public static function save_order_item_data( $item, $cart_item_key, $values, $or
                         'price'=>max(0,(float)($item['price']??0)),
                         'enabled'=>!empty($item['enabled']),
                     ];
-                    foreach(['hex','icon','unit','tag','value'] as $extra) if(isset($item[$extra])) $clean_item[$extra]=sanitize_text_field($item[$extra]);
+                    foreach(['hex','icon','unit','tag','value','asset_id','texture_url','material_id','preview_url'] as $extra) if(isset($item[$extra])) $clean_item[$extra]=sanitize_text_field($item[$extra]);
+                    foreach(['compatible_backboards','compatible_colours','layers'] as $extra) if(isset($item[$extra]) && is_array($item[$extra])) $clean_item[$extra]=self::sanitize_nested($item[$extra]);
                     $clean['options'][$type][$group][]=$clean_item;
                 }
             }
+        }
+        $clean['backboard_assets'] = [];
+        foreach ( (array) ( $config['backboard_assets'] ?? [] ) as $asset ) {
+            if ( ! is_array( $asset ) ) continue;
+            $aid = sanitize_key( $asset['id'] ?? '' );
+            $url = esc_url_raw( $asset['url'] ?? '' );
+            if ( '' === $aid || '' === $url ) continue;
+            $clean['backboard_assets'][] = [
+                'id'=>$aid, 'name'=>sanitize_text_field($asset['name'] ?? $aid), 'url'=>$url,
+                'type'=>sanitize_key($asset['type'] ?? 'shape'), 'mime'=>sanitize_text_field($asset['mime'] ?? ''),
+                'enabled'=>!empty($asset['enabled']), 'description'=>sanitize_textarea_field($asset['description'] ?? ''),
+            ];
         }
         $clean['languages']=[];
         foreach((array)($config['languages']??[]) as $l){
@@ -2359,6 +2983,7 @@ public static function save_order_item_data( $item, $cart_item_key, $values, $or
             'fonts'=>'Fonts',
             'languages'=>'Languages',
             'integration'=>'Integration',
+            'features'=>'Visual Features',
             'advanced'=>'Advanced',
         ];
         $status=sanitize_key($_GET['neon_status']??'');$message=sanitize_text_field(wp_unslash($_GET['neon_message']??''));
@@ -2379,6 +3004,7 @@ public static function save_order_item_data( $item, $cart_item_key, $values, $or
             case 'fonts': self::render_fonts($config); break;
             case 'languages': self::render_languages($config); break;
             case 'integration': self::render_integration($config); break;
+            case 'features': self::render_features($config); break;
             case 'advanced': self::render_advanced($config); break;
             default: self::render_dashboard($config); break;
         }
@@ -2492,6 +3118,28 @@ public static function save_order_item_data( $item, $cart_item_key, $values, $or
         );
         self::card('WooCommerce flow','Keep payment, customer accounts, checkout and orders in WooCommerce.',
             '<ol class="neon-steps"><li><b>React</b> builds the configuration.</li><li><b>React</b> sends <code>neon_stack</code> with the WooCommerce/WooGraphQL add-to-cart request.</li><li><b>Plugin</b> sanitizes and stores the configuration in the cart.</li><li><b>WooCommerce</b> calculates the authoritative price using configured option prices.</li><li><b>Checkout</b> creates the order.</li><li><b>Plugin</b> promotes only the final sign-only screenshot to a private attachment.</li></ol>'
+        );
+    }
+
+    private static function render_features($config) {
+        $f = self::normalise_feature_config( $config['features'] ?? [] );
+        self::card('Share & save', 'Persistent designs without changing your existing pricing or sizing rules.',
+            '<form method="post">'.wp_nonce_field('neon_stack_admin','neon_stack_nonce',true,false).'<input type="hidden" name="neon_stack_action" value="save_feature_settings"><div class="neon-two"><label><input type="checkbox" name="share_enabled" '.checked($f['share_save']['enabled'],true,false).'> Enable share links</label><label><input type="checkbox" name="autosave_enabled" '.checked($f['autosave']['enabled'],true,false).'> Enable auto-save</label></div><label>Auto-save lifetime (days)<input type="number" name="autosave_ttl_days" min="1" max="365" value="'.esc_attr($f['autosave']['ttl_days']).'"></label><div class="neon-two"><label><input type="checkbox" name="review_enabled" '.checked($f['review_screen']['enabled'],true,false).'> Enable review screen</label><label><input type="checkbox" name="track_share_source" '.checked($f['share_save']['track_source'],true,false).'> Track shared-design source</label></div><p><button class="button button-primary neon-primary">Save Feature Settings</button></p></form>'
+        );
+        self::card('Backboards & visual components', 'These settings expose capabilities to React. The existing server-side option prices remain unchanged.',
+            '<form method="post">'.wp_nonce_field('neon_stack_admin','neon_stack_nonce',true,false).'<input type="hidden" name="neon_stack_action" value="save_feature_settings"><div class="neon-two"><label><input type="checkbox" name="backboard_custom_shapes" '.checked($f['backboards']['custom_shapes'],true,false).'> Custom SVG backboard shapes</label><label><input type="checkbox" name="backboard_materials" '.checked($f['backboards']['materials_textures'],true,false).'> Backboard colours / materials / textures</label></div><div class="neon-two"><label><input type="checkbox" name="backboard_customer_images" '.checked($f['backboards']['customer_images'],true,false).'> Customer-designed backboard images</label><label><input type="checkbox" name="backboard_multi_layer" '.checked($f['backboards']['multi_layer'],true,false).'> Multi-layer backboards</label></div><div class="neon-two"><label><input type="checkbox" name="mountings_enabled" '.checked($f['mountings']['enabled'],true,false).'> Mountings</label><label><input type="checkbox" name="mountings_restrict" '.checked($f['mountings']['restrict_by_backboard'],true,false).'> Restrict mountings by backboard</label></div><div class="neon-two"><label><input type="checkbox" name="icons_enabled" '.checked($f['icons']['enabled'],true,false).'> Icons / graphics</label><label><input type="checkbox" name="multi_style_enabled" '.checked($f['multi_style']['enabled'],true,false).'> Multi-colour / multi-font</label></div><div class="neon-two"><label><input type="checkbox" name="transform_enabled" '.checked($f['transform']['enabled'],true,false).'> Drag / scale / rotate / layer</label><label><input type="checkbox" name="scene_scale" '.checked($f['scene']['scale_visualization_with_size'],true,false).'> Visually scale sign with size</label></div><p class="description">The scene/background system stays with your current React implementation. This does not move or store the customer wall photo.</p><p><button class="button button-primary neon-primary">Save Visual Features</button></p></form>'
+        );
+        self::card('Artwork & AI', 'Upload plumbing is ready for logo and customer artwork. AI is opt-in and disabled until a provider is configured.',
+            '<form method="post">'.wp_nonce_field('neon_stack_admin','neon_stack_nonce',true,false).'<input type="hidden" name="neon_stack_action" value="save_feature_settings"><div class="neon-two"><label><input type="checkbox" name="logo_upload" '.checked($f['artwork']['logo_upload'],true,false).'> Logo uploads</label><label><input type="checkbox" name="customer_backboard_upload" '.checked($f['artwork']['customer_backboard_upload'],true,false).'> Customer backboard artwork</label></div><div class="neon-two"><label>Max image size (MB)<input type="number" name="max_image_mb" min="1" max="10" value="'.esc_attr($f['artwork']['max_image_mb']).'"></label><label>Max PDF size (MB)<input type="number" name="max_pdf_mb" min="1" max="50" value="'.esc_attr($f['artwork']['max_pdf_mb']).'"></label></div><label><input type="checkbox" name="ai_enabled" '.checked($f['artwork']['ai_designer']['enabled'],true,false).'> Enable AI Designer integration</label><p class="description">No AI vendor key is stored in React. The provider/endpoint remains server-side.</p><p><button class="button button-primary neon-primary">Save Artwork Settings</button></p></form>'
+        );
+        $asset_rows = '';
+        foreach ( (array) ( $config['backboard_assets'] ?? [] ) as $asset ) {
+            if ( ! is_array( $asset ) ) continue;
+            $id = sanitize_key( $asset['id'] ?? '' );
+            $asset_rows .= '<tr><td><strong>'.esc_html($asset['name'] ?? $id).'</strong><br><code>'.esc_html($id).'</code></td><td>'.esc_html($asset['type'] ?? '').'</td><td><a href="'.esc_url($asset['url'] ?? '').'" target="_blank" rel="noopener">Preview ↗</a></td><td><form method="post">'.wp_nonce_field('neon_stack_admin','neon_stack_nonce',true,false).'<input type="hidden" name="neon_stack_action" value="delete_backboard_asset"><input type="hidden" name="asset_id" value="'.esc_attr($id).'"> <button class="button-link-delete">Remove</button></form></td></tr>';
+        }
+        self::card('Merchant backboard asset library', 'Upload reusable SVG/image assets for React to render as custom backboard shapes or material textures. These are merchant assets, not customer wall photos.',
+            '<form method="post" enctype="multipart/form-data">'.wp_nonce_field('neon_stack_admin','neon_stack_nonce',true,false).'<input type="hidden" name="neon_stack_action" value="upload_backboard_asset"><div class="neon-two"><label>Asset ID<input name="asset_id" pattern="[a-zA-Z0-9_-]+" placeholder="rounded_arch"></label><label>Name<input name="asset_name" placeholder="Rounded Arch"></label></div><div class="neon-two"><label>Type<select name="asset_type"><option value="shape">Backboard shape</option><option value="texture">Texture / material</option><option value="icon">Graphic / icon</option></select></label><label>File<input type="file" name="backboard_asset" accept=".svg,.png,.jpg,.jpeg,.webp" required></label></div><label>Description<textarea name="asset_description" rows="2"></textarea></label><p class="description">SVG uploads are checked for script/embedded-object content. Keep the customer wall/background image out of this library.</p><button class="button button-primary neon-primary">Upload Asset</button></form><div class="neon-table-wrap" style="margin-top:18px;"><table class="neon-table"><thead><tr><th>Asset</th><th>Type</th><th>Preview</th><th></th></tr></thead><tbody>'.($asset_rows ?: '<tr><td colspan="4" class="neon-empty">No merchant backboard assets uploaded yet.</td></tr>').'</tbody></table></div>'
         );
     }
 
@@ -2709,7 +3357,7 @@ JS;
         if ( ! is_array( $payload ) ) return [];
 
         $out = [];
-        $scalar_keys = [ 'configurator', 'text', 'font', 'fontId', 'language', 'textMode', 'textColor', 'size', 'glowStyle', 'colorMode', 'alignment', 'product_id', 'screenshot_token', 'notes' ];
+        $scalar_keys = [ 'configurator', 'text', 'font', 'fontId', 'language', 'textMode', 'textColor', 'size', 'glowStyle', 'colorMode', 'alignment', 'product_id', 'screenshot_token', 'notes', 'design_id', 'share_token', 'save_mode', 'logo_asset_token', 'backboard_image_token', 'artwork_token', 'design_source' ];
         foreach ( $scalar_keys as $key ) {
             if ( isset( $payload[ $key ] ) && is_scalar( $payload[ $key ] ) ) {
                 $value = 'notes' === $key
@@ -2742,7 +3390,7 @@ JS;
             unset( $out['colors'], $out['textColor'], $out['colorMode'], $out['glowStyle'], $out['effects'] );
         }
 
-        foreach ( [ 'backboard', 'hardware', 'sizeOption' ] as $key ) {
+        foreach ( [ 'backboard', 'hardware', 'sizeOption', 'backboardLayers', 'backboardMaterial', 'backboardTexture', 'mounting', 'logo', 'artwork', 'icons', 'transforms', 'scene' ] as $key ) {
             if ( isset( $payload[ $key ] ) && ( is_scalar( $payload[ $key ] ) || is_array( $payload[ $key ] ) ) ) {
                 $out[ $key ] = self::sanitize_nested( $payload[ $key ] );
             }
@@ -2792,6 +3440,7 @@ add_action('plugins_loaded',function(){
         Neon_Stack_Configurator::init();
     }
 });
+
 /**
  * Headless Password Reset Flow
  * This snippet changes the password reset links sent by WordPress and WooCommerce
