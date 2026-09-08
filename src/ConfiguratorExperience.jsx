@@ -122,22 +122,6 @@ export function ConfiguratorExperience({type="custom_neon"}){
 
             const html2canvas = (await import('html2canvas')).default;
             
-            // Temporarily hide the background and ruler elements for the clean screenshot
-            const bgElement = previewRef.current.querySelector('.ns-canvas-background');
-            const rulerElement = previewRef.current.querySelector('.ns-sign-ruler');
-            const calibElement = previewRef.current.querySelector('.ns-calibration-live');
-            const toggleElement = previewRef.current.querySelector('.ns-mobile-light-toggle');
-
-            const originalBgDisplay = bgElement ? bgElement.style.display : '';
-            const originalRulerDisplay = rulerElement ? rulerElement.style.display : '';
-            const originalCalibDisplay = calibElement ? calibElement.style.display : '';
-            const originalToggleDisplay = toggleElement ? toggleElement.style.display : '';
-
-            if (bgElement) bgElement.style.display = 'none';
-            if (rulerElement) rulerElement.style.display = 'none';
-            if (calibElement) calibElement.style.display = 'none';
-            if (toggleElement) toggleElement.style.display = 'none';
-
             // Generate high-res blob for WordPress
             const canvas = await html2canvas(previewRef.current, {
               useCORS: true,
@@ -154,12 +138,6 @@ export function ConfiguratorExperience({type="custom_neon"}){
             });
             cartThumb = tinyCanvas.toDataURL('image/png', 0.9);
             
-            // Restore elements
-            if (bgElement) bgElement.style.display = originalBgDisplay;
-            if (rulerElement) rulerElement.style.display = originalRulerDisplay;
-            if (calibElement) calibElement.style.display = originalCalibDisplay;
-            if (toggleElement) toggleElement.style.display = originalToggleDisplay;
-
             if (mojo && textRef.current) {
               textRef.current.classList.add('spectrum');
               textRef.current.style.removeProperty('color');
@@ -207,8 +185,8 @@ export function ConfiguratorExperience({type="custom_neon"}){
             shapes,
             backboard: backboard?.id || backboard?.name,
             hardware: hardware?.id || hardware?.name,
-            screenshot_token: screenshotToken
           },
+          screenshot_token: screenshotToken,
           image: cartThumb
         };
         item.neon_stack.screenshot_token = screenshotToken;
