@@ -49,6 +49,10 @@ export function ConfiguratorExperience({type="custom_neon"}){
  }));
  const signW = Math.max(baseW/12, maxLineW) + (shapes.length * 6);
  const signH = (linesCount * baseH) + ((linesCount - 1) * 3);
+
+  // Use a ref for the backboard SVG filter container to match dimensions
+  const neonArtRef = useRef(null);
+
  useEffect(()=>{const box=previewRef.current;if(!box)return;const fit=()=>{const probe=document.createElement("span"),cs=textRef.current?getComputedStyle(textRef.current):null;
   const leftCount=shapes.filter(s=>s.position==="left").length,rightCount=shapes.filter(s=>s.position==="right").length;
   const leftPad=leftCount?(0.6+(leftCount-1)*0.9+0.5):0,rightPad=rightCount?(0.6+(rightCount-1)*0.9+0.5):0;
@@ -70,7 +74,36 @@ export function ConfiguratorExperience({type="custom_neon"}){
  const darkenHex=h=>{if(!h||!h.startsWith("#"))return "#1a1a24";let r=parseInt(h.slice(1,3),16)*0.2,g=parseInt(h.slice(3,5),16)*0.2,b=parseInt(h.slice(5,7),16)*0.2;return `#${Math.floor(r).toString(16).padStart(2,'0')}${Math.floor(g).toString(16).padStart(2,'0')}${Math.floor(b).toString(16).padStart(2,'0')}`};
  const getShadow=c=>"none";
  const textStyle={fontFamily:fontFamily(font),fontSize:`${fontSize}px`,lineHeight:1.02,whiteSpace:"pre",display:"inline-block",textAlign:align,color:mojo?"transparent":(isMulti?undefined:(lightOn?neonColor:darkenHex(neonColor))),backgroundImage:mojo?"linear-gradient(90deg,#ffde00,#ff7b00,#ff007b,#c400ff,#00d4ff,#ffde00)":undefined,WebkitBackgroundClip:mojo?"text":undefined,backgroundSize:mojo?"300% 100%":undefined,animation:mojo?"nsMojoSpectrum 3s linear infinite":undefined,textShadow:mojo?"none":(isMulti?undefined:getShadow(neonColor)),filter:"none",opacity:lightOn?1:.9};
- const renderText=()=>{if(mojo||!isMulti)return text||"Preview";return (text||"Preview").split("").map((char,i)=>{const c=letterColors[i]||color,cHex=lightOn?(c?.hex||"#63df21"):darkenHex(c?.hex||"#63df21");return <span key={i} onClick={(e)=>{if(isMulti){e.stopPropagation();setSelectedLetter(i)}}} style={{color:cHex,textShadow:getShadow(cHex),cursor:isMulti?"pointer":"inherit",display:"inline-block",transform:isMulti&&selectedLetter===i?"scale(1.1)":"none",transition:"transform 0.2s",zIndex:isMulti&&selectedLetter===i?10:1,position:"relative"}}>{char}</span>})};
+ const renderText=(isBackboard=false)=>{
+    if(mojo||!isMulti) return text||"Preview";
+    return (text||"Preview").split("").map((char,i)=>{
+        const c=letterColors[i]||color, cHex=lightOn?(c?.hex||"#63df21"):darkenHex(c?.hex||"#63df21");
+        return <span key={i} onClick={(e)=>{if(!isBackboard&&isMulti){e.stopPropagation();setSelectedLetter(i)}}} style={{color:isBackboard?'transparent':cHex,textShadow:isBackboard?'none':getShadow(cHex),cursor:(!isBackboard&&isMulti)?"pointer":"inherit",display:"inline-block",transform:(!isBackboard&&isMulti)&&selectedLetter===i?"scale(1.1)":"none",transition:"transform 0.2s",zIndex:(!isBackboard&&isMulti)&&selectedLetter===i?10:1,position:"relative"}}>{char}</span>
+    });
+ };
+
+ const renderNeonComposition = (isBackboard=false) => {
+    return (
+        <div
+            ref={isBackboard ? null : textRef}
+            className={`ns-neon-text${mojo?" spectrum":""}`}
+            style={{
+                ...textStyle,
+                position:"relative",
+                pointerEvents:isBackboard ? "none" : "auto",
+                cursor:isBackboard ? "inherit" : (isMulti?"inherit":"grab"),
+                userSelect:"none",
+                ...(isBackboard ? { color: 'transparent', textShadow: 'none', backgroundImage: 'none', WebkitBackgroundClip: 'initial', filter: 'url(#cut-to-shape-filter)' } : {})
+            }}
+            onPointerDown={e=>{if(!isBackboard && !isMulti) dragSign(e)}}
+        >
+            {leftShapes.map((s,i)=><span key={isBackboard ? `bg-left-${s.uid}` : s.uid} style={{...shapePosition(s,"left",i), ...(isBackboard ? { color: 'transparent', filter: 'none', animation: 'none' } : {})}}>{shapeIcon(s.name,"1em")}</span>)}
+            {renderText(isBackboard)}
+            {rightShapes.map((s,i)=><span key={isBackboard ? `bg-right-${s.uid}` : s.uid} style={{...shapePosition(s,"right",i), ...(isBackboard ? { color: 'transparent', filter: 'none', animation: 'none' } : {})}}>{shapeIcon(s.name,"1em")}</span>)}
+        </div>
+    );
+ };
+
  const shapePosition=(s,side,index)=>{
     const offsetGap=0.6+index*0.9;
     const isShapeMojo = mojo && (!s.color || s.color.id === 'mojo');
@@ -346,17 +379,23 @@ export function ConfiguratorExperience({type="custom_neon"}){
       {/* 3. PREVIEW CANVAS */}
       <section className="ns-champ-preview ns-grid-bg" style={{flex:1, display:'flex', flexDirection:'column', overflow:'hidden', position:'relative', background:'#edf2f7'}}>
 
-      {/* SVG Filter for Cut-to-Shape Backboard */}
+      {/* SVG Filter for Cut-to-Shape Backboard - Updated bounds and margin logic */}
       <svg width="0" height="0" style={{ position: 'absolute', pointerEvents: 'none' }}>
         <defs>
-          <filter id="cut-to-shape-filter">
-            <feMorphology in="SourceAlpha" result="DILATED" operator="dilate" radius="15" />
-            <feGaussianBlur in="DILATED" stdDeviation="3" result="BLURRED" />
+          <filter id="cut-to-shape-filter" x="-50%" y="-50%" width="200%" height="200%">
+            {/* Morphological dilation of the actual composition alpha */}
+            <feMorphology in="SourceAlpha" result="DILATED" operator="dilate" radius="8" />
+            {/* Smooth the expanded contour */}
+            <feGaussianBlur in="DILATED" stdDeviation="4" result="BLURRED" />
+            {/* Threshold to create a solid alpha mask with smooth edges */}
             <feComponentTransfer in="BLURRED" result="SMOOTHED">
-              <feFuncA type="linear" slope="10" intercept="-4" />
+              <feFuncA type="linear" slope="20" intercept="-8" />
             </feComponentTransfer>
-            <feFlood floodColor="rgba(255, 255, 255, 0.15)" result="BG_COLOR" />
+            {/* Fill with solid white color (acrylic backing) with slight opacity for realism */}
+            <feFlood floodColor="#fff" floodOpacity="0.85" result="BG_COLOR" />
+            {/* Apply color to the smoothed alpha mask */}
             <feComposite in="BG_COLOR" in2="SMOOTHED" operator="in" result="SHAPE" />
+            {/* Optional slight shadow for depth */}
             <feDropShadow in="SHAPE" dx="0" dy="4" stdDeviation="8" floodColor="#000" floodOpacity="0.15" result="SHADOW" />
             <feMerge>
                 <feMergeNode in="SHADOW" />
@@ -408,7 +447,7 @@ export function ConfiguratorExperience({type="custom_neon"}){
                             />
                         )}
 
-                        {/* Cut to Shape / Cut to Letter */}
+                        {/* Cut to Shape */}
                         {(backboard.id !== 'whole_board' && backboard.name !== 'Whole Board' && backboard.name !== 'Square') && (
                             <div
                                 className="ns-backboard-visualizer cut-to-shape"
@@ -417,8 +456,9 @@ export function ConfiguratorExperience({type="custom_neon"}){
                                     left: `${signPos.x * 100}%`,
                                     top: `${signPos.y * 100}%`,
                                     transform: "translate(-50%,-50%)",
-                                    width: "100%",
-                                    height: "100%",
+                                    // Use auto width/height to bound tightly to content instead of 100% full canvas
+                                    width: "auto",
+                                    height: "auto",
                                     pointerEvents: "none",
                                     display: "flex",
                                     alignItems: "center",
@@ -426,17 +466,32 @@ export function ConfiguratorExperience({type="custom_neon"}){
                                     zIndex: 1,
                                 }}
                             >
-                                <div style={{ ...textStyle, position: "relative", pointerEvents: "none", filter: 'url(#cut-to-shape-filter)', color: '#ffffff', textShadow: 'none' }}>
-                                    {leftShapes.map((s, i) => <span key={s.uid} style={shapePosition(s, "left", i)}>{shapeIcon(s.name, "1em")}</span>)}
-                                    {renderText()}
-                                    {rightShapes.map((s, i) => <span key={s.uid} style={shapePosition(s, "right", i)}>{shapeIcon(s.name, "1em")}</span>)}
-                                </div>
+                                {renderNeonComposition(true)}
                             </div>
                         )}
                     </>
                 )}
-                <div className="ns-neon-art" style={{left:`${signPos.x*100}%`,top:`${signPos.y*100}%`,transform:"translate(-50%,-50%)",width:"100%",height:"100%",position:"absolute",pointerEvents:"none",display:"flex",alignItems:"center",justifyContent:"center"}}>
-                   <div ref={textRef} className={`ns-neon-text${mojo?" spectrum":""}`} style={{...textStyle,position:"relative",pointerEvents:"auto",cursor:isMulti?"inherit":"grab",userSelect:"none"}} onPointerDown={e=>{if(!isMulti) dragSign(e)}}>{leftShapes.map((s,i)=><span key={s.uid} style={shapePosition(s,"left",i)}>{shapeIcon(s.name,"1em")}</span>)}{renderText()}{rightShapes.map((s,i)=><span key={s.uid} style={shapePosition(s,"right",i)}>{shapeIcon(s.name,"1em")}</span>)}</div>
+
+                {/* The actual Neon composition */}
+                <div
+                    className="ns-neon-art"
+                    ref={neonArtRef}
+                    style={{
+                        left:`${signPos.x*100}%`,
+                        top:`${signPos.y*100}%`,
+                        transform:"translate(-50%,-50%)",
+                        // Tight bounds! Match the backboard width/height approach
+                        width:"auto",
+                        height:"auto",
+                        position:"absolute",
+                        pointerEvents:"none",
+                        display:"flex",
+                        alignItems:"center",
+                        justifyContent:"center",
+                        zIndex: 2
+                    }}
+                >
+                   {renderNeonComposition(false)}
                 </div>
                 {calibrating&&<div className="ns-calibration-live" style={{position:"absolute",inset:0,zIndex:50,pointerEvents:"none"}}><div onPointerDown={dragCalibration} style={{position:"absolute",left:`${calibrationPos.x*100}%`,top:`${calibrationPos.y*100}%`,width:calibrationWidth,height:6,transform:"translate(-50%,-50%)",background:"#ff3355",boxShadow:"0 0 16px rgba(255,51,85,.8)",cursor:"move",pointerEvents:"auto"}}><span style={{position:"absolute",left:"50%",top:-24,transform:"translateX(-50%)",color:"#fff",fontWeight:800,whiteSpace:"nowrap"}}>{Math.round(calibrationWidth)} px — drag over a known object</span><i style={{position:"absolute",left:-8,top:-8,width:22,height:22,borderRadius:"50%",background:"#ff3355"}}/><i style={{position:"absolute",right:-8,top:-8,width:22,height:22,borderRadius:"50%",background:"#ff3355"}}/></div><div style={{position:"absolute",left:12,bottom:12,zIndex:51,padding:12,background:"rgba(5,6,10,.94)",border:"1px solid #752eff",borderRadius:12,pointerEvents:"auto",display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}><b style={{color:"#a8f2cc",fontSize:11}}>CALIBRATE ROOM SIZE</b><span style={{color:"#8992a5",fontSize:10}}>Place red line over a real object, then enter its width.</span><input value={calibrationInches} onChange={e=>setCalibrationInches(e.target.value)} type="number" min="1" style={{height:38,width:110,background:"#111",color:"#fff",border:"1px solid #444",borderRadius:7,padding:"0 10px"}}/><button onClick={setCalibration} style={{height:38,background:"#752eff",color:"#fff",border:0,borderRadius:7,padding:"0 15px",fontWeight:800}}>SET SCALE</button><button onClick={()=>setCalibrating(false)} style={{height:38,background:"#161a24",color:"#fff",border:"1px solid #333",borderRadius:7,padding:"0 12px"}}>CANCEL</button></div></div>}
              </div>
