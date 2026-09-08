@@ -6,15 +6,13 @@ import { Info, CheckCircle } from "lucide-react";
 import { StateSelect, CitySelect } from 'react-country-state-city';
 import "react-country-state-city/dist/react-country-state-city.css";
 
-import { stateCityMap } from "../../src/lib/cities";
-
 export default function CheckoutPage() {
   const [cart, setCart] = useState([]);
   const [isClient, setIsClient] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [showCoupon, setShowCoupon] = useState(false);
-  const [selectedState, setSelectedState] = useState('');
-  const [selectedCity, setSelectedCity] = useState('');
+  const [selectedState, setSelectedState] = useState(null);
+  const [selectedCity, setSelectedCity] = useState(null);
 
   useEffect(() => {
     setIsClient(true);
@@ -43,8 +41,15 @@ export default function CheckoutPage() {
       return;
     }
 
+    const getProductId = (item) =>
+      Number(
+        item?.product_id ??
+        item?.woocommerce?.product_id ??
+        0
+      );
+
     const staleCartItem = cart.find(item => {
-      const productId = Number(item?.product_id);
+      const productId = getProductId(item);
       return !Number.isInteger(productId) || productId < 1;
     });
     if (staleCartItem) {
@@ -68,38 +73,43 @@ export default function CheckoutPage() {
     };
     const notes = formData.get('notes');
     
-    let customer_id = 0;
-    try {
-      const u = JSON.parse(localStorage.getItem('ns_user'));
-      if (u && u.databaseId) customer_id = u.databaseId;
-    } catch(e) {}
-    
     const payload = {
       payment_method: 'cod',
       payment_method_title: 'Cash on Delivery',
       set_paid: false,
       billing,
       shipping: billing,
-      customer_id,
       customer_note: notes,
       line_items: cart.map(item => {
-        // Fallback: If screenshot_token was saved at the root of the cart item but not in neon_stack, merge it in.
-        const mergedNeonStack = item.neon_stack ? { ...item.neon_stack } : null;
-        if (mergedNeonStack && !mergedNeonStack.screenshot_token && item.screenshot_token) {
+        const productId = getProductId(item);
+
+        const mergedNeonStack = {
+          ...(item.neon_stack || {}),
+        };
+
+        if (!mergedNeonStack.screenshot_token && item.screenshot_token) {
           mergedNeonStack.screenshot_token = item.screenshot_token;
         }
 
         return {
-          ...(item.product_id ? { product_id: Number(item.product_id) } : {}),
+          product_id: productId,
           name: item.name + (item.type ? ` (${item.type})` : ''),
-          total: String(((parseFloat(String(item.price).replace(/[^0-9.-]+/g,"")) || 0) * (item.qty || 1))),
+          total: String(
+            ((parseFloat(String(item.price).replace(/[^0-9.-]+/g, "")) || 0) *
+              (item.qty || 1))
+          ),
           quantity: item.qty || 1,
-          ...(mergedNeonStack ? {
-            meta_data: [{
-              key: 'neon_stack',
-              value: JSON.stringify(mergedNeonStack)
-            }]
-          } : {})
+
+          ...(item.neon_stack || item.screenshot_token
+            ? {
+                meta_data: [
+                  {
+                    key: 'neon_stack',
+                    value: JSON.stringify(mergedNeonStack),
+                  },
+                ],
+              }
+            : {}),
         };
       })
     };
@@ -174,7 +184,7 @@ export default function CheckoutPage() {
             <p style={{ margin: 0, color: '#b8bfd8', fontSize: '14px', width: '100%' }}>If you have a coupon code, please apply it below.</p>
             <div style={{ display: 'flex', gap: '10px', width: '100%', maxWidth: '450px' }}>
               <input type="text" placeholder="Coupon code" style={{ width: '100%', padding: '12px 15px', background: '#11151f', border: '1px solid #2a3040', color: '#fff', borderRadius: '6px', outline: 'none' }} />
-              <button type="button" className="btn ghost" style={{ borderRadius: '6px', whiteSpace: 'nowrap' }}>Apply coupon</button>
+              <button type="button" className="btn ghost" disabled style={{ borderRadius: '6px', whiteSpace: 'nowrap', opacity: 0.5, cursor: 'not-allowed' }}>Apply coupon</button>
             </div>
           </div>
         )}
