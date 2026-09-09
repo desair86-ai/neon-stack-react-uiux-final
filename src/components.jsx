@@ -432,9 +432,9 @@ function Social(){
 export function Home(){
   const { items: products } = useCatalogData();
   return <><Header/><main>
-    <section className="homeHero" style={{ padding: 0, paddingBottom: '46px', background: 'transparent', position: 'relative' }}>
-      <Link href="/collections" style={{ display: 'block' }}>
-        <img src="/images/hero banner.webp" alt="Launch Offer - Shop Now" style={{ width: '100%', height: 'auto', display: 'block' }} />
+    <section className="homeHero">
+      <Link href="/collections" className="homeHeroLink" style={{ display: 'block' }}>
+        <img src="/images/hero banner.webp" alt="Launch Offer - Shop Now" className="homeHeroImg" />
       </Link>
       <InfiniteTicker />
     </section>

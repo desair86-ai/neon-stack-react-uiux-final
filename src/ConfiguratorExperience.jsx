@@ -5,7 +5,7 @@ import {AlignCenter,AlignLeft,AlignRight,ArrowLeft,ArrowRight,Check,ChevronDown,
 import "./configurator.css";
 import { useNeonConfig, useNeonConfigRevision } from "./hooks/useNeonConfig";
 import { useNeonQuote } from "./hooks/useNeonQuote";
-import { getNeonStackApiBase, uploadNeonScreenshot } from "./api/neonStackApi";
+import { uploadNeonScreenshot } from "./api/neonStackApi";
 const STEPS=["text","size","shapes","color","backboard","hardware"],LABELS={text:"TEXT",size:"SIZE",shapes:"SHAPES",color:"COLOUR",backboard:"BACKBOARD",hardware:"HARDWARE"};
 const COLORS=[{id:"pink",name:"Pink",hex:"#ff2aa8"},{id:"purple",name:"Purple",hex:"#8d3cff"},{id:"blue",name:"Blue",hex:"#198cff"},{id:"cyan",name:"Cyan",hex:"#12dfe5"},{id:"green",name:"Green",hex:"#63df21"},{id:"yellow",name:"Yellow",hex:"#ffd11a"},{id:"orange",name:"Orange",hex:"#ff8618"},{id:"white",name:"White",hex:"#fff"}];
 const BACKGROUNDS=[
@@ -161,25 +161,15 @@ export function ConfiguratorExperience({type="custom_neon"}){
                textRef.current.style.removeProperty('-webkit-background-clip');
              }
              
-             const screenshotApiBase = getNeonStackApiBase();
-             const screenshotUrl = screenshotApiBase ? `${screenshotApiBase}/screenshot` : null;
-             if (!screenshotUrl) {
-               console.warn('Screenshot endpoint is not configured');
-             } else {
-               const formData = new FormData();
-               formData.append("screenshot", blob, "neon-preview.png");
-               
-               const response = await fetch(screenshotUrl, {
-                 method: "POST",
-                 body: formData
-               });
-               
-               const result = await response.json();
-               if (response.ok && result.success && result.token) {
+             try {
+               const result = await uploadNeonScreenshot(blob);
+               if (result.success && result.token) {
                  screenshotToken = result.token;
                } else {
                  console.error("Failed to save neon preview:", result);
                }
+             } catch (error) {
+               console.error("Failed to save neon preview:", error);
              }
            } catch(e) {
              console.error("Canvas/Upload error", e);

@@ -17,6 +17,13 @@ export function getNeonStackApiBase() {
 }
 
 export async function getNeonConfig(configurator = 'custom_neon') {
+  if (typeof window !== 'undefined') {
+    const proxyUrl = `/api/config?configurator=${encodeURIComponent(configurator)}`;
+    const proxyRes = await fetch(proxyUrl, { cache: 'no-store', headers: { Accept: 'application/json' } });
+    if (!proxyRes.ok) throw new Error(`Config fetch failed: ${proxyRes.status}`);
+    return proxyRes.json();
+  }
+
   const base = getNeonStackApiBase();
   if (!base) throw new Error('WordPress API base URL is not configured');
   const url = `${base}/config?configurator=${encodeURIComponent(configurator)}`;
@@ -26,6 +33,12 @@ export async function getNeonConfig(configurator = 'custom_neon') {
 }
 
 export async function getNeonConfigVersion() {
+  if (typeof window !== 'undefined') {
+    const proxyRes = await fetch('/api/config-version', { cache: 'no-store', headers: { Accept: 'application/json' } });
+    if (!proxyRes.ok) throw new Error(`Config version fetch failed: ${proxyRes.status}`);
+    return proxyRes.json();
+  }
+
   const base = getNeonStackApiBase();
   if (!base) throw new Error('WordPress API base URL is not configured');
   const url = `${base}/config-version`;
@@ -35,6 +48,17 @@ export async function getNeonConfigVersion() {
 }
 
 export async function getNeonQuote(configurator, design) {
+  if (typeof window !== 'undefined') {
+    const proxyRes = await fetch('/api/quote', {
+      method: 'POST',
+      cache: 'no-store',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ configurator, design }),
+    });
+    if (!proxyRes.ok) throw new Error(`Quote failed: ${proxyRes.status}`);
+    return proxyRes.json();
+  }
+
   const base = getNeonStackApiBase();
   if (!base) throw new Error('WordPress API base URL is not configured');
   const url = `${base}/quote`;
@@ -49,6 +73,14 @@ export async function getNeonQuote(configurator, design) {
 }
 
 export async function uploadNeonScreenshot(blob) {
+  if (typeof window !== 'undefined') {
+    const formData = new FormData();
+    formData.append('screenshot', blob, 'neon-preview.png');
+    const proxyRes = await fetch('/api/screenshot', { method: 'POST', body: formData });
+    if (!proxyRes.ok) throw new Error(`Screenshot upload failed: ${proxyRes.status}`);
+    return proxyRes.json();
+  }
+
   const base = getNeonStackApiBase();
   if (!base) throw new Error('WordPress API base URL is not configured');
   const url = `${base}/screenshot`;
@@ -60,6 +92,12 @@ export async function uploadNeonScreenshot(blob) {
 }
 
 export async function getNeonHealth() {
+  if (typeof window !== 'undefined') {
+    const proxyRes = await fetch('/api/health', { cache: 'no-store', headers: { Accept: 'application/json' } });
+    if (!proxyRes.ok) throw new Error(`Health check failed: ${proxyRes.status}`);
+    return proxyRes.json();
+  }
+
   const base = getNeonStackApiBase();
   if (!base) throw new Error('WordPress API base URL is not configured');
   const url = `${base}/health`;
