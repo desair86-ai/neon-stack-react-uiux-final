@@ -39,14 +39,12 @@
   z-index: 1 !important;
   width: max-content !important;
   max-width: none !important;
-  color: transparent !important;
-  -webkit-text-fill-color: transparent !important;
+  color: #b7b8c2 !important;
+  -webkit-text-fill-color: #b7b8c2 !important;
   background-image: none !important;
   -webkit-background-clip: initial !important;
   text-shadow: none !important;
   pointer-events: none !important;
-  backdrop-filter: blur(7px);
-  -webkit-backdrop-filter: blur(7px);
 }
 
 .ns-container {

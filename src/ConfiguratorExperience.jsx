@@ -28,7 +28,6 @@ const BACKGROUNDS=[
 ];
 const LIGHTING={night:{label:"Dark Room",filter:"brightness(.38) contrast(1.25)"},evening:{label:"Cozy Evening",filter:"brightness(.62) contrast(1.1) sepia(.12)"},day:{label:"Daytime",filter:"brightness(.95) contrast(1)"}};
 const money=v=>`₹${Number(v||0).toLocaleString("en-IN")}`;
-const sizePriceLabel=(s)=>s?.first_letter_price!=null?`${money(s.first_letter_price)} + ${money(s.additional_letter_price)} / added`:money(s?.price||0);
 const physicalWidth=s=>{const m=String(s?.description||"").match(/([\d.]+)\s*[×x]/);return m?Number(m[1]):50};
 const physicalHeight=s=>{const m=String(s?.description||"").match(/[×x]\s*([\d.]+)/);return m?Number(m[1]):10};
 const fontFamily=f=>f?.class||f?.family||f?.name||"inherit";
@@ -342,7 +341,7 @@ export function ConfiguratorExperience({type="custom_neon"}){
          
          {step===1 && <div className="ns-champ-panel">
             <h2 style={{fontSize:'16px', fontWeight:800, marginBottom:'20px', color:'#fff', fontFamily:'Poppins'}}>SELECT SIZE</h2>
-            <div className="ns-field"><label>SIZE</label><div className="ns-option-list">{options.sizes?.map(s=><button key={s.id} className={size?.id===s.id?"selected":""} onClick={()=>setSize(s)}><span><b>{s.name}</b><small>{s.description}</small></span><strong>{sizePriceLabel(s)}</strong></button>)}</div></div>
+            <div className="ns-field"><label>SIZE</label><div className="ns-option-list">{options.sizes?.map(s=><button key={s.id} className={size?.id===s.id?"selected":""} onClick={()=>setSize(s)}><span><b>{s.name}</b><small>{s.description}</small></span></button>)}</div></div>
             <button className="btn primary" onClick={()=>setStep(2)} style={{width:'100%', marginTop:20}}>NEXT: NEON SHAPES</button>
          </div>}
 
@@ -378,24 +377,18 @@ export function ConfiguratorExperience({type="custom_neon"}){
       {/* SVG Filter for Cut-to-Shape Backboard */}
       <svg width="0" height="0" style={{ position: 'absolute', pointerEvents: 'none' }}>
         <defs>
-          <filter id="cut-to-shape-filter" x="-50%" y="-50%" width="200%" height="200%">
-            {/* Morphological dilation of the actual composition alpha */}
-            <feMorphology in="SourceAlpha" result="DILATED" operator="dilate" radius="10" />
-            {/* Smooth the expanded contour */}
-            <feGaussianBlur in="DILATED" stdDeviation="6" result="BLURRED" />
-            {/* Threshold to create a solid alpha mask with smooth edges */}
-            <feComponentTransfer in="BLURRED" result="SMOOTHED">
-              <feFuncA type="linear" slope="20" intercept="-8" />
+          <filter id="cut-to-shape-filter" x="-50%" y="-50%" width="200%" height="200%" colorInterpolationFilters="sRGB">
+            <feMorphology in="SourceAlpha" operator="dilate" radius="12" result="expanded" />
+            <feGaussianBlur in="expanded" stdDeviation="7" result="softened" />
+            <feComponentTransfer in="softened" result="solidMask">
+              <feFuncA type="table" tableValues="0 0.82 0.94 0.98 1" />
             </feComponentTransfer>
-            {/* Fill with solid white color (acrylic backing) with slight opacity for realism */}
-            <feFlood floodColor={cutToShapeColor} floodOpacity="0.52" result="BG_COLOR" />
-            {/* Apply color to the smoothed alpha mask */}
-            <feComposite in="BG_COLOR" in2="SMOOTHED" operator="in" result="SHAPE" />
-            {/* Optional slight shadow for depth */}
-            <feDropShadow in="SHAPE" dx="0" dy="4" stdDeviation="8" floodColor="#000" floodOpacity="0.15" result="SHADOW" />
+            <feFlood floodColor={cutToShapeColor} floodOpacity="0.52" result="boardColor" />
+            <feComposite in="boardColor" in2="solidMask" operator="in" result="board" />
+            <feDropShadow in="board" dx="0" dy="4" stdDeviation="8" floodColor="#000" floodOpacity="0.18" result="shadow" />
             <feMerge>
-                <feMergeNode in="SHADOW" />
-                <feMergeNode in="SHAPE" />
+              <feMergeNode in="shadow" />
+              <feMergeNode in="board" />
             </feMerge>
           </filter>
         </defs>
@@ -441,7 +434,7 @@ export function ConfiguratorExperience({type="custom_neon"}){
                 <div className="ns-neon-art" style={{left:`${signPos.x*100}%`,top:`${signPos.y*100}%`,transform:"translate(-50%,-50%)",width:"100%",height:"100%",position:"absolute",pointerEvents:"none",display:"flex",alignItems:"center",justifyContent:"center",zIndex: 2}}>
                    {/* Cut to Shape Backboard Layer */}
                      {backboard && backboard.id !== 'whole_board' && backboard.name !== 'Whole Board' && backboard.name !== 'Square' && backboard.id !== 'no_backing' && backboard.name !== 'No Backing' && (
-                       <div className="ns-neon-text ns-cut-to-shape-board" style={{...textStyle, position: "absolute", filter: 'url(#cut-to-shape-filter)', zIndex: 1, pointerEvents: "none", color: "transparent", WebkitTextFillColor: 'transparent', backgroundImage: 'none', WebkitBackgroundClip: 'initial', textShadow: 'none', opacity: 1}}>
+                       <div className="ns-cut-to-shape-board" style={{...textStyle, position: "absolute", filter: 'url(#cut-to-shape-filter)', zIndex: 1, pointerEvents: "none", color: cutToShapeColor, WebkitTextFillColor: cutToShapeColor, backgroundImage: 'none', WebkitBackgroundClip: 'initial', textShadow: 'none', opacity: 1}}>
                            {leftShapes.map((s,i)=><span key={s.uid} style={shapePosition(s,"left",i)}>{shapeIcon(s.name,"1em")}</span>)}{renderText()}{rightShapes.map((s,i)=><span key={s.uid} style={shapePosition(s,"right",i)}>{shapeIcon(s.name,"1em")}</span>)}
                        </div>
                    )}
