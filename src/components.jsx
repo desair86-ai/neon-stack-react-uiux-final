@@ -465,7 +465,7 @@ export function CategoryMarquee({ items, loading }) {
             backgroundPosition: 'center',
           }}
         >
-          {!image && <span style={{ fontSize: '22px' }}>{iconForName(name) || Sparkles}</span>}
+          {!image && (() => { const Icon = iconForName(name) || Sparkles; return <span style={{ fontSize: '22px' }}><Icon size={22} /></span>; })()}
         </div>
         <b className="catMarqueeLabel">{label}</b>
       </Link>
