@@ -83,6 +83,7 @@ export function ConfiguratorExperience({type="custom_neon"}){
   const dragCalibration=e=>{if(!calibrating)return;e.preventDefault();const box=previewRef.current?.getBoundingClientRect();if(!box)return;const sx=e.clientX,sy=e.clientY,ox=calibrationPos.x,oy=calibrationPos.y;const move=ev=>setCalibrationPos({x:Math.max(.08,Math.min(.92,ox+(ev.clientX-sx)/box.width)),y:Math.max(.08,Math.min(.88,oy+(ev.clientY-sy)/box.height))});const up=()=>{window.removeEventListener("pointermove",move);window.removeEventListener("pointerup",up)};window.addEventListener("pointermove",move);window.addEventListener("pointerup",up)};
   const setCalibration=()=>{const inches=Number(calibrationInches);if(inches>0)setCalibrationRatio(calibrationWidth/inches);setCalibrating(false);};
   const neonColor=color?.hex||"#63df21",lighting=LIGHTING[mood],leftShapes=shapes.filter(s=>s.position==="left"),rightShapes=shapes.filter(s=>s.position==="right");
+  const cutToShapeColor = '#b7b8c2';
   const darkenHex=h=>{if(!h||!h.startsWith("#"))return "#1a1a24";let r=parseInt(h.slice(1,3),16)*0.2,g=parseInt(h.slice(3,5),16)*0.2,b=parseInt(h.slice(5,7),16)*0.2;return `#${Math.floor(r).toString(16).padStart(2,'0')}${Math.floor(g).toString(16).padStart(2,'0')}${Math.floor(b).toString(16).padStart(2,'0')}`};
   const getShadow=c=>"none";
   const textStyle={fontFamily:fontFamily(font),fontSize:`${fontSize}px`,lineHeight:1.02,whiteSpace:"pre",display:"inline-block",textAlign:align,color:mojo?"transparent":(isMulti?undefined:(lightOn?neonColor:darkenHex(neonColor))),backgroundImage:mojo?"linear-gradient(90deg,#ffde00,#ff7b00,#ff007b,#c400ff,#00d4ff,#ffde00)":undefined,WebkitBackgroundClip:mojo?"text":undefined,backgroundSize:mojo?"300% 100%":undefined,animation:mojo?"nsMojoSpectrum 3s linear infinite":undefined,textShadow:mojo?"none":(isMulti?undefined:getShadow(neonColor)),filter:"none",opacity:lightOn?1:.9};
@@ -380,7 +381,7 @@ export function ConfiguratorExperience({type="custom_neon"}){
               <feFuncA type="linear" slope="20" intercept="-8" />
             </feComponentTransfer>
             {/* Fill with solid white color (acrylic backing) with slight opacity for realism */}
-            <feFlood floodColor="#fff" floodOpacity="0.85" result="BG_COLOR" />
+            <feFlood floodColor={cutToShapeColor} floodOpacity="0.52" result="BG_COLOR" />
             {/* Apply color to the smoothed alpha mask */}
             <feComposite in="BG_COLOR" in2="SMOOTHED" operator="in" result="SHAPE" />
             {/* Optional slight shadow for depth */}
@@ -432,8 +433,8 @@ export function ConfiguratorExperience({type="custom_neon"}){
 
                 <div className="ns-neon-art" style={{left:`${signPos.x*100}%`,top:`${signPos.y*100}%`,transform:"translate(-50%,-50%)",width:"100%",height:"100%",position:"absolute",pointerEvents:"none",display:"flex",alignItems:"center",justifyContent:"center",zIndex: 2}}>
                    {/* Cut to Shape Backboard Layer */}
-                   {backboard && backboard.id !== 'whole_board' && backboard.name !== 'Whole Board' && backboard.name !== 'Square' && backboard.id !== 'no_backing' && backboard.name !== 'No Backing' && (
-                       <div className={`ns-neon-text`} style={{...textStyle, position: "absolute", filter: 'url(#cut-to-shape-filter)', zIndex: -1, pointerEvents: "none", color: "transparent"}}>
+                     {backboard && backboard.id !== 'whole_board' && backboard.name !== 'Whole Board' && backboard.name !== 'Square' && backboard.id !== 'no_backing' && backboard.name !== 'No Backing' && (
+                       <div className="ns-neon-text ns-cut-to-shape-board" style={{...textStyle, position: "absolute", filter: 'url(#cut-to-shape-filter)', zIndex: 1, pointerEvents: "none", color: "#fff", backgroundImage: 'none', WebkitBackgroundClip: 'initial', textShadow: `0 0 12px ${neonColor}66`, opacity: 0.9}}>
                            {leftShapes.map((s,i)=><span key={s.uid} style={shapePosition(s,"left",i)}>{shapeIcon(s.name,"1em")}</span>)}{renderText()}{rightShapes.map((s,i)=><span key={s.uid} style={shapePosition(s,"right",i)}>{shapeIcon(s.name,"1em")}</span>)}
                        </div>
                    )}

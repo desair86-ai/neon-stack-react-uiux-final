@@ -34,6 +34,18 @@
   width: 100%;
 }
 
+.ns-configurator .ns-cut-to-shape-board {
+  position: absolute !important;
+  z-index: 1 !important;
+  width: max-content !important;
+  max-width: none !important;
+  color: #fff !important;
+  background-image: none !important;
+  -webkit-background-clip: initial !important;
+  text-shadow: none !important;
+  pointer-events: none !important;
+}
+
 .ns-container {
   width: min(1450px, calc(100% - 84px));
   margin: auto;
