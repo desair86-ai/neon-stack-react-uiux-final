@@ -28,6 +28,7 @@ const BACKGROUNDS=[
 ];
 const LIGHTING={night:{label:"Dark Room",filter:"brightness(.38) contrast(1.25)"},evening:{label:"Cozy Evening",filter:"brightness(.62) contrast(1.1) sepia(.12)"},day:{label:"Daytime",filter:"brightness(.95) contrast(1)"}};
 const money=v=>`₹${Number(v||0).toLocaleString("en-IN")}`;
+const sizePriceLabel=(s)=>s?.first_letter_price!=null?`${money(s.first_letter_price)} + ${money(s.additional_letter_price)} / added`:money(s?.price||0);
 const physicalWidth=s=>{const m=String(s?.description||"").match(/([\d.]+)\s*[×x]/);return m?Number(m[1]):50};
 const physicalHeight=s=>{const m=String(s?.description||"").match(/[×x]\s*([\d.]+)/);return m?Number(m[1]):10};
 const fontFamily=f=>f?.class||f?.family||f?.name||"inherit";
@@ -42,7 +43,13 @@ export function ConfiguratorExperience({type="custom_neon"}){
   useEffect(()=>{if(!wpConfig)return;const o=wpConfig.options||{},fs=wpConfig.fonts?.length?wpConfig.fonts:[];setFont(fs[0]||null);setSize(null);setColor(mojo?null:(o.colors?.[0]||null));setBackboard(null);setHardware(null)},[wpConfig]);
   const options=wpConfig?.options||{},fonts=wpConfig?.fonts?.length?wpConfig.fonts:[],presentation=wpConfig?.presentation||{},current=STEPS[step],baseShapeColors=presentation.shape_color_options?.length?presentation.shape_color_options:(options.colors?.length?options.colors:COLORS),shapeColors=mojo?[{id:"mojo",name:"Mojo Mix (Animated)",hex:"linear-gradient(135deg, #ff007b, #00d4ff)"},...baseShapeColors]:baseShapeColors;
   const valid={text:Boolean(text.trim())&&Boolean(font),size:Boolean(size),shapes:true,color:mojo||Boolean(color),backboard:Boolean(backboard),hardware:Boolean(hardware)},complete=STEPS.every(k=>valid[k]);
-  const clientPrice=useMemo(()=>Number(size?.price||0)+Number(backboard?.price||0)+Number(hardware?.price||0)+shapes.reduce((n,s)=>n+Number(s.price||0),0),[size,backboard,hardware,shapes]);
+  const clientPrice=useMemo(()=>{
+    const billableLetters=(text||"").match(/[\p{L}\p{N}]/gu)?.length||0;
+    const sizePrice=billableLetters>0
+      ? Number(size?.first_letter_price||0)+Math.max(0,billableLetters-1)*Number(size?.additional_letter_price||0)
+      : 0;
+    return sizePrice+Number(backboard?.price||0)+Number(hardware?.price||0)+shapes.reduce((n,s)=>n+Number(s.price||0),0);
+  },[text,size,backboard,hardware,shapes]);
   const serverPrice = pricing?.unit_price ?? pricing?.final_unit_price ?? null;
   const displayPrice = serverPrice ?? clientPrice;
   const linesArray = (text || "").split('\n');
@@ -335,7 +342,7 @@ export function ConfiguratorExperience({type="custom_neon"}){
          
          {step===1 && <div className="ns-champ-panel">
             <h2 style={{fontSize:'16px', fontWeight:800, marginBottom:'20px', color:'#fff', fontFamily:'Poppins'}}>SELECT SIZE</h2>
-            <div className="ns-field"><label>SIZE</label><div className="ns-option-list">{options.sizes?.map(s=><button key={s.id} className={size?.id===s.id?"selected":""} onClick={()=>setSize(s)}><span><b>{s.name}</b><small>{s.description}</small></span><strong>{money(s.price)}</strong></button>)}</div></div>
+            <div className="ns-field"><label>SIZE</label><div className="ns-option-list">{options.sizes?.map(s=><button key={s.id} className={size?.id===s.id?"selected":""} onClick={()=>setSize(s)}><span><b>{s.name}</b><small>{s.description}</small></span><strong>{sizePriceLabel(s)}</strong></button>)}</div></div>
             <button className="btn primary" onClick={()=>setStep(2)} style={{width:'100%', marginTop:20}}>NEXT: NEON SHAPES</button>
          </div>}
 
@@ -434,7 +441,7 @@ export function ConfiguratorExperience({type="custom_neon"}){
                 <div className="ns-neon-art" style={{left:`${signPos.x*100}%`,top:`${signPos.y*100}%`,transform:"translate(-50%,-50%)",width:"100%",height:"100%",position:"absolute",pointerEvents:"none",display:"flex",alignItems:"center",justifyContent:"center",zIndex: 2}}>
                    {/* Cut to Shape Backboard Layer */}
                      {backboard && backboard.id !== 'whole_board' && backboard.name !== 'Whole Board' && backboard.name !== 'Square' && backboard.id !== 'no_backing' && backboard.name !== 'No Backing' && (
-                       <div className="ns-neon-text ns-cut-to-shape-board" style={{...textStyle, position: "absolute", filter: 'url(#cut-to-shape-filter)', zIndex: 1, pointerEvents: "none", color: "#fff", backgroundImage: 'none', WebkitBackgroundClip: 'initial', textShadow: `0 0 12px ${neonColor}66`, opacity: 0.9}}>
+                       <div className="ns-neon-text ns-cut-to-shape-board" style={{...textStyle, position: "absolute", filter: 'url(#cut-to-shape-filter)', zIndex: 1, pointerEvents: "none", color: "transparent", WebkitTextFillColor: 'transparent', backgroundImage: 'none', WebkitBackgroundClip: 'initial', textShadow: 'none', opacity: 1}}>
                            {leftShapes.map((s,i)=><span key={s.uid} style={shapePosition(s,"left",i)}>{shapeIcon(s.name,"1em")}</span>)}{renderText()}{rightShapes.map((s,i)=><span key={s.uid} style={shapePosition(s,"right",i)}>{shapeIcon(s.name,"1em")}</span>)}
                        </div>
                    )}
