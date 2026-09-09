@@ -110,7 +110,7 @@ export function Login() {
                 </label>
               </div>
               
-              <Link href="#" className="lostPassword">Lost your password?</Link>
+              <Link href="/forgot-password" className="lostPassword">Lost your password?</Link>
             </form>
           </div>
           

@@ -164,7 +164,7 @@ export function Header(){
           <Link href="/contact" className={pathname === '/contact' ? 'active' : ''} onMouseEnter={()=>setShop(false)}>Contact</Link>
         </nav>
         <div className="headerActions" onMouseEnter={()=>setShop(false)}>
-          <button><Search/></button>
+          <button aria-label="Search" onClick={() => { window.location.href = '/collections'; }}><Search/></button>
           <Link href="/account" className={`account ${pathname.startsWith('/account') && pathname !== '/account/wishlist' ? 'active' : ''}`}><UserRound/></Link>
           <Link href="/account/wishlist" className={pathname === '/account/wishlist' ? 'active' : ''} style={{position:'relative'}}><Heart/>{wishlist?.length > 0 && <span style={{position:'absolute',top:-8,right:-8,background:'#ff65bf',color:'#fff',borderRadius:'50%',width:'18px',height:'18px',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'10px',fontWeight:'bold'}}>{wishlist.length}</span>}</Link>
           <Link href="/cart" className={pathname === '/cart' ? 'active' : ''} style={{position:'relative'}}><ShoppingCart/>{cartCount > 0 && <span style={{position:'absolute',top:-8,right:-8,background:'#00ffbc',color:'#000',borderRadius:'50%',width:'18px',height:'18px',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'10px',fontWeight:'bold'}}>{cartCount}</span>}</Link>
@@ -554,11 +554,41 @@ function CatalogGrid({ category = null }) {
     const { items: products, maxPrice, sizes } = useCatalogData(category);
     const categories = useCategories();
     const categoryNames = categories.map(c => c.name);
+    const [selectedCategories, setSelectedCategories] = useState([]);
+    const [selectedSizes, setSelectedSizes] = useState([]);
+    const [selectedTypes, setSelectedTypes] = useState([]);
+    const [maxSelectedPrice, setMaxSelectedPrice] = useState(maxPrice || 24999);
 
-    return <section className="catalogGrid container"><button className="mobileFilter" onClick={()=>setFilterOpen(v=>!v)}><SlidersHorizontal/> FILTER BY <ChevronDown/></button><aside className={filterOpen?'show':''}><div className="filterHead"><b>FILTER BY</b><button>CLEAR ALL</button></div><Filter title="CATEGORIES" items={categoryNames.length > 0 ? categoryNames : allCategories.slice(0,12)}/><Filter title="PRICE RANGE" isRange={true} rangeMin={499} rangeMax={maxPrice || 24999}/><Filter title="SIZE" items={sizes.length > 0 ? sizes : ['Up to 12 inch (52)','12 - 24 inch (97)','24 - 36 inch (63)','36 inch & above (36)']}/><Filter title="TYPE" items={['Standard LED (168)','Mojo Mix (42)','UV Printed (28)']}/><button className="clearBtn">CLEAR FILTERS</button></aside><div className="catalogResults"><div className="resultTools"><span>Showing 1-{Math.min(24, products.length)} of {products.length} products</span><select><option>Sort by: Featured</option><option>Price: Low to High</option></select><button><GridIcon/></button><button><Menu/></button></div><div className="catalogProducts">{products.map(p=><ProductCard key={p[0]} p={p}/>)}</div>{Math.ceil(products.length / 24) > 1 && <div className="pagination"><button><ArrowLeft/></button><b>1</b>{Array.from({length: Math.min(3, Math.ceil(products.length / 24) - 1)}).map((_, i) => <span key={i}>{i+2}</span>)}{Math.ceil(products.length / 24) > 4 && <span>.</span>}{Math.ceil(products.length / 24) > 4 && <span>{Math.ceil(products.length / 24)}</span>}<button><ArrowRight/></button></div>}<CatalogCTA/></div></section>
+    useEffect(() => setMaxSelectedPrice(maxPrice || 24999), [maxPrice]);
+    useEffect(() => {
+      setSelectedCategories([]);
+      setSelectedSizes([]);
+      setSelectedTypes([]);
+    }, [category]);
+
+    const filteredProducts = products.filter((product) => {
+      const metadata = product[7] || {};
+      const productCategories = metadata.categoryNames || [];
+      const productSizes = metadata.sizeOptions || [];
+      const productType = String(metadata.type || product[1] || '').toLowerCase();
+      const matchesCategories = !selectedCategories.length || selectedCategories.includes('All Neon Signs') || selectedCategories.some((value) => productCategories.includes(value) || product[1] === value);
+      const matchesSizes = !selectedSizes.length || selectedSizes.some((value) => productSizes.includes(value));
+      const matchesTypes = !selectedTypes.length || selectedTypes.some((value) => productType.includes(value.toLowerCase()));
+      return matchesCategories && matchesSizes && matchesTypes && Number(product[5] || 0) <= Number(maxSelectedPrice);
+    });
+
+    const toggleValue = (setter, value) => setter((current) => current.includes(value) ? current.filter((item) => item !== value) : [...current, value]);
+    const clearFilters = () => {
+      setSelectedCategories([]);
+      setSelectedSizes([]);
+      setSelectedTypes([]);
+      setMaxSelectedPrice(maxPrice || 24999);
+    };
+
+    return <section className="catalogGrid container"><button className="mobileFilter" onClick={()=>setFilterOpen(v=>!v)}><SlidersHorizontal/> FILTER BY <ChevronDown/></button><aside className={filterOpen?'show':''}><div className="filterHead"><b>FILTER BY</b><button type="button" onClick={clearFilters}>CLEAR ALL</button></div><Filter title="CATEGORIES" items={categoryNames.length > 0 ? categoryNames : allCategories.slice(0,12)} selected={selectedCategories} onToggle={(value)=>toggleValue(setSelectedCategories,value)}/><Filter title="PRICE RANGE" isRange={true} rangeMin={499} rangeMax={maxPrice || 24999} selectedMax={maxSelectedPrice} onMaxChange={setMaxSelectedPrice}/><Filter title="SIZE" items={sizes.length > 0 ? sizes : ['Up to 12 inch (52)','12 - 24 inch (97)','24 - 36 inch (63)','36 inch & above (36)']} selected={selectedSizes} onToggle={(value)=>toggleValue(setSelectedSizes,value)}/><Filter title="TYPE" items={['Standard LED','Mojo Mix','UV Printed']} selected={selectedTypes} onToggle={(value)=>toggleValue(setSelectedTypes,value)}/><button type="button" className="clearBtn" onClick={clearFilters}>CLEAR FILTERS</button></aside><div className="catalogResults"><div className="resultTools"><span>Showing {filteredProducts.length ? `1-${Math.min(24, filteredProducts.length)}` : '0-0'} of {filteredProducts.length} products</span><select aria-label="Sort products"><option>Sort by: Featured</option><option>Price: Low to High</option></select><button type="button" aria-label="Grid view"><GridIcon/></button><button type="button" aria-label="List view"><Menu/></button></div><div className="catalogProducts">{filteredProducts.map(p=><ProductCard key={p[0]} p={p}/>)}</div>{filteredProducts.length === 0 && <p className="catalogEmpty">No products match the selected filters.</p>}<CatalogCTA/></div></section>
 }
 
-function Filter({title, items, isRange, rangeMin, rangeMax}) {
+function Filter({title, items, isRange, rangeMin, rangeMax, selected = [], onToggle, selectedMax, onMaxChange}) {
   const [open, setOpen] = useState(true);
   return (
     <div className="filter">
@@ -567,9 +597,9 @@ function Filter({title, items, isRange, rangeMin, rangeMax}) {
       </div>
       {open && (
         isRange ? (
-          <div className="range"><i/><span>₹{rangeMin}</span><span>₹{rangeMax.toLocaleString()}</span></div>
+          <div className="range"><input type="range" min={rangeMin} max={rangeMax} value={Math.min(selectedMax ?? rangeMax, rangeMax)} onChange={(event) => onMaxChange?.(Number(event.target.value))} aria-label="Maximum price"/><span>₹{rangeMin}</span><span>₹{Number(selectedMax ?? rangeMax).toLocaleString()}</span></div>
         ) : (
-          items?.map(x => <label key={x}><input type="checkbox"/> {x}</label>)
+          items?.map(x => <label key={x} className={selected.includes(x) ? 'selected' : ''}><input type="checkbox" checked={selected.includes(x)} onChange={() => onToggle?.(x)}/> {x}</label>)
         )
       )}
     </div>
@@ -578,7 +608,7 @@ function Filter({title, items, isRange, rangeMin, rangeMax}) {
 
 function GridIcon(){return <span className="gridIcon"><i/><i/><i/><i/></span>}
 
-export function Category({name}){const params=useParams(); name=name||params.name?.replaceAll('-',' ')||'Gaming'; const key=name.toLowerCase();const bg=key.includes('gaming')?rooms.gaming:key.includes('business')?rooms.office:key.includes('cafe')?rooms.cafe:key.includes('home')?rooms.living:rooms.party;return <><Header/><main className="categoryPage"><section className="catHero container" style={{'--bg':`url(${bg})`}}><div><div className="crumb">Home <ChevronRight/> All Collections <ChevronRight/> {name} Neon Signs</div><h1>{name.toUpperCase()}<br/><em>NEON SIGNS</em></h1><p>Level up your {name.toLowerCase()} with premium neon signs. Perfect for your space, your vibe and your story.</p><div className="catProof"><Benefit icon={<Gem/>} title="Premium LED Neon" text="Bright, safe & energy efficient"/><Benefit icon={<Sparkles/>} title="Made for You" text="Designed to match your vibe"/></div></div><InfiniteTicker /></section><div className="container catTabs">{['All Gaming','Controllers','Console','PC Setup','Characters','Quotes','Anime','More'].map((x,i)=><Link key={x} href="#" className={i===0?'active':''}><Gamepad2/><b>{x}</b></Link>)}</div><CatalogGrid category={params.name}/></main><Footer/></>}
+export function Category({name}){const params=useParams(); name=name||params.name?.replaceAll('-',' ')||'Gaming'; const key=name.toLowerCase();const bg=key.includes('gaming')?rooms.gaming:key.includes('business')?rooms.office:key.includes('cafe')?rooms.cafe:key.includes('home')?rooms.living:rooms.party;return <><Header/><main className="categoryPage"><section className="catHero container" style={{'--bg':`url(${bg})`}}><div><div className="crumb">Home <ChevronRight/> All Collections <ChevronRight/> {name} Neon Signs</div><h1>{name.toUpperCase()}<br/><em>NEON SIGNS</em></h1><p>Level up your {name.toLowerCase()} with premium neon signs. Perfect for your space, your vibe and your story.</p><div className="catProof"><Benefit icon={<Gem/>} title="Premium LED Neon" text="Bright, safe & energy efficient"/><Benefit icon={<Sparkles/>} title="Made for You" text="Designed to match your vibe"/></div></div><InfiniteTicker /></section><div className="container catTabs">{['All Gaming','Controllers','Console','PC Setup','Characters','Quotes','Anime','More'].map((x,i)=>{const slug=slugFromName(x);return <Link key={x} href={x==='More'?'/collections':`/category/${slug}`} className={i===0?'active':''}><Gamepad2/><b>{x}</b></Link>})}</div><CatalogGrid category={params.name}/></main><Footer/></>}
 
 const FONTS = [{ name: 'Neon Script', class: 'font-neon-script' }, { name: 'Arista Pro', class: 'font-arista' }, { name: 'Dreamy', class: 'font-dreamy' }];
 const COLORS = [{ name: 'pink', hex: '#ff00ff', glow: '255,0,255' }, { name: 'cyan', hex: '#00ffff', glow: '0,255,255' }, { name: 'yellow', hex: '#ffff00', glow: '255,255,0' }, { name: 'green', hex: '#00ff00', glow: '0,255,0' }, { name: 'red', hex: '#ff0000', glow: '255,0,0' }, { name: 'white', hex: '#ffffff', glow: '255,255,255' }];

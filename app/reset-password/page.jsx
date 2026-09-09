@@ -2,6 +2,9 @@
 
 import { useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import { ChevronRight, KeyRound } from 'lucide-react';
+import { Header, Footer } from '../../src/components';
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
@@ -43,48 +46,40 @@ function ResetPasswordForm() {
 
   if (!key || !login) {
     return (
-      <div style={{ padding: '40px', maxWidth: '400px', margin: '100px auto', background: '#0a121d', borderRadius: '12px', color: '#fff', border: '1px solid #1a273b' }}>
-        <h2 style={{ fontSize: '1.5rem', marginBottom: '20px' }}>Invalid Link</h2>
-        <p style={{ color: '#b8bfd8' }}>This password reset link is invalid or missing required parameters. Please request a new password reset.</p>
-      </div>
+      <PasswordPageShell><section className="passwordPanel" aria-labelledby="invalid-link-title"><div className="passwordIcon"><KeyRound size={26} /></div><p className="passwordEyebrow">ACCOUNT ACCESS</p><h1 id="invalid-link-title">Invalid reset link</h1><p className="passwordIntro">This password reset link is invalid or missing required details. Request a new link to continue.</p><Link className="btn primary passwordAction" href="/forgot-password">Request a new link</Link></section></PasswordPageShell>
     );
   }
 
   return (
-    <div style={{ padding: '40px', maxWidth: '400px', margin: '100px auto', background: '#0a121d', borderRadius: '12px', color: '#fff', border: '1px solid #1a273b' }}>
-      <h2 style={{ fontSize: '1.5rem', marginBottom: '20px' }}>Set New Password</h2>
+    <PasswordPageShell><section className="passwordPanel" aria-labelledby="new-password-title"><div className="passwordIcon"><KeyRound size={26} /></div><p className="passwordEyebrow">ACCOUNT ACCESS</p><h1 id="new-password-title">Create a new password</h1><p className="passwordIntro">Choose a strong password for your Neon Stack account.</p>
       <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#b8bfd8' }}>New Password</label>
+        <div className="passwordForm">
+          <label htmlFor="new-password">New password</label>
           <input
+            id="new-password"
             type="password"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Enter your new password"
-            style={{ width: '100%', padding: '12px', background: '#11151f', border: '1px solid #2a3040', color: '#fff', borderRadius: '6px', outline: 'none' }}
           />
         </div>
-        {error && <div style={{ color: '#ff65bf', marginBottom: '20px', fontSize: '14px' }}>{error}</div>}
-        {message && <div style={{ color: '#00ffbc', marginBottom: '20px', fontSize: '14px' }}>{message}</div>}
-        <button
-          type="submit"
-          disabled={loading}
-          style={{ width: '100%', padding: '12px', background: '#ff65bf', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
-        >
-          {loading ? 'Saving...' : 'Save Password'}
-        </button>
+        {error && <div className="passwordStatus error">{error}</div>}
+        {message && <div className="passwordStatus success">{message}</div>}
+        <button className="btn primary passwordAction" type="submit" disabled={loading}>{loading ? 'Saving...' : 'Save password'}</button>
       </form>
-    </div>
+      <Link className="passwordBack" href="/login">Back to login</Link></section></PasswordPageShell>
   );
+}
+
+function PasswordPageShell({ children }) {
+  return <><Header /><main className="passwordPage"><div className="passwordPageInner"><div className="crumb"><Link href="/">Home</Link><ChevronRight /> Account <ChevronRight /> Password</div>{children}</div></main><Footer /></>;
 }
 
 export default function ResetPasswordPage() {
   return (
-    <main style={{ minHeight: '100vh', background: '#050a10', display: 'flex', alignItems: 'center' }}>
-      <Suspense fallback={<div style={{ color: '#fff', textAlign: 'center', width: '100%' }}>Loading...</div>}>
+    <Suspense fallback={<main className="passwordPage"><div className="passwordPageInner"><div className="passwordPanel">Loading...</div></div></main>}>
         <ResetPasswordForm />
-      </Suspense>
-    </main>
+    </Suspense>
   );
 }

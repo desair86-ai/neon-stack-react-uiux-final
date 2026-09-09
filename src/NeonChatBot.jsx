@@ -173,6 +173,7 @@ return (
       {/* ── SIDE TAB TRIGGER (draggable vertically; pinned to left/right edge) ── */}
       <div
         ref={tabRef}
+        className="neon-chat-trigger"
         onPointerDown={onPointerDown}
         style={{
           position: 'fixed',
@@ -255,6 +256,7 @@ return (
       <AnimatePresence>
         {isOpen && (
           <motion.div
+            className="neon-chat-panel"
             initial={{ opacity: 0, x: isRight ? 30 : -30, scale: 0.97 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: isRight ? 20 : -20, scale: 0.97 }}

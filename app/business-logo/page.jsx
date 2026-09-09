@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { Header, Footer } from "../../src/components";
 import {
   BriefcaseBusiness, Upload, ArrowRight, CheckCircle, ShieldCheck, Truck,
@@ -24,6 +27,30 @@ function CatCard({ name, href, icon }) {
 }
 
 export default function BusinessLogoPage() {
+  const [submitting, setSubmitting] = useState(false);
+  const [formStatus, setFormStatus] = useState({ type: '', message: '' });
+
+  const handleQuoteSubmit = async (event) => {
+    event.preventDefault();
+    setSubmitting(true);
+    setFormStatus({ type: '', message: '' });
+
+    try {
+      const response = await fetch('/api/business-logo-quote', {
+        method: 'POST',
+        body: new FormData(event.currentTarget),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Unable to send your quote request.');
+      event.currentTarget.reset();
+      setFormStatus({ type: 'success', message: 'Thanks. Your quote request was sent successfully.' });
+    } catch (error) {
+      setFormStatus({ type: 'error', message: error.message || 'Unable to send your quote request.' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <>
       <Header />
@@ -53,26 +80,27 @@ export default function BusinessLogoPage() {
               </h2>
               <p style={{ color: '#8992a5', marginBottom: '24px' }}>Share a few details and our designers will craft your logo neon within 24 hours.</p>
 
-              <form className="quoteFields">
-                <input type="text" placeholder="Your Name *" required />
-                <input type="email" placeholder="Your Email *" required />
-                <input type="tel" placeholder="Phone Number" />
-                <select>
+              <form className="quoteFields" onSubmit={handleQuoteSubmit}>
+                <input name="name" type="text" placeholder="Your Name *" autoComplete="name" required />
+                <input name="email" type="email" placeholder="Your Email *" autoComplete="email" required />
+                <input name="phone" type="tel" placeholder="Phone Number" autoComplete="tel" />
+                <select name="signType" defaultValue="">
                   <option>Select Sign Type</option>
                   <option>Custom Neon Sign — Classic LED neon on acrylic backboard</option>
                   <option>Mojo Mix — RGB multi-color dynamic LED signs</option>
                   <option>UV Printed Neon — Full-color UV print with neon highlights</option>
                 </select>
-                <textarea rows={4} placeholder="Design Details & Requirements *" required></textarea>
-                <input type="text" placeholder="Approximate Budget (Optional)" />
+                <textarea name="designDetails" rows={4} placeholder="Design Details & Requirements *" required></textarea>
+                <input name="budget" type="text" placeholder="Approximate Budget (Optional)" />
                 <label className="uploadBox">
                   <Upload size={18} style={{ marginRight: '8px' }} />
                   Upload Artwork / Logo
-                  <input type="file" accept="image/*,.svg,.ai,.pdf" style={{ display: 'none' }} />
+                  <input name="artwork" type="file" accept="image/*,.svg,.ai,.pdf" style={{ display: 'none' }} />
                   <small>PNG, JPG, SVG, AI, PDF</small>
                 </label>
-                <button className="btn primary" type="submit" style={{ width: '100%', padding: '16px', fontSize: '15px' }}>
-                  Get a FREE Quote &amp; Mockup <ArrowRight size={16} />
+                {formStatus.message && <p className={`quoteStatus ${formStatus.type}`} role="status">{formStatus.message}</p>}
+                <button className="btn primary" type="submit" disabled={submitting} style={{ width: '100%', padding: '16px', fontSize: '15px' }}>
+                  {submitting ? 'Sending request...' : 'Get a FREE Quote & Mockup'} <ArrowRight size={16} />
                 </button>
               </form>
             </div>

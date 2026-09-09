@@ -24,8 +24,14 @@
 .filter{border-top:1px solid var(--line);padding:15px 0}
 .filter>div:first-child{display:flex;justify-content:space-between;font-size: 10px}
 .filter>div:first-child svg{width:12px}
-.filter label{display:block;font-size: 10px;color:#b7b9c2;margin-top:10px}
-.filter input{appearance:none;width:11px;height:11px;border:1px solid #666;margin:0 5px 0 0;vertical-align:-2px}
+.filter label{display:flex;align-items:center;gap:5px;font-size: 10px;color:#b7b9c2;margin-top:10px;padding:5px 6px;border:1px solid transparent;border-radius:5px;cursor:pointer;transition:background .2s,border-color .2s,color .2s}
+.filter label:hover,.filter label.selected{color:#fff;background:rgba(0,255,188,.08);border-color:rgba(0,255,188,.35)}
+.filter label.selected{font-weight:700}
+.filter input{appearance:none;width:14px;height:14px;flex:0 0 14px;border:1px solid #667084;border-radius:3px;margin:0;background:#080b12;position:relative;cursor:pointer}
+.filter input:checked{background:#00ffbc;border-color:#00ffbc;box-shadow:0 0 8px rgba(0,255,188,.35)}
+.filter input:checked::after{content:'✓';position:absolute;inset:0;display:grid;place-items:center;color:#05060a;font-size:11px;font-weight:900;line-height:1}
+.filter .range input[type="range"]{display:block;width:100%;height:4px;margin:10px 0 18px;accent-color:#00ffbc}
+.catalogEmpty{grid-column:1 / -1;padding:48px 20px;text-align:center;color:#aeb5c4;border:1px dashed var(--line);border-radius:8px}
 .range{height:45px;position:relative;margin-top:8px}
 .range i{position:absolute;left:5%;right:5%;top:15px;height:3px;background:#00ffbc}
 .range:before,.range:after{content:'';position:absolute;top:9px;width:14px;height:14px;border-radius:50%;background:#00ffbc}
@@ -85,10 +91,6 @@ body{font-size:var(--body-size);-webkit-font-smoothing:antialiased;text-renderin
 .sectionHead small{font-size: 15px}
 .sectionHead h2{font-size:34px;line-height:1.16}
 .sectionHead p{font-size: 16px;line-height:1.6}
-
-main > :first-child{
-  min-height:calc(100svh - var(--site-header-height)) !important;
-}
 
 /* Hero typography: larger, but keep the existing premium hierarchy. */
 .heroCopy>small{font-size: 15px}
@@ -950,7 +952,8 @@ main,footer{background:var(--site-surface)}
 @keyframes catMarqueeMove{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 @media(max-width:768px){.catMarqueeItem{min-width:90px}.catMarqueeImg{width:80px;height:80px;font-size:18px}.catMarqueeLabel{font-size:12px}}
 .specialGrid{grid-template-columns:repeat(4,1fr)}
-.businessLogoPage .quoteFormWrap{display:grid;grid-template-columns:1.15fr .85fr;gap:40px;align-items:start}
+.businessLogoPage .quoteFormWrap{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:40px;align-items:start}
+.businessLogoPage .quoteForm,.businessLogoPage .quoteBenefits{min-width:0}
 .businessLogoPage .quoteForm{background:#0a0d14;border:1px solid #1c212e;border-radius:14px;padding:32px}
 .businessLogoPage .quoteForm h2{font:700 28px/.95 'Poppins';letter-spacing:-.04em;margin:0 0 8px}
 .businessLogoPage .quoteForm p{color:#8992a5;font-size:14px;margin:0 0 24px}
@@ -960,6 +963,11 @@ main,footer{background:var(--site-surface)}
 }
 .businessLogoPage .quoteFields input:focus,.businessLogoPage .quoteFields select:focus,.businessLogoPage .quoteFields textarea:focus{border-color:#752eff}
 .businessLogoPage .quoteFields textarea{resize:vertical;min-height:90px}
+.businessLogoPage .quoteFields input,.businessLogoPage .quoteFields select,.businessLogoPage .quoteFields textarea,.businessLogoPage .quoteFields button{min-width:0;max-width:100%}
+.businessLogoPage .quoteFields button{white-space:normal;line-height:1.3}
+.businessLogoPage .quoteStatus{grid-column:1 / -1;margin:0;padding:12px 14px;border-radius:8px;font-size:13px;line-height:1.45}
+.businessLogoPage .quoteStatus.success{color:#a8f2cc;background:rgba(0,255,188,.08);border:1px solid rgba(0,255,188,.25)}
+.businessLogoPage .quoteStatus.error{color:#ffb3ca;background:rgba(255,101,191,.08);border:1px solid rgba(255,101,191,.25)}
 .businessLogoPage .uploadBox{position:relative;border:1.5px dashed #752eff;border-radius:8px;padding:18px;text-align:center;cursor:pointer;color:#b8bfd8;font-size:13px;display:flex;flex-direction:column;gap:4px;align-items:center;justify-content:center;background:rgba(117,46,255,.04)}
 .businessLogoPage .uploadBox input{position:absolute;inset:0;opacity:0;cursor:pointer}
 .businessLogoPage .uploadBox small{color:#555;font-size:11px}
@@ -979,6 +987,52 @@ main,footer{background:var(--site-surface)}
 .businessLogoPage .catCard b{font-size:14px}
 .businessLogoPage .ctaBand{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
 @media(max-width:900px){.specialGrid{grid-template-columns:repeat(2,1fr)}.businessLogoPage .quoteFormWrap{grid-template-columns:1fr}.businessLogoPage .catGrid{grid-template-columns:repeat(2,1fr)}.businessLogoPage .boxGrid{grid-template-columns:1fr}}
+@media(max-width:520px){.businessLogoPage .quoteForm{padding:22px 16px}.businessLogoPage .quoteForm h2{font-size:24px}.businessLogoPage .quoteForm p{font-size:13px}.businessLogoPage .quoteFields{width:100%}.businessLogoPage .quoteFields input,.businessLogoPage .quoteFields select,.businessLogoPage .quoteFields textarea{font-size:16px}.businessLogoPage .quoteStatus{overflow-wrap:anywhere}.businessLogoPage .uploadBox{min-width:0;text-align:center}}
+.neon-chat-trigger{max-width:calc(100vw - 12px)}
+.neon-chat-panel{max-width:calc(100vw - 24px)}
+@media(max-width:520px){.neon-chat-trigger{transform:translateY(-50%) scale(.86);transform-origin:right center}.neon-chat-panel{left:12px!important;right:12px!important;width:auto!important;height:min(560px,72vh)!important;max-height:72vh;border-radius:14px!important}}
+.uvPage{background:#040509;color:#fff;overflow:hidden;padding-bottom:80px}
+.uvHeroIntro{padding:36px 0 30px;text-align:center}
+.uvHeroIntro .crumb{justify-content:center;color:#8992a5;margin-bottom:24px}
+.uvHeroIntro .crumb a{color:#00ffbc}
+.uvHeroIntro .crumb svg{width:14px}
+.uvEyebrow{margin:0 0 12px;color:#00ffbc;font-size:11px;font-weight:800;letter-spacing:.16em}
+.uvHeroIntro h1{margin:0;font-size:clamp(36px,6vw,72px);line-height:1.05}
+.uvHeroIntro h1 span{background:linear-gradient(90deg,#00e5ff,#752eff,#6eff86);-webkit-background-clip:text;background-clip:text;color:transparent}
+.uvHeroIntro .heroIcons{justify-content:center;gap:20px;margin:30px 0 0}
+.uvHeroSlider{padding:26px 0 70px}
+.uvHeroSlide{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);align-items:center;gap:clamp(30px,6vw,90px);min-height:460px}
+.uvHeroImage{aspect-ratio:16 / 10;overflow:hidden;border:1px solid color-mix(in srgb,var(--uv-accent) 55%,transparent);border-radius:18px;box-shadow:0 0 45px color-mix(in srgb,var(--uv-accent) 20%,transparent);background:#0a0d14}
+.uvHeroImage img{width:100%;height:100%;display:block;object-fit:cover}
+.uvHeroCopy{max-width:560px}
+.uvSlideCount{color:var(--uv-accent);font-size:12px;font-weight:800;letter-spacing:.14em}
+.uvHeroCopy h2{margin:16px 0;font-size:clamp(30px,4vw,56px);line-height:1.08}
+.uvHeroCopy p{margin:0;color:#c1c3cb;font-size:17px;line-height:1.75}
+.uvSliderControls{display:flex;align-items:center;gap:16px;margin-top:32px}
+.uvSliderControls>button{width:42px;height:42px;display:grid;place-items:center;border:1px solid #39445c;border-radius:50%;color:#fff;background:#0a0d14}
+.uvSliderControls>button:hover{border-color:var(--uv-accent);color:var(--uv-accent)}
+.uvDots{display:flex;gap:8px;align-items:center}
+.uvDots button{width:26px;height:4px;padding:0;border:0;background:#39445c;border-radius:99px}
+.uvDots button.active{background:var(--uv-accent);box-shadow:0 0 10px var(--uv-accent)}
+.uvProductsSection{padding-top:30px}
+.uvProductGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
+.uvProductCard{min-width:0;background:#0a0d14;border:1px solid #20283a;border-radius:10px;overflow:hidden}
+.uvProductImage{display:block;position:relative;aspect-ratio:1 / 1;background:#11151f;overflow:hidden}
+.uvProductImage img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .25s ease}
+.uvProductImage:hover img{transform:scale(1.04)}
+.uvProductImage>span{position:absolute;top:10px;left:10px;padding:5px 8px;border-radius:4px;background:#ff65bf;color:#fff;font-size:10px;font-weight:800}
+.uvProductInfo{padding:14px}
+.uvProductInfo small{color:#8992a5;font-size:11px}
+.uvProductInfo h3{margin:6px 0 14px;font-size:15px;line-height:1.3}
+.uvProductBottom{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.uvProductBottom strong{color:#00ffbc;font-size:15px}
+.uvProductBottom button{width:38px;height:38px;display:grid;place-items:center;border:1px solid #752eff;border-radius:50%;color:#fff;background:transparent}
+.uvProductBottom button:hover{border-color:#00ffbc;color:#00ffbc}
+.uvAddedMark{font-size:18px;color:#00ffbc}
+.uvProductState{padding:30px;border:1px solid #20283a;border-radius:10px;color:#aeb5c4;text-align:center;background:#0a0d14}
+.uvProductState.error{color:#ffb3ca;border-color:#6b294f}
+@media(max-width:900px){.uvHeroSlide{grid-template-columns:1fr;gap:28px}.uvHeroCopy{max-width:none}.uvProductGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.uvPage{padding-bottom:50px}.uvHeroIntro{padding:28px 0 18px}.uvHeroIntro .heroIcons{gap:12px;margin-top:22px}.uvHeroSlider{padding:14px 0 42px}.uvHeroSlide{min-height:0}.uvHeroCopy h2{font-size:32px}.uvHeroCopy p{font-size:15px;line-height:1.6}.uvSliderControls{margin-top:24px}.uvProductsSection{padding-top:12px}.uvProductsSection .sectionHead{display:block}.uvProductsSection .sectionHead .textLink{display:inline-flex;margin-top:14px}.uvProductGrid{gap:10px}.uvProductInfo{padding:11px}.uvProductInfo h3{font-size:13px}.uvProductBottom strong{font-size:13px}.uvProductBottom button{width:36px;height:36px}}
 .section,.darkSection,.why,.mojoSection,.trustCTA{background:var(--site-surface)!important}
 .header-wrapper{position:sticky!important;top:0!important;z-index:999!important;background:var(--site-surface)!important}
 .header{position:relative;top:auto;background:var(--site-surface)}
@@ -997,6 +1051,28 @@ h1,h2,h3,h4,h5,h6{font-family:'Poppins','DM Sans',Arial,sans-serif}
   a.special.specialLink{pointer-events:none;cursor:default}
   a.special.specialLink .btn.ghost{pointer-events:auto;cursor:pointer}
 }
+
+.passwordPage{min-height:calc(100svh - 134px);padding:64px 20px 90px;background:var(--site-surface)}
+.passwordPageInner{width:min(620px,100%);margin:0 auto}
+.passwordPage .crumb{justify-content:center;margin-bottom:28px;color:#8992a5}
+.passwordPage .crumb a{color:#00ffbc}
+.passwordPage .crumb svg{width:14px}
+.passwordPanel{padding:40px;border:1px solid #252c3d;border-radius:14px;background:linear-gradient(145deg,#0d1320,#080b13);box-shadow:0 22px 60px rgba(0,0,0,.28);text-align:center}
+.passwordIcon{width:58px;height:58px;margin:0 auto 20px;display:grid;place-items:center;border:1px solid #00ffbc;border-radius:50%;color:#00ffbc;background:rgba(0,255,188,.08);box-shadow:0 0 24px rgba(0,255,188,.14)}
+.passwordEyebrow{margin:0 0 10px;color:#00ffbc;font-size:11px;font-weight:700;letter-spacing:.14em}
+.passwordPanel h1{margin:0;font-size:clamp(28px,5vw,42px);line-height:1.1}
+.passwordIntro{max-width:470px;margin:16px auto 28px;color:#aeb5c4;font-size:15px;line-height:1.65}
+.passwordForm{text-align:left}
+.passwordForm label{display:block;margin-bottom:8px;color:#e8ebf2;font-size:13px;font-weight:700}
+.passwordForm input{width:100%;min-height:48px;padding:12px 14px;background:#050811;border:1px solid #2a3448;border-radius:7px;color:#fff;outline:none}
+.passwordForm input:focus{border-color:#00ffbc;box-shadow:0 0 0 3px rgba(0,255,188,.1)}
+.passwordAction{width:100%;margin-top:18px}
+.passwordStatus{margin:14px 0 0;padding:11px 12px;border-radius:7px;font-size:13px;line-height:1.45}
+.passwordStatus.success{color:#a8f2cc;background:rgba(0,255,188,.08);border:1px solid rgba(0,255,188,.25)}
+.passwordStatus.error{color:#ffb3ca;background:rgba(255,101,191,.08);border:1px solid rgba(255,101,191,.25)}
+.passwordBack{display:inline-block;margin-top:22px;color:#aeb5c4;font-size:13px}
+.passwordBack:hover{color:#00ffbc}
+@media(max-width:520px){.passwordPage{padding:34px 14px 60px}.passwordPanel{padding:28px 20px}.passwordPage .crumb{font-size:12px;margin-bottom:20px}}
 
 /* Keep the static proof strip inside the viewport after stopping its animation. */
 @media (max-width: 800px) {

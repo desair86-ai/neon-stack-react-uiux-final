@@ -90,14 +90,22 @@ export async function getProducts(categorySlug = null) {
       }
     }
     
+    const productCategories = p.productCategories?.nodes || [];
+    const categoryNames = productCategories.map((category) => category.name).filter(Boolean);
+    const categorySlugs = productCategories.map((category) => category.slug).filter(Boolean);
+    const sizeOptions = (p.attributes?.nodes || [])
+      .filter((attribute) => ['size', 'pa_size'].includes(attribute.name?.toLowerCase()))
+      .flatMap((attribute) => attribute.options || []);
+
     return [
       p.name,
-      'Premium LED Neon',
+      categoryNames[0] || 'Premium LED Neon',
       p.image?.sourceUrl || '/images/products/product_01.png',
       badge,
       price,
       rawPrice,
-      p.databaseId
+      p.databaseId,
+      { categoryNames, categorySlugs, sizeOptions, type: categoryNames[0] || 'Premium LED Neon' }
     ];
   });
   

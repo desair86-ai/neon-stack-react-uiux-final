@@ -7,6 +7,11 @@
   background: #03050a;
   color: #fff;
 }
+
+.ns-configurator > :first-child {
+  min-height: 0 !important;
+}
+
 .ns-container {
   width: min(1450px, calc(100% - 84px));
   margin: auto;
