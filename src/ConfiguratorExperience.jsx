@@ -1,12 +1,13 @@
 "use client";
 import React,{useEffect,useMemo,useRef,useState} from "react";
 import {Footer, MobileMenu} from "./components";
-import {getConfiguratorOptions} from "./lib/api";
 import {AlignCenter,AlignLeft,AlignRight,ArrowLeft,ArrowRight,Check,ChevronDown,Crown,Heart,Menu,Minus,Moon,Plus,Ruler,RotateCcw,Smile,Sparkles,Star,Sun,Sunset,Trash2,Upload,WandSparkles,Zap} from "lucide-react";
 import "./configurator.css";
+import { useNeonConfig, useNeonConfigRevision } from "./hooks/useNeonConfig";
+import { useNeonQuote } from "./hooks/useNeonQuote";
+import { getNeonStackApiBase, uploadNeonScreenshot } from "./api/neonStackApi";
 const STEPS=["text","size","shapes","color","backboard","hardware"],LABELS={text:"TEXT",size:"SIZE",shapes:"SHAPES",color:"COLOUR",backboard:"BACKBOARD",hardware:"HARDWARE"};
 const COLORS=[{id:"pink",name:"Pink",hex:"#ff2aa8"},{id:"purple",name:"Purple",hex:"#8d3cff"},{id:"blue",name:"Blue",hex:"#198cff"},{id:"cyan",name:"Cyan",hex:"#12dfe5"},{id:"green",name:"Green",hex:"#63df21"},{id:"yellow",name:"Yellow",hex:"#ffd11a"},{id:"orange",name:"Orange",hex:"#ff8618"},{id:"white",name:"White",hex:"#fff"}];
-const FALLBACK={options:{colors:COLORS,sizes:[{id:"small",name:"Small",price:5600,description:"39.5 × 10 in"},{id:"medium",name:"Medium",price:9100,description:"51.5 × 13 in"},{id:"large",name:"Large",price:11400,description:"63.5 × 15 in"},{id:"xl",name:"Extra Large",price:14800,description:"87.5 × 17 in"}],shapes:[{id:"heart",name:"Heart",price:300},{id:"star",name:"Star",price:300},{id:"lightning",name:"Lightning",price:300},{id:"crown",name:"Crown",price:300},{id:"moon",name:"Moon",price:300},{id:"smile",name:"Smile",price:300}],backboards:[{id:"cut",name:"Cut to Shape",price:0},{id:"whole",name:"Whole Board / Square",price:1200},{id:"none",name:"No Backing / Minimal",price:0}],hardware:[{id:"screws",name:"Wall Screws",price:0},{id:"wire",name:"Hanging Wire",price:300},{id:"dimmer",name:"Standard Dimmer",price:500},{id:"smart",name:"Smart WiFi / Wireless Remote",price:1000},{id:"indoor",name:"Indoor LED",price:0},{id:"outdoor",name:"IP67 Waterproof Outdoor",price:900}]},fonts:[{id:"neon-script",name:"Neon Script",class:"font-neon-script"},{id:"classic",name:"Classic",class:""}],presentation:{text_color_selection:true,shape_color_mode:"single",shape_color_options:COLORS}};
 const BACKGROUNDS=[
   ["Brick Wall","/images/backgrounds/brick wall.webp"],
   ["Office 1","/images/backgrounds/office 1.webp"],
@@ -32,186 +33,207 @@ const physicalHeight=s=>{const m=String(s?.description||"").match(/[×x]\s*([\d.
 const fontFamily=f=>f?.class||f?.family||f?.name||"inherit";
 function shapeIcon(name,size=28){const p={size,strokeWidth:1.7},n=String(name||"").toLowerCase();if(n.includes("heart"))return <Heart {...p}/>;if(n.includes("star"))return <Star {...p}/>;if(n.includes("moon"))return <Moon {...p}/>;if(n.includes("crown"))return <Crown {...p}/>;if(n.includes("smile"))return <Smile {...p}/>;if(n.includes("light"))return <Zap {...p}/>;return <Sparkles {...p}/>}
 export function ConfiguratorExperience({type="custom_neon"}){
- const mojo=type==="mojo_mix";
- const [config,setConfig]=useState(null),[loading,setLoading]=useState(true),[step,setStep]=useState(0),[text,setText]=useState("The Neon Stack"),[font,setFont]=useState(null),[align,setAlign]=useState("center"),[size,setSize]=useState(null),[color,setColor]=useState(null),[isMulti,setIsMulti]=useState(false),[letterColors,setLetterColors]=useState({}),[selectedLetter,setSelectedLetter]=useState(null),[shapes,setShapes]=useState([]),[backboard,setBackboard]=useState(null),[hardware,setHardware]=useState(null),[background,setBackground]=useState(BACKGROUNDS[0][1]),[wallFile,setWallFile]=useState(null),[mood,setMood]=useState("day"),[lightOn,setLightOn]=useState(true),[showRuler,setShowRuler]=useState(true),[calibrating,setCalibrating]=useState(false),[calibrationInches,setCalibrationInches]=useState("50"),[calibrationRatio,setCalibrationRatio]=useState(null),[calibrationWidth,setCalibrationWidth]=useState(295),[calibrationPos,setCalibrationPos]=useState({x:.5,y:.52}),[signPos,setSignPos]=useState({x:.5,y:.5}),[fontSize,setFontSize]=useState(80),[bounds,setBounds]=useState(null);
- const previewRef=useRef(null),textRef=useRef(null);
- useEffect(()=>{let active=true;setLoading(true);getConfiguratorOptions(type).then(data=>{if(!active)return;const c=data?.options?data:FALLBACK,o=c.options||FALLBACK.options,fs=c.fonts?.length?c.fonts:FALLBACK.fonts;setConfig(c);setFont(fs[0]);setSize(null);setColor(mojo?null:(o.colors?.[0]||COLORS[0]));setBackboard(null);setHardware(null);setLoading(false)}).catch(()=>{if(!active)return;setConfig(FALLBACK);setFont(FALLBACK.fonts[0]);setSize(null);setColor(mojo?null:COLORS[0]);setBackboard(null);setHardware(null);setLoading(false)});return()=>{active=false}},[type,mojo]);
- const options=config?.options||FALLBACK.options,fonts=config?.fonts?.length?config.fonts:FALLBACK.fonts,presentation=config?.presentation||{},current=STEPS[step],baseShapeColors=presentation.shape_color_options?.length?presentation.shape_color_options:(options.colors?.length?options.colors:COLORS),shapeColors=mojo?[{id:"mojo",name:"Mojo Mix (Animated)",hex:"linear-gradient(135deg, #ff007b, #00d4ff)"},...baseShapeColors]:baseShapeColors;
- const valid={text:Boolean(text.trim())&&Boolean(font),size:Boolean(size),shapes:true,color:mojo||Boolean(color),backboard:Boolean(backboard),hardware:Boolean(hardware)},complete=STEPS.every(k=>valid[k]);
- const price=useMemo(()=>Number(size?.price||0)+Number(backboard?.price||0)+Number(hardware?.price||0)+shapes.reduce((n,s)=>n+Number(s.price||0),0),[size,backboard,hardware,shapes]);
- const linesArray = (text || "").split('\n');
- const linesCount = Math.max(1, linesArray.length);
- const baseW = physicalWidth(size), baseH = physicalHeight(size);
- const maxLineW = Math.max(...linesArray.map(line => {
-   const c = line.replace(/\s/g, '').length;
-   const s = (line.match(/ /g) || []).length;
-   return (c * (baseW/12)) + (s * 1.75);
- }));
- const signW = Math.max(baseW/12, maxLineW) + (shapes.length * 6);
- const signH = (linesCount * baseH) + ((linesCount - 1) * 3);
- useEffect(()=>{const box=previewRef.current;if(!box)return;const fit=()=>{const probe=document.createElement("span"),cs=textRef.current?getComputedStyle(textRef.current):null;
-  const leftCount=shapes.filter(s=>s.position==="left").length,rightCount=shapes.filter(s=>s.position==="right").length;
-  const leftPad=leftCount?(0.6+(leftCount-1)*0.9+0.5):0,rightPad=rightCount?(0.6+(rightCount-1)*0.9+0.5):0;
-  probe.style.cssText=`position:fixed;left:-99999px;top:-99999px;visibility:hidden;white-space:pre;display:inline-block;font-family:${JSON.stringify(fontFamily(font))};font-weight:${cs?.fontWeight||"400"};letter-spacing:${cs?.letterSpacing||"normal"};line-height:1.02;padding-left:${leftPad}em;padding-right:${rightPad}em;`;
-  probe.textContent=text||"Preview";document.body.appendChild(probe);const sIdx=options?.sizes?.findIndex(s=>s.id===size?.id)??0,mult=[0.4,0.55,0.7,0.85][Math.min(3,Math.max(0,sIdx))]||0.55,maxWidth=Math.max(140,Math.min(box.clientWidth*mult,calibrationRatio?signW*calibrationRatio:box.clientWidth*mult));const lines=String(text||"").split("\n").length;let low=12,high=190;for(let i=0;i<18;i++){const mid=(low+high)/2;probe.style.fontSize=`${mid}px`;if(probe.scrollWidth<=maxWidth&&probe.scrollHeight<=Math.max(80,box.clientHeight*.5/lines))low=mid;else high=mid}setFontSize(low);document.body.removeChild(probe)};fit();const ro=new ResizeObserver(fit);ro.observe(box);return()=>ro.disconnect()},[text,font,size,calibrationRatio,shapes,options]);
- useEffect(()=>{const box=previewRef.current,el=textRef.current;if(!box||!el)return;const update=()=>{const a=box.getBoundingClientRect(),r=el.getBoundingClientRect();setBounds({left:r.left-a.left,top:r.top-a.top,width:r.width,height:r.height})};update();const ro=new ResizeObserver(update);ro.observe(el);ro.observe(box);return()=>ro.disconnect()},[fontSize,text,align,signPos,shapes]);
- const addShape=s=>setShapes(prev=>{const l=prev.filter(x=>x.position==="left").length,r=prev.filter(x=>x.position==="right").length;return [...prev,{...s,uid:`${s.id}-${Date.now()}-${Math.random()}`,position:l<=r?"left":"right",color:shapeColors[0]||COLORS[0]}]});
- const removeShape=uid=>setShapes(prev=>prev.filter(s=>s.uid!==uid));
- const updateShape=(uid,patch)=>setShapes(prev=>prev.map(s=>s.uid===uid?{...s,...patch}:s));
- const uploadWall=e=>{const f=e.target.files?.[0];if(!f)return;if(wallFile)URL.revokeObjectURL(wallFile);const u=URL.createObjectURL(f);setWallFile(u);setBackground(u);setCalibrationRatio(null)};
- const chooseBackground=u=>{if(wallFile)URL.revokeObjectURL(wallFile);setWallFile(null);setBackground(u);setCalibrationRatio(null)};
- const nextBg = () => { const idx = BACKGROUNDS.findIndex(b => b[1] === background); chooseBackground(BACKGROUNDS[(Math.max(0, idx) + 1) % BACKGROUNDS.length][1]); };
- const prevBg = () => { const idx = BACKGROUNDS.findIndex(b => b[1] === background); chooseBackground(BACKGROUNDS[(Math.max(0, idx) - 1 + BACKGROUNDS.length) % BACKGROUNDS.length][1]); };
- const reset=()=>{if(wallFile)URL.revokeObjectURL(wallFile);setText("The Neon Stack");setShapes([]);setBackground(BACKGROUNDS[0][1]);setWallFile(null);setMood("day");setLightOn(true);setShowRuler(true);setCalibrating(false);setCalibrationRatio(null);setCalibrationWidth(295);setCalibrationPos({x:.5,y:.52});setSignPos({x:.5,y:.5});setStep(0);setIsMulti(false);setLetterColors({});setSelectedLetter(null);setColor(config?.colors?.[0]||COLORS[0])};
- const dragSign=e=>{if(calibrating)return;e.preventDefault();const box=previewRef.current?.getBoundingClientRect();if(!box)return;const sx=e.clientX,sy=e.clientY,ox=signPos.x,oy=signPos.y;const move=ev=>setSignPos({x:Math.max(.08,Math.min(.92,ox+(ev.clientX-sx)/box.width)),y:Math.max(.12,Math.min(.88,oy+(ev.clientY-sy)/box.height))});const up=()=>{window.removeEventListener("pointermove",move);window.removeEventListener("pointerup",up)};window.addEventListener("pointermove",move);window.addEventListener("pointerup",up)};
- const dragCalibration=e=>{if(!calibrating)return;e.preventDefault();const box=previewRef.current?.getBoundingClientRect();if(!box)return;const sx=e.clientX,sy=e.clientY,ox=calibrationPos.x,oy=calibrationPos.y;const move=ev=>setCalibrationPos({x:Math.max(.08,Math.min(.92,ox+(ev.clientX-sx)/box.width)),y:Math.max(.08,Math.min(.92,oy+(ev.clientY-sy)/box.height))});const up=()=>{window.removeEventListener("pointermove",move);window.removeEventListener("pointerup",up)};window.addEventListener("pointermove",move);window.addEventListener("pointerup",up)};
- const setCalibration=()=>{const inches=Number(calibrationInches);if(inches>0)setCalibrationRatio(calibrationWidth/inches);setCalibrating(false);};
- const neonColor=color?.hex||"#63df21",lighting=LIGHTING[mood],leftShapes=shapes.filter(s=>s.position==="left"),rightShapes=shapes.filter(s=>s.position==="right");
- const darkenHex=h=>{if(!h||!h.startsWith("#"))return "#1a1a24";let r=parseInt(h.slice(1,3),16)*0.2,g=parseInt(h.slice(3,5),16)*0.2,b=parseInt(h.slice(5,7),16)*0.2;return `#${Math.floor(r).toString(16).padStart(2,'0')}${Math.floor(g).toString(16).padStart(2,'0')}${Math.floor(b).toString(16).padStart(2,'0')}`};
- const getShadow=c=>"none";
- const textStyle={fontFamily:fontFamily(font),fontSize:`${fontSize}px`,lineHeight:1.02,whiteSpace:"pre",display:"inline-block",textAlign:align,color:mojo?"transparent":(isMulti?undefined:(lightOn?neonColor:darkenHex(neonColor))),backgroundImage:mojo?"linear-gradient(90deg,#ffde00,#ff7b00,#ff007b,#c400ff,#00d4ff,#ffde00)":undefined,WebkitBackgroundClip:mojo?"text":undefined,backgroundSize:mojo?"300% 100%":undefined,animation:mojo?"nsMojoSpectrum 3s linear infinite":undefined,textShadow:mojo?"none":(isMulti?undefined:getShadow(neonColor)),filter:"none",opacity:lightOn?1:.9};
- const renderText=()=>{if(mojo||!isMulti)return text||"Preview";return (text||"Preview").split("").map((char,i)=>{const c=letterColors[i]||color,cHex=lightOn?(c?.hex||"#63df21"):darkenHex(c?.hex||"#63df21");return <span key={i} onClick={(e)=>{if(isMulti){e.stopPropagation();setSelectedLetter(i)}}} style={{color:cHex,textShadow:getShadow(cHex),cursor:isMulti?"pointer":"inherit",display:"inline-block",transform:isMulti&&selectedLetter===i?"scale(1.1)":"none",transition:"transform 0.2s",zIndex:isMulti&&selectedLetter===i?10:1,position:"relative"}}>{char}</span>})};
- const shapePosition=(s,side,index)=>{
-    const offsetGap=0.6+index*0.9;
-    const isShapeMojo = mojo && (!s.color || s.color.id === 'mojo');
-    const finalShapeColor = lightOn ? (s.color?.hex||neonColor) : darkenHex(s.color?.hex||neonColor);
-    return {
-      position:"absolute",
-      top:"50%",
-      left:side==="left"?`calc(0% - ${offsetGap}em)`:`calc(100% + ${offsetGap}em)`,
-      color: isShapeMojo ? (lightOn ? "#ff007b" : "#4a0024") : finalShapeColor,
-      animation: isShapeMojo && lightOn ? "nsMojoSpectrumColor 3s linear infinite" : undefined,
-      opacity:lightOn?1:.9,
-      transform:"translate(-50%,-50%)",
-      fontSize:Math.max(30,fontSize*.5),
-      filter: isShapeMojo && lightOn ? "drop-shadow(0 0 2px #fff) drop-shadow(0 0 7px currentColor)" : "none",
-      textShadow:"none",
-      display:"flex",
-      alignItems:"center",
-      justifyContent:"center"
-    };
- };
- const ruler=useMemo(()=>{if(!bounds)return null;const gap=Math.max(44,Math.min(78,fontSize*.55)),left=bounds.left-leftShapes.length*gap-gap/2,right=bounds.left+bounds.width+rightShapes.length*gap+gap/2,top=bounds.top-Math.min(24,fontSize*.1),bottom=bounds.top+bounds.height+Math.min(24,fontSize*.1);return {left:Math.max(8,left),top:Math.max(8,top),width:Math.max(100,right-left),height:Math.max(70,bottom-top)}},[bounds,leftShapes.length,rightShapes.length,fontSize]);
-  const handleAddToCart = async () => { 
-    if (complete) {
-      const woocommerce = {
-        product_id: config?.product_id,
-        sku: config?.product_sku,
-        ...(config?.woocommerce || {})
-      };
-      const productId = Number(config?.product_id) || Number(woocommerce?.product_id);
-      if (!Number.isInteger(productId) || productId < 1) {
-        alert("This configurator is not connected to a WooCommerce product yet.");
-        return;
-      }
+  const mojo=type==="mojo_mix";
+  const { config: wpConfig, revision, loading, error: configError, disabled: configDisabled, refetch } = useNeonConfig(type);
+  const { revision: liveRevision, version } = useNeonConfigRevision(type, 30000);
+  const { pricing, loading: pricingLoading, quote, debouncedQuote } = useNeonQuote(type);
+  const [step,setStep]=useState(0),[text,setText]=useState("The Neon Stack"),[font,setFont]=useState(null),[align,setAlign]=useState("center"),[size,setSize]=useState(null),[color,setColor]=useState(null),[isMulti,setIsMulti]=useState(false),[letterColors,setLetterColors]=useState({}),[selectedLetter,setSelectedLetter]=useState(null),[shapes,setShapes]=useState([]),[backboard,setBackboard]=useState(null),[hardware,setHardware]=useState(null),[background,setBackground]=useState(BACKGROUNDS[0][1]),[wallFile,setWallFile]=useState(null),[mood,setMood]=useState("day"),[lightOn,setLightOn]=useState(true),[showRuler,setShowRuler]=useState(true),[calibrating,setCalibrating]=useState(false),[calibrationInches,setCalibrationInches]=useState("50"),[calibrationRatio,setCalibrationRatio]=useState(null),[calibrationWidth,setCalibrationWidth]=useState(295),[calibrationPos,setCalibrationPos]=useState({x:.5,y:.52}),[signPos,setSignPos]=useState({x:.5,y:.5}),[fontSize,setFontSize]=useState(80),[bounds,setBounds]=useState(null);
+  const previewRef=useRef(null),textRef=useRef(null);
+  useEffect(()=>{if(!wpConfig)return;const o=wpConfig.options||{},fs=wpConfig.fonts?.length?wpConfig.fonts:[];setFont(fs[0]||null);setSize(null);setColor(mojo?null:(o.colors?.[0]||null));setBackboard(null);setHardware(null)},[wpConfig]);
+  const options=wpConfig?.options||{},fonts=wpConfig?.fonts?.length?wpConfig.fonts:[],presentation=wpConfig?.presentation||{},current=STEPS[step],baseShapeColors=presentation.shape_color_options?.length?presentation.shape_color_options:(options.colors?.length?options.colors:COLORS),shapeColors=mojo?[{id:"mojo",name:"Mojo Mix (Animated)",hex:"linear-gradient(135deg, #ff007b, #00d4ff)"},...baseShapeColors]:baseShapeColors;
+  const valid={text:Boolean(text.trim())&&Boolean(font),size:Boolean(size),shapes:true,color:mojo||Boolean(color),backboard:Boolean(backboard),hardware:Boolean(hardware)},complete=STEPS.every(k=>valid[k]);
+  const clientPrice=useMemo(()=>Number(size?.price||0)+Number(backboard?.price||0)+Number(hardware?.price||0)+shapes.reduce((n,s)=>n+Number(s.price||0),0),[size,backboard,hardware,shapes]);
+  const serverPrice = pricing?.unit_price ?? pricing?.final_unit_price ?? null;
+  const displayPrice = serverPrice ?? clientPrice;
+  const linesArray = (text || "").split('\n');
+  const linesCount = Math.max(1, linesArray.length);
+  const baseW = physicalWidth(size), baseH = physicalHeight(size);
+  const maxLineW = Math.max(...linesArray.map(line => {
+    const c = line.replace(/\s/g, '').length;
+    const s = (line.match(/ /g) || []).length;
+    return (c * (baseW/12)) + (s * 1.75);
+  }));
+  const signW = Math.max(baseW/12, maxLineW) + (shapes.length * 6);
+  const signH = (linesCount * baseH) + ((linesCount - 1) * 3);
 
-      // Show loading indicator on button
-      const btn = document.querySelector('.ns-add-to-cart-btn');
-      if (btn) btn.innerHTML = 'UPLOADING PREVIEW...';
-      try {
-        let screenshotToken = null;
-        let cartThumb = background;
-        if (previewRef.current) {
-          try {
-            if (mojo && textRef.current) {
-              textRef.current.classList.remove('spectrum');
-              textRef.current.style.setProperty('color', '#ff007b', 'important');
-              textRef.current.style.setProperty('background-image', 'none', 'important');
-              textRef.current.style.setProperty('-webkit-background-clip', 'initial', 'important');
-            }
-
-            const html2canvas = (await import('html2canvas')).default;
-            
-            // Generate high-res blob for WordPress
-            const canvas = await html2canvas(previewRef.current, {
-              useCORS: true,
-              scale: 2, // 2x is plenty for a full-size preview
-              backgroundColor: null 
-            });
-            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-            
-            // Generate crisp base64 for local cart UI
-            const tinyCanvas = await html2canvas(previewRef.current, {
-              useCORS: true,
-              scale: 1.5, // 1.5x of the full preview box gives a great sharp thumbnail
-              backgroundColor: null
-            });
-            cartThumb = tinyCanvas.toDataURL('image/png', 0.9);
-            
-            if (mojo && textRef.current) {
-              textRef.current.classList.add('spectrum');
-              textRef.current.style.removeProperty('color');
-              textRef.current.style.removeProperty('background-image');
-              textRef.current.style.removeProperty('-webkit-background-clip');
-            }
-            
-            const formData = new FormData();
-            formData.append("screenshot", blob, "neon-preview.png");
-            
-            const response = await fetch("https://lightseagreen-caterpillar-909783.hostingersite.com/wp-json/neon-stack/v2/screenshot", {
-              method: "POST",
-              body: formData
-            });
-            
-            const result = await response.json();
-            if (response.ok && result.success && result.token) {
-              screenshotToken = result.token;
-            } else {
-              console.error("Failed to save neon preview:", result);
-            }
-          } catch(e) {
-            console.error("Canvas/Upload error", e);
-          }
-        }
-        
-        const item = {
-          id: Date.now(),
-          name: text || "Custom Neon",
-          type: type === "mojo_mix" ? "Mojo Mix" : "Custom Neon",
-          configurator: type,
-          product_id: productId,
-          product_sku: woocommerce?.sku || null,
-          price: price,
-          qty: 1,
-          size: size?.name,
-          color: mojo ? "Mojo Spectrum" : (color?.name || "Multi-color"),
-          font: font?.name,
-          neon_stack: {
-            configurator: type,
-            text,
-            font: font?.id || font?.name,
-            size: size?.id || size?.name,
-            color: mojo ? "mojo_mix" : (color?.id || color?.name),
-            shapes,
-            backboard: backboard?.id || backboard?.name,
-            hardware: hardware?.id || hardware?.name,
-          },
-          screenshot_token: screenshotToken,
-          image: cartThumb
-        };
-        item.neon_stack.screenshot_token = screenshotToken;
-        const cart = JSON.parse(localStorage.getItem('ns_cart') || '[]');
-        const existing = cart.find(x => x.name === item.name && x.type === item.type && x.size === item.size && x.color === item.color && x.font === item.font && x.screenshot_token === item.screenshot_token);
-        if (existing) existing.qty = (existing.qty || 1) + 1;
-        else cart.push(item);
-        localStorage.setItem('ns_cart', JSON.stringify(cart));
-        window.dispatchEvent(new Event('cartUpdated'));
-      } catch (err) {
-        console.error("Cart error", err);
-      }
-      if (btn) btn.innerHTML = 'ADD TO CART';
-      window.location.href='/cart';
-    } else {
-      const missing = STEPS.find(k => !valid[k]);
-      let msg = "Please select all options.";
-      if (missing === 'text') msg = "Please enter your text.";
-      if (missing === 'size') msg = "Please select a size.";
-      if (missing === 'color') msg = "Please select a colour.";
-      if (missing === 'backboard') msg = "Please add a backboard.";
-      if (missing === 'hardware') msg = "Please add hardware.";
-      alert(msg);
+  // WordPress config can change without a React deploy. Poll the revision and
+  // auto-refetch the authoritative configuration when the admin updates it.
+  useEffect(() => {
+    if (!liveRevision || !revision) return;
+    if (liveRevision !== revision) {
+      refetch();
     }
+  }, [liveRevision, revision, refetch]);
+  useEffect(()=>{const box=previewRef.current;if(!box)return;const fit=()=>{const probe=document.createElement("span"),cs=textRef.current?getComputedStyle(textRef.current):null;
+   const leftCount=shapes.filter(s=>s.position==="left").length,rightCount=shapes.filter(s=>s.position==="right").length;
+   const leftPad=leftCount?(0.6+(leftCount-1)*0.9+0.5):0,rightPad=rightCount?(0.6+(rightCount-1)*0.9+0.5):0;
+   probe.style.cssText=`position:fixed;left:-99999px;top:-99999px;visibility:hidden;white-space:pre;display:inline-block;font-family:${JSON.stringify(fontFamily(font))};font-weight:${cs?.fontWeight||"400"};letter-spacing:${cs?.letterSpacing||"normal"};line-height:1.02;padding-left:${leftPad}em;padding-right:${rightPad}em;`;
+   probe.textContent=text||"Preview";document.body.appendChild(probe);const sIdx=options?.sizes?.findIndex(s=>s.id===size?.id)??0,mult=[0.4,0.55,0.7,0.85][Math.min(3,Math.max(0,sIdx))]||0.55,maxWidth=Math.max(140,Math.min(box.clientWidth*mult,calibrationRatio?signW*calibrationRatio:box.clientWidth*mult));const lines=String(text||"").split("\n").length;let low=12,high=190;for(let i=0;i<18;i++){const mid=(low+high)/2;probe.style.fontSize=`${mid}px`;if(probe.scrollWidth<=maxWidth&&probe.scrollHeight<=Math.max(80,box.clientHeight*.5/lines))low=mid;else high=mid}setFontSize(low);document.body.removeChild(probe)};fit();const ro=new ResizeObserver(fit);ro.observe(box);return()=>ro.disconnect()},[text,font,size,calibrationRatio,shapes,options]);
+  useEffect(()=>{const box=previewRef.current,el=textRef.current;if(!box||!el)return;const update=()=>{const a=box.getBoundingClientRect(),r=el.getBoundingClientRect();setBounds({left:r.left-a.left,top:r.top-a.top,width:r.width,height:r.height})};update();const ro=new ResizeObserver(update);ro.observe(el);ro.observe(box);return()=>ro.disconnect()},[fontSize,text,align,signPos,shapes]);
+  useEffect(()=>{if(!wpConfig||!size||!font)return;const design={text:text||"",fontId:font?.id||font?.name,language:"english",size:size?.id||size?.name,textColor:mojo?"#ff007b":(color?.hex||"#fff"),glowStyle:"classic",colors:shapes.map(s=>({id:s.id,name:s.name,hex:s.color?.hex||"#fff",position:s.position})),shapes:shapes.map(s=>({id:s.id,name:s.name,position:s.position,color:s.color?.id||s.color?.name||"white"})),backboard:backboard?.id||backboard?.name,hardware:hardware?.id||hardware?.name};debouncedQuote(design,250)},[type,text,font,size,color,shapes,backboard,hardware,mojo,wpConfig,debouncedQuote]);
+  const addShape=s=>setShapes(prev=>{const l=prev.filter(x=>x.position==="left").length,r=prev.filter(x=>x.position==="right").length;return [...prev,{...s,uid:`${s.id}-${Date.now()}-${Math.random()}`,position:l<=r?"left":"right",color:shapeColors[0]||COLORS[0]}]});
+  const removeShape=uid=>setShapes(prev=>prev.filter(s=>s.uid!==uid));
+  const updateShape=(uid,patch)=>setShapes(prev=>prev.map(s=>s.uid===uid?{...s,...patch}:s));
+  const uploadWall=e=>{const f=e.target.files?.[0];if(!f)return;if(wallFile)URL.revokeObjectURL(wallFile);const u=URL.createObjectURL(f);setWallFile(u);setBackground(u);setCalibrationRatio(null)};
+  const chooseBackground=u=>{if(wallFile)URL.revokeObjectURL(wallFile);setWallFile(null);setBackground(u);setCalibrationRatio(null)};
+  const nextBg = () => { const idx = BACKGROUNDS.findIndex(b => b[1] === background); chooseBackground(BACKGROUNDS[(Math.max(0, idx) + 1) % BACKGROUNDS.length][1]); };
+  const prevBg = () => { const idx = BACKGROUNDS.findIndex(b => b[1] === background); chooseBackground(BACKGROUNDS[(Math.max(0, idx) - 1 + BACKGROUNDS.length) % BACKGROUNDS.length][1]); };
+  const reset=()=>{if(wallFile)URL.revokeObjectURL(wallFile);setText("The Neon Stack");setShapes([]);setBackground(BACKGROUNDS[0][1]);setWallFile(null);setMood("day");setLightOn(true);setShowRuler(true);setCalibrating(false);setCalibrationRatio(null);setCalibrationWidth(295);setCalibrationPos({x:.5,y:.52});setSignPos({x:.5,y:.5});setStep(0);setIsMulti(false);setLetterColors({});setSelectedLetter(null);setColor(options.colors?.[0]||COLORS[0])};
+  const dragSign=e=>{if(calibrating)return;e.preventDefault();const box=previewRef.current?.getBoundingClientRect();if(!box)return;const sx=e.clientX,sy=e.clientY,ox=signPos.x,oy=signPos.y;const move=ev=>setSignPos({x:Math.max(.08,Math.min(.92,ox+(ev.clientX-sx)/box.width)),y:Math.max(.12,Math.min(.88,oy+(ev.clientY-sy)/box.height))});const up=()=>{window.removeEventListener("pointermove",move);window.removeEventListener("pointerup",up)};window.addEventListener("pointermove",move);window.addEventListener("pointerup",up)};
+  const dragCalibration=e=>{if(!calibrating)return;e.preventDefault();const box=previewRef.current?.getBoundingClientRect();if(!box)return;const sx=e.clientX,sy=e.clientY,ox=calibrationPos.x,oy=calibrationPos.y;const move=ev=>setCalibrationPos({x:Math.max(.08,Math.min(.92,ox+(ev.clientX-sx)/box.width)),y:Math.max(.08,Math.min(.88,oy+(ev.clientY-sy)/box.height))});const up=()=>{window.removeEventListener("pointermove",move);window.removeEventListener("pointerup",up)};window.addEventListener("pointermove",move);window.addEventListener("pointerup",up)};
+  const setCalibration=()=>{const inches=Number(calibrationInches);if(inches>0)setCalibrationRatio(calibrationWidth/inches);setCalibrating(false);};
+  const neonColor=color?.hex||"#63df21",lighting=LIGHTING[mood],leftShapes=shapes.filter(s=>s.position==="left"),rightShapes=shapes.filter(s=>s.position==="right");
+  const darkenHex=h=>{if(!h||!h.startsWith("#"))return "#1a1a24";let r=parseInt(h.slice(1,3),16)*0.2,g=parseInt(h.slice(3,5),16)*0.2,b=parseInt(h.slice(5,7),16)*0.2;return `#${Math.floor(r).toString(16).padStart(2,'0')}${Math.floor(g).toString(16).padStart(2,'0')}${Math.floor(b).toString(16).padStart(2,'0')}`};
+  const getShadow=c=>"none";
+  const textStyle={fontFamily:fontFamily(font),fontSize:`${fontSize}px`,lineHeight:1.02,whiteSpace:"pre",display:"inline-block",textAlign:align,color:mojo?"transparent":(isMulti?undefined:(lightOn?neonColor:darkenHex(neonColor))),backgroundImage:mojo?"linear-gradient(90deg,#ffde00,#ff7b00,#ff007b,#c400ff,#00d4ff,#ffde00)":undefined,WebkitBackgroundClip:mojo?"text":undefined,backgroundSize:mojo?"300% 100%":undefined,animation:mojo?"nsMojoSpectrum 3s linear infinite":undefined,textShadow:mojo?"none":(isMulti?undefined:getShadow(neonColor)),filter:"none",opacity:lightOn?1:.9};
+  const renderText=()=>{if(mojo||!isMulti)return text||"Preview";return (text||"Preview").split("").map((char,i)=>{const c=letterColors[i]||color,cHex=lightOn?(c?.hex||"#63df21"):darkenHex(c?.hex||"#63df21");return <span key={i} onClick={(e)=>{if(isMulti){e.stopPropagation();setSelectedLetter(i)}}} style={{color:cHex,textShadow:getShadow(cHex),cursor:isMulti?"pointer":"inherit",display:"inline-block",transform:isMulti&&selectedLetter===i?"scale(1.1)":"none",transition:"transform 0.2s",zIndex:isMulti&&selectedLetter===i?10:1,position:"relative"}}>{char}</span>})};
+  const shapePosition=(s,side,index)=>{
+     const offsetGap=0.6+index*0.9;
+     const isShapeMojo = mojo && (!s.color || s.color.id === 'mojo');
+     const finalShapeColor = lightOn ? (s.color?.hex||neonColor) : darkenHex(s.color?.hex||neonColor);
+     return {
+       position:"absolute",
+       top:"50%",
+       left:side==="left"?`calc(0% - ${offsetGap}em)`:`calc(100% + ${offsetGap}em)`,
+       color: isShapeMojo ? (lightOn ? "#ff007b" : "#4a0024") : finalShapeColor,
+       animation: isShapeMojo && lightOn ? "nsMojoSpectrumColor 3s linear infinite" : undefined,
+       opacity:lightOn?1:.9,
+       transform:"translate(-50%,-50%)",
+       fontSize:Math.max(30,fontSize*.5),
+       filter: isShapeMojo && lightOn ? "drop-shadow(0 0 2px #fff) drop-shadow(0 0 7px currentColor)" : "none",
+       textShadow:"none",
+       display:"flex",
+       alignItems:"center",
+       justifyContent:"center"
+     };
   };
+  const ruler=useMemo(()=>{if(!bounds)return null;const gap=Math.max(44,Math.min(78,fontSize*.55)),left=bounds.left-leftShapes.length*gap-gap/2,right=bounds.left+bounds.width+rightShapes.length*gap+gap/2,top=bounds.top-Math.min(24,fontSize*.1),bottom=bounds.top+bounds.height+Math.min(24,fontSize*.1);return {left:Math.max(8,left),top:Math.max(8,top),width:Math.max(100,right-left),height:Math.max(70,bottom-top)}},[bounds,leftShapes.length,rightShapes.length,fontSize]);
+   const handleAddToCart = async () => { 
+     if (complete) {
+       const woocommerce = {
+         product_id: wpConfig?.product_id,
+         sku: wpConfig?.product_sku,
+         ...(wpConfig?.woocommerce || {})
+       };
+       const productId = Number(wpConfig?.product_id) || Number(woocommerce?.product_id);
+       if (!Number.isInteger(productId) || productId < 1) {
+         alert("This configurator is not connected to a WooCommerce product yet.");
+         return;
+       }
+
+       // Show loading indicator on button
+       const btn = document.querySelector('.ns-add-to-cart-btn');
+       if (btn) btn.innerHTML = 'UPLOADING PREVIEW...';
+       try {
+         let screenshotToken = null;
+         let cartThumb = background;
+         if (previewRef.current) {
+           try {
+             if (mojo && textRef.current) {
+               textRef.current.classList.remove('spectrum');
+               textRef.current.style.setProperty('color', '#ff007b', 'important');
+               textRef.current.style.setProperty('background-image', 'none', 'important');
+               textRef.current.style.setProperty('-webkit-background-clip', 'initial', 'important');
+             }
+
+             const html2canvas = (await import('html2canvas')).default;
+             
+             // Generate high-res blob for WordPress
+             const canvas = await html2canvas(previewRef.current, {
+               useCORS: true,
+               scale: 2, // 2x is plenty for a full-size preview
+               backgroundColor: null 
+             });
+             const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+             
+             // Generate crisp base64 for local cart UI
+             const tinyCanvas = await html2canvas(previewRef.current, {
+               useCORS: true,
+               scale: 1.5, // 1.5x of the full preview box gives a great sharp thumbnail
+               backgroundColor: null
+             });
+             cartThumb = tinyCanvas.toDataURL('image/png', 0.9);
+             
+             if (mojo && textRef.current) {
+               textRef.current.classList.add('spectrum');
+               textRef.current.style.removeProperty('color');
+               textRef.current.style.removeProperty('background-image');
+               textRef.current.style.removeProperty('-webkit-background-clip');
+             }
+             
+             const screenshotApiBase = getNeonStackApiBase();
+             const screenshotUrl = screenshotApiBase ? `${screenshotApiBase}/screenshot` : null;
+             if (!screenshotUrl) {
+               console.warn('Screenshot endpoint is not configured');
+             } else {
+               const formData = new FormData();
+               formData.append("screenshot", blob, "neon-preview.png");
+               
+               const response = await fetch(screenshotUrl, {
+                 method: "POST",
+                 body: formData
+               });
+               
+               const result = await response.json();
+               if (response.ok && result.success && result.token) {
+                 screenshotToken = result.token;
+               } else {
+                 console.error("Failed to save neon preview:", result);
+               }
+             }
+           } catch(e) {
+             console.error("Canvas/Upload error", e);
+           }
+         }
+         
+         const item = {
+           id: Date.now(),
+           name: text || "Custom Neon",
+           type: type === "mojo_mix" ? "Mojo Mix" : "Custom Neon",
+           configurator: type,
+           product_id: productId,
+           product_sku: woocommerce?.sku || null,
+           price: displayPrice,
+           qty: 1,
+           size: size?.name,
+           color: mojo ? "Mojo Spectrum" : (color?.name || "Multi-color"),
+           font: font?.name,
+           neon_stack: {
+             configurator: type,
+             text,
+             font: font?.id || font?.name,
+             size: size?.id || size?.name,
+             color: mojo ? "mojo_mix" : (color?.id || color?.name),
+             shapes,
+             backboard: backboard?.id || backboard?.name,
+             hardware: hardware?.id || hardware?.name,
+           },
+           screenshot_token: screenshotToken,
+           image: cartThumb
+         };
+         item.neon_stack.screenshot_token = screenshotToken;
+         const cart = JSON.parse(localStorage.getItem('ns_cart') || '[]');
+         const existing = cart.find(x => x.name === item.name && x.type === item.type && x.size === item.size && x.color === item.color && x.font === item.font && x.screenshot_token === item.screenshot_token);
+         if (existing) existing.qty = (existing.qty || 1) + 1;
+         else cart.push(item);
+         localStorage.setItem('ns_cart', JSON.stringify(cart));
+         window.dispatchEvent(new Event('cartUpdated'));
+       } catch (err) {
+         console.error("Cart error", err);
+       }
+       if (btn) btn.innerHTML = 'ADD TO CART';
+       window.location.href='/cart';
+     } else {
+       const missing = STEPS.find(k => !valid[k]);
+       let msg = "Please select all options.";
+       if (missing === 'text') msg = "Please enter your text.";
+       if (missing === 'size') msg = "Please select a size.";
+       if (missing === 'color') msg = "Please select a colour.";
+       if (missing === 'backboard') msg = "Please add a backboard.";
+       if (missing === 'hardware') msg = "Please add hardware.";
+       alert(msg);
+     }
+   };
 
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -226,6 +248,8 @@ export function ConfiguratorExperience({type="custom_neon"}){
   );
 
   if(loading)return <main className="ns-config-loading">Loading your neon builder…</main>;
+  if(configError)return <main className="ns-config-loading">Unable to load configurator. Please refresh or try again later.</main>;
+  if(configDisabled)return <main className="ns-config-loading">This configurator is currently unavailable.</main>;
 
   return <main className={`ns-configurator${mojo?" ns-mojo":""}`}>
     {mobileMenuOpen && <MobileMenu close={()=>setMobileMenuOpen(false)} onMouseLeave={()=>setMobileMenuOpen(false)}/>}
@@ -247,10 +271,10 @@ export function ConfiguratorExperience({type="custom_neon"}){
           </div>
       </div>
       <div className="ns-header-right-cart" style={{display:'flex', alignItems:'center', gap:'20px'}}>
-        <div style={{display:'flex', flexDirection:'column', alignItems:'flex-end'}}>
-          <span style={{fontSize:'12px', color:'#a6a8b3'}}>Estimated Price</span>
-          <strong style={{fontSize:'22px', color:'#00ffbc'}}>{money(price)}</strong>
-        </div>
+           <div style={{display:'flex', flexDirection:'column', alignItems:'flex-end'}}>
+             <span style={{fontSize:'12px', color:'#a6a8b3'}}>{serverPrice ? 'Price' : 'Estimated Price'}</span>
+             <strong style={{fontSize:'22px', color:'#00ffbc'}}>{money(displayPrice)}{pricingLoading ? '...' : ''}</strong>
+           </div>
         <button className="ns-add-to-cart-btn" onClick={handleAddToCart} style={{
           padding:'12px 32px', 
           fontSize:'15px', 
@@ -272,34 +296,34 @@ export function ConfiguratorExperience({type="custom_neon"}){
       <aside className="ns-champ-sidebar" style={{width:'80px', flexShrink:0, background:'#05060a', borderRight:'1px solid #161a23', display:'flex', flexDirection:'column', overflowY:'auto'}}>
          <button className={`ns-champ-tab ${step===0?'active':''}`} onClick={()=>setStep(0)} style={{padding:'20px 0', border:'none', background:step===0?'#0a0d14':'transparent', color:step===0?'#00ffbc':'#8992a5', borderRight:step===0?'2px solid #00ffbc':'none', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:'8px'}}>
             <WandSparkles size={20}/>
-            <span style={{fontSize:'10px', textAlign:'center', lineHeight:1.2, fontFamily:'Space Grotesk', fontWeight:600}}>Create<br/>Own</span>
+            <span style={{fontSize:'10px', textAlign:'center', lineHeight:1.2, fontFamily:'Poppins', fontWeight:600}}>Create<br/>Own</span>
          </button>
          <button className={`ns-champ-tab ${step===1?'active':''}`} onClick={()=>setStep(1)} style={{padding:'20px 0', border:'none', background:step===1?'#0a0d14':'transparent', color:step===1?'#00ffbc':'#8992a5', borderRight:step===1?'2px solid #00ffbc':'none', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:'8px'}}>
             <Ruler size={20}/>
-            <span style={{fontSize:'10px', textAlign:'center', lineHeight:1.2, fontFamily:'Space Grotesk', fontWeight:600}}>Select<br/>Size</span>
+            <span style={{fontSize:'10px', textAlign:'center', lineHeight:1.2, fontFamily:'Poppins', fontWeight:600}}>Select<br/>Size</span>
          </button>
          <button className={`ns-champ-tab ${step===2?'active':''}`} onClick={()=>setStep(2)} style={{padding:'20px 0', border:'none', background:step===2?'#0a0d14':'transparent', color:step===2?'#00ffbc':'#8992a5', borderRight:step===2?'2px solid #00ffbc':'none', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:'8px'}}>
             <Sparkles size={20}/>
-            <span style={{fontSize:'10px', textAlign:'center', lineHeight:1.2, fontFamily:'Space Grotesk', fontWeight:600}}>Neon<br/>Shapes</span>
+            <span style={{fontSize:'10px', textAlign:'center', lineHeight:1.2, fontFamily:'Poppins', fontWeight:600}}>Neon<br/>Shapes</span>
          </button>
          <button className={`ns-champ-tab ${step===3?'active':''}`} onClick={()=>setStep(3)} style={{padding:'20px 0', border:'none', background:step===3?'#0a0d14':'transparent', color:step===3?'#00ffbc':'#8992a5', borderRight:step===3?'2px solid #00ffbc':'none', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:'8px'}}>
             <Sunset size={20}/>
-            <span style={{fontSize:'10px', textAlign:'center', lineHeight:1.2, fontFamily:'Space Grotesk', fontWeight:600}}>Color</span>
+            <span style={{fontSize:'10px', textAlign:'center', lineHeight:1.2, fontFamily:'Poppins', fontWeight:600}}>Color</span>
          </button>
          <button className={`ns-champ-tab ${step===4?'active':''}`} onClick={()=>setStep(4)} style={{padding:'20px 0', border:'none', background:step===4?'#0a0d14':'transparent', color:step===4?'#00ffbc':'#8992a5', borderRight:step===4?'2px solid #00ffbc':'none', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:'8px'}}>
             <Moon size={20}/>
-            <span style={{fontSize:'10px', textAlign:'center', lineHeight:1.2, fontFamily:'Space Grotesk', fontWeight:600}}>Back<br/>Board</span>
+            <span style={{fontSize:'10px', textAlign:'center', lineHeight:1.2, fontFamily:'Poppins', fontWeight:600}}>Back<br/>Board</span>
          </button>
          <button className={`ns-champ-tab ${step===5?'active':''}`} onClick={()=>setStep(5)} style={{padding:'20px 0', border:'none', background:step===5?'#0a0d14':'transparent', color:step===5?'#00ffbc':'#8992a5', borderRight:step===5?'2px solid #00ffbc':'none', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:'8px'}}>
             <Zap size={20}/>
-            <span style={{fontSize:'10px', textAlign:'center', lineHeight:1.2, fontFamily:'Space Grotesk', fontWeight:600}}>Power &<br/>Hardw.</span>
+            <span style={{fontSize:'10px', textAlign:'center', lineHeight:1.2, fontFamily:'Poppins', fontWeight:600}}>Power &<br/>Hardw.</span>
          </button>
       </aside>
 
       {/* 2. CONTROLS PANEL */}
       <aside className="ns-champ-controls" style={{width:'340px', flexShrink:0, background:'#0a0d14', borderRight:'1px solid #161a23', overflowY:'auto', padding:'25px 20px'}}>
          {step===0 && <div className="ns-champ-panel">
-            <h2 style={{fontSize:'16px', fontWeight:800, marginBottom:'20px', color:'#fff', fontFamily:'Space Grotesk'}}>CREATE YOUR OWN {valid.text&&<Check size={16} color="#00ffbc" style={{marginLeft:6, verticalAlign:'text-bottom'}}/>}</h2>
+            <h2 style={{fontSize:'16px', fontWeight:800, marginBottom:'20px', color:'#fff', fontFamily:'Poppins'}}>CREATE YOUR OWN {valid.text&&<Check size={16} color="#00ffbc" style={{marginLeft:6, verticalAlign:'text-bottom'}}/>}</h2>
             <div className="ns-field"><label>YOUR TEXT <small>{text.length}/50</small></label><textarea value={text} maxLength={50} rows={3} onChange={e=>setText(e.target.value)}/><small style={{display:"block",marginTop:6,color:"#8992a5"}}>Press Enter only when you want another line.</small></div>
             <div className="ns-field" style={{position:'relative'}}>
                <label>FONT STYLE <small>{fonts.length} Fonts</small></label>
@@ -322,32 +346,32 @@ export function ConfiguratorExperience({type="custom_neon"}){
          </div>}
          
          {step===1 && <div className="ns-champ-panel">
-            <h2 style={{fontSize:'16px', fontWeight:800, marginBottom:'20px', color:'#fff', fontFamily:'Space Grotesk'}}>SELECT SIZE</h2>
+            <h2 style={{fontSize:'16px', fontWeight:800, marginBottom:'20px', color:'#fff', fontFamily:'Poppins'}}>SELECT SIZE</h2>
             <div className="ns-field"><label>SIZE</label><div className="ns-option-list">{options.sizes?.map(s=><button key={s.id} className={size?.id===s.id?"selected":""} onClick={()=>setSize(s)}><span><b>{s.name}</b><small>{s.description}</small></span><strong>{money(s.price)}</strong></button>)}</div></div>
             <button className="btn primary" onClick={()=>setStep(2)} style={{width:'100%', marginTop:20}}>NEXT: NEON SHAPES</button>
          </div>}
 
          {step===2 && <div className="ns-champ-panel">
-            <h2 style={{fontSize:'16px', fontWeight:800, marginBottom:'20px', color:'#fff', fontFamily:'Space Grotesk'}}>NEON SHAPES {valid.shapes&&shapes.length>0&&<Check size={16} color="#00ffbc" style={{marginLeft:6, verticalAlign:'text-bottom'}}/>}</h2>
+            <h2 style={{fontSize:'16px', fontWeight:800, marginBottom:'20px', color:'#fff', fontFamily:'Poppins'}}>NEON SHAPES {valid.shapes&&shapes.length>0&&<Check size={16} color="#00ffbc" style={{marginLeft:6, verticalAlign:'text-bottom'}}/>}</h2>
             <div className="ns-section-title"><div><small>Each shape has its own colour and position.</small></div></div><div className="ns-shape-list">{options.shapes?.map(s=>{const count=shapes.filter(x=>x.id===s.id).length;return <div className="ns-shape-row" key={s.id}><span className="ns-shape-label">{shapeIcon(s.name,24)}<b>{s.name}</b></span><button className="ns-icon-btn" onClick={()=>addShape(s)}><Plus size={16}/></button><span className="ns-count">{count}</span><button className="ns-icon-btn" onClick={()=>{const last=[...shapes].reverse().find(x=>x.id===s.id);if(last)removeShape(last.uid)}}><Minus size={16}/></button></div>})}</div>{shapes.length>0&&<div className="ns-shape-configs"><h3>POSITION &amp; COLOUR</h3>{shapes.map((s,i)=><div className="ns-shape-config" key={s.uid}><div className="ns-shape-config-top"><b>{s.name} {i+1}</b><button className="ns-icon-btn" onClick={()=>removeShape(s.uid)}><Trash2 size={15}/></button></div><div className="ns-position"><button className={s.position==="left"?"selected":""} onClick={()=>updateShape(s.uid,{position:"left"})}>Left</button><button className={s.position==="right"?"selected":""} onClick={()=>updateShape(s.uid,{position:"right"})}>Right</button></div><div className="ns-mini-color-row">{shapeColors.map(c=><button key={c.id||c.name} className={s.color?.id===c.id?"selected":""} style={{background:c.hex}} onClick={()=>updateShape(s.uid,{color:c})} title={c.name}/>)}</div></div>)}</div>}
             <button className="btn primary" onClick={()=>setStep(3)} style={{width:'100%', marginTop:20}}>NEXT: COLOR</button>
          </div>}
 
          {step===3 && <div className="ns-champ-panel">
-            <h2 style={{fontSize:'16px', fontWeight:800, marginBottom:'20px', color:'#fff', fontFamily:'Space Grotesk'}}>COLOR {valid.color&&<Check size={16} color="#00ffbc" style={{marginLeft:6, verticalAlign:'text-bottom'}}/>}</h2>
+            <h2 style={{fontSize:'16px', fontWeight:800, marginBottom:'20px', color:'#fff', fontFamily:'Poppins'}}>COLOR {valid.color&&<Check size={16} color="#00ffbc" style={{marginLeft:6, verticalAlign:'text-bottom'}}/>}</h2>
             {!mojo&&<div className="ns-field"><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}><label style={{margin:0}}>TEXT COLOUR</label><button onClick={()=>{setIsMulti(!isMulti);if(!isMulti&&selectedLetter===null)setSelectedLetter(0)}} style={{background:isMulti?"#8b4cff":"transparent",color:isMulti?"#fff":"#8b4cff",border:"1px solid #8b4cff",borderRadius:6,fontSize:9,padding:"4px 8px",fontWeight:800,cursor:"pointer"}}>{isMulti?"SINGLE COLOUR":"MULTI COLOUR"}</button></div>{isMulti&&<div style={{background:"#0a0d14",padding:12,borderRadius:8,marginBottom:15,border:"1px solid #2a3040"}}><div style={{fontSize:10,color:"#aeb5c4",marginBottom:10}}>Click a letter below, then choose a colour.</div><div style={{display:"flex",flexWrap:"wrap",gap:6}}>{(text||"Preview").split("").map((char,i)=>{if(char.trim()==="")return null;const isSel=selectedLetter===i,c=letterColors[i]||color,cHex=c?.hex||"#63df21";return <button key={i} onClick={()=>setSelectedLetter(i)} style={{width:32,height:32,borderRadius:6,background:isSel?"#752eff":"#161a24",border:isSel?"1px solid #9a6cff":"1px solid #333",color:isSel?"#fff":cHex,fontSize:14,fontWeight:"bold",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>{char}</button>})}</div></div>}<div className="ns-color-grid">{(options.colors?.length?options.colors:COLORS).map(c=>{const isSelected=isMulti?letterColors[selectedLetter]?.id===c.id:color?.id===c.id;return <button key={c.id||c.name} className={isSelected?"selected":""} style={{background:c.hex}} onClick={()=>{if(isMulti){if(selectedLetter!==null)setLetterColors(prev=>({...prev,[selectedLetter]:c}))}else{setColor(c)}}} title={c.name}/>})}</div></div>}
             {mojo&&<div className="ns-field"><label>MOJO SPECTRUM</label><p style={{color:"#aeb5c4",lineHeight:1.6}}>Mojo Mix uses a continuous moving multicolour spectrum. The text and shapes animate independently from Custom Neon colours.</p></div>}
             <button className="btn primary" onClick={()=>setStep(4)} style={{width:'100%', marginTop:20}}>NEXT: BACKBOARD</button>
          </div>}
 
          {step===4 && <div className="ns-champ-panel">
-            <h2 style={{fontSize:'16px', fontWeight:800, marginBottom:'20px', color:'#fff', fontFamily:'Space Grotesk'}}>BACKBOARD {valid.backboard&&<Check size={16} color="#00ffbc" style={{marginLeft:6, verticalAlign:'text-bottom'}}/>}</h2>
+            <h2 style={{fontSize:'16px', fontWeight:800, marginBottom:'20px', color:'#fff', fontFamily:'Poppins'}}>BACKBOARD {valid.backboard&&<Check size={16} color="#00ffbc" style={{marginLeft:6, verticalAlign:'text-bottom'}}/>}</h2>
             <div className="ns-field"><div className="ns-option-list">{options.backboards?.map(x=><button key={x.id} className={backboard?.id===x.id?"selected":""} onClick={()=>setBackboard(x)}><span><b>{x.name}</b></span><strong>{money(x.price)}</strong></button>)}</div></div>
             <button className="btn primary" onClick={()=>setStep(5)} style={{width:'100%', marginTop:20}}>NEXT: HARDWARE</button>
          </div>}
 
          {step===5 && <div className="ns-champ-panel">
-            <h2 style={{fontSize:'16px', fontWeight:800, marginBottom:'20px', color:'#fff', fontFamily:'Space Grotesk'}}>POWER & HARDWARE {valid.hardware&&<Check size={16} color="#00ffbc" style={{marginLeft:6, verticalAlign:'text-bottom'}}/>}</h2>
+            <h2 style={{fontSize:'16px', fontWeight:800, marginBottom:'20px', color:'#fff', fontFamily:'Poppins'}}>POWER & HARDWARE {valid.hardware&&<Check size={16} color="#00ffbc" style={{marginLeft:6, verticalAlign:'text-bottom'}}/>}</h2>
             <div className="ns-field"><div className="ns-option-list">{options.hardware?.map(x=><button key={x.id} className={hardware?.id===x.id?"selected":""} onClick={()=>setHardware(x)}><span><b>{x.name}</b></span><strong>{money(x.price)}</strong></button>)}</div></div>
             <button className="btn primary ns-add-to-cart" disabled={!complete} onClick={handleAddToCart} style={{width:'100%', marginTop:20}}>ADD TO CART</button>
          </div>}
@@ -428,15 +452,13 @@ export function ConfiguratorExperience({type="custom_neon"}){
                    )}
                    <div ref={textRef} className={`ns-neon-text${mojo?" spectrum":""}`} style={{...textStyle,position:"relative",pointerEvents:"auto",cursor:isMulti?"inherit":"grab",userSelect:"none"}} onPointerDown={e=>{if(!isMulti) dragSign(e)}}>{leftShapes.map((s,i)=><span key={s.uid} style={shapePosition(s,"left",i)}>{shapeIcon(s.name,"1em")}</span>)}{renderText()}{rightShapes.map((s,i)=><span key={s.uid} style={shapePosition(s,"right",i)}>{shapeIcon(s.name,"1em")}</span>)}</div>
                 </div>
-                </div>
-
                 {calibrating&&<div className="ns-calibration-live" style={{position:"absolute",inset:0,zIndex:50,pointerEvents:"none"}}><div onPointerDown={dragCalibration} style={{position:"absolute",left:`${calibrationPos.x*100}%`,top:`${calibrationPos.y*100}%`,width:calibrationWidth,height:6,transform:"translate(-50%,-50%)",background:"#ff3355",boxShadow:"0 0 16px rgba(255,51,85,.8)",cursor:"move",pointerEvents:"auto"}}><span style={{position:"absolute",left:"50%",top:-24,transform:"translateX(-50%)",color:"#fff",fontWeight:800,whiteSpace:"nowrap"}}>{Math.round(calibrationWidth)} px — drag over a known object</span><i style={{position:"absolute",left:-8,top:-8,width:22,height:22,borderRadius:"50%",background:"#ff3355"}}/><i style={{position:"absolute",right:-8,top:-8,width:22,height:22,borderRadius:"50%",background:"#ff3355"}}/></div><div style={{position:"absolute",left:12,bottom:12,zIndex:51,padding:12,background:"rgba(5,6,10,.94)",border:"1px solid #752eff",borderRadius:12,pointerEvents:"auto",display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}><b style={{color:"#a8f2cc",fontSize:11}}>CALIBRATE ROOM SIZE</b><span style={{color:"#8992a5",fontSize:10}}>Place red line over a real object, then enter its width.</span><input value={calibrationInches} onChange={e=>setCalibrationInches(e.target.value)} type="number" min="1" style={{height:38,width:110,background:"#111",color:"#fff",border:"1px solid #444",borderRadius:7,padding:"0 10px"}}/><button onClick={setCalibration} style={{height:38,background:"#752eff",color:"#fff",border:0,borderRadius:7,padding:"0 15px",fontWeight:800}}>SET SCALE</button><button onClick={()=>setCalibrating(false)} style={{height:38,background:"#161a24",color:"#fff",border:"1px solid #333",borderRadius:7,padding:"0 12px"}}>CANCEL</button></div></div>}
              </div>
          </div>
          
          <div className="ns-champ-bottom-bar" style={{background:'#05060a', display:'flex', flexDirection:'column', padding:'20px 30px', borderTop:'1px solid #161a23'}}>
              <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'15px'}}>
-                 <strong style={{fontSize:'14px', color:'#fff', fontFamily:'Space Grotesk', fontWeight:700}}>ROOM / WALL BACKGROUND</strong>
+                 <strong style={{fontSize:'14px', color:'#fff', fontFamily:'Poppins', fontWeight:700}}>ROOM / WALL BACKGROUND</strong>
                  <label className="btn" style={{padding:'8px 16px', fontSize:'12px', background:'transparent', color:'#fff', border:'1px solid #00ffbc', borderRadius:'6px', display:'inline-flex', alignItems:'center', cursor:'pointer'}}><Upload size={14} style={{marginRight:8}}/> UPLOAD YOUR WALL<input type="file" accept="image/*, image/webp, .webp" onChange={uploadWall} style={{display:'none'}}/></label>
              </div>
              <div className="ns-background-horiz-scroll" style={{display:'flex', gap:15, overflowX:'auto', paddingBottom:5, alignItems:'center'}}>

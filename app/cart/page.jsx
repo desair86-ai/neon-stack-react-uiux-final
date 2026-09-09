@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { Header, Footer } from "../../src/components";
 import Link from "next/link";
-import { Trash2 } from "lucide-react";
+import { Trash2, Minus, Plus } from "lucide-react";
 
 export default function CartPage() { 
   const [cart, setCart] = useState([]);
@@ -57,8 +57,9 @@ export default function CartPage() {
           </div>
         ) : (
           <div>
-            <div style={{ overflowX: 'auto', background: '#0a0d14', border: '1px solid #1c212e', borderRadius: '12px', padding: '20px' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            {/* Desktop Table */}
+            <div className="cart-desktop" style={{ overflowX: 'auto', background: '#0a0d14', border: '1px solid #1c212e', borderRadius: '12px', padding: '20px', display: 'block' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '700px' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid #1c212e' }}>
                     <th colSpan="3" style={{ padding: '15px', textAlign: 'left', fontWeight: '600', color: '#fff' }}>Product</th>
@@ -99,19 +100,53 @@ export default function CartPage() {
                   <tr>
                     <td colSpan="6" style={{ padding: '20px 15px 5px' }}>
                        <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
-                         <div style={{ display: 'flex', gap: '10px' }}>
-                           <input type="text" placeholder="Coupon code" style={{ padding: '10px 15px', background: '#11151f', border: '1px solid #2a3040', color: '#fff', borderRadius: '6px', outline: 'none' }} />
-                           <button className="btn ghost" style={{ borderRadius: '6px' }}>Apply coupon</button>
-                         </div>
-                       </div>
+                          <div style={{ display: 'flex', gap: '10px' }}>
+                            <input type="text" placeholder="Coupon code" style={{ padding: '10px 15px', background: '#11151f', border: '1px solid #2a3040', color: '#fff', borderRadius: '6px', outline: 'none' }} />
+                            <button className="btn ghost" style={{ borderRadius: '6px' }}>Apply coupon</button>
+                          </div>
+                        </div>
                     </td>
                   </tr>
                 </tbody>
               </table>
             </div>
 
+            {/* Mobile Cards */}
+            <div className="cart-mobile" style={{ display: 'none', flexDirection: 'column', gap: '15px' }}>
+              {cart.map(item => (
+                <div key={item.id} style={{ background: '#0a0d14', border: '1px solid #1c212e', borderRadius: '12px', padding: '20px' }}>
+                  <div style={{ display: 'flex', gap: '15px', marginBottom: '15px' }}>
+                    {item.image ? (
+                      <img src={item.image} alt={item.name} style={{ width: '80px', height: '80px', objectFit: 'contain', borderRadius: '8px', flexShrink: 0 }} />
+                    ) : (
+                      <div style={{ width: '80px', height: '80px', background: '#111', borderRadius: '8px', flexShrink: 0 }}></div>
+                    )}
+                    <div style={{ flex: 1 }}>
+                      <h3 style={{ margin: '0 0 5px', color: '#fff', fontSize: '16px' }}>{item.name}</h3>
+                      <small style={{ color: '#8992a5' }}>{item.type}</small>
+                      <div style={{ marginTop: '8px', color: '#00ffbc', fontWeight: '600' }}>₹{((parseFloat(String(item.price).replace(/[^0-9.-]+/g,"")) || 0) * (item.qty || 1)).toFixed(2)}</div>
+                    </div>
+                    <button onClick={() => remove(item.id)} style={{ color: '#ff65bf', border: 'none', background: 'none', cursor: 'pointer', alignSelf: 'flex-start' }}><Trash2 size={18}/></button>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '15px', borderTop: '1px solid #1c212e' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ color: '#b8bfd8', fontSize: '14px' }}>Qty:</span>
+                      <button onClick={() => updateQty(item.id, (item.qty || 1) - 1)} style={{ width: '32px', height: '32px', border: '1px solid #2a3040', background: '#11151f', color: '#fff', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><Minus size={14}/></button>
+                      <span style={{ color: '#fff', fontWeight: '600', minWidth: '20px', textAlign: 'center' }}>{item.qty || 1}</span>
+                      <button onClick={() => updateQty(item.id, (item.qty || 1) + 1)} style={{ width: '32px', height: '32px', border: '1px solid #2a3040', background: '#11151f', color: '#fff', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><Plus size={14}/></button>
+                    </div>
+                    <div style={{ color: '#b8bfd8', fontSize: '14px' }}>₹{(parseFloat(String(item.price).replace(/[^0-9.-]+/g,"")) || 0).toFixed(2)} each</div>
+                  </div>
+                </div>
+              ))}
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <input type="text" placeholder="Coupon code" style={{ flex: 1, padding: '12px 15px', background: '#11151f', border: '1px solid #2a3040', color: '#fff', borderRadius: '6px', outline: 'none' }} />
+                <button className="btn ghost" style={{ borderRadius: '6px', whiteSpace: 'nowrap' }}>Apply coupon</button>
+              </div>
+            </div>
+
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '40px' }}>
-              <div style={{ width: '100%', maxWidth: '400px', background: '#0a0d14', border: '1px solid #1c212e', borderRadius: '12px', padding: '30px' }}>
+              <div className="cart-totals" style={{ width: '100%', maxWidth: '400px', background: '#0a0d14', border: '1px solid #1c212e', borderRadius: '12px', padding: '30px' }}>
                 <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '20px', fontFamily: "'Space Grotesk', sans-serif" }}>Cart totals</h2>
                 <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '20px' }}>
                   <tbody>

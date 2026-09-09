@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, Sparkles, Bot, ArrowRight, ShieldCheck } from 'lucide-react';
+import { X, Send, Sparkles, Bot, ArrowRight, ShieldCheck, GripVertical } from 'lucide-react';
 
 const INITIAL_MESSAGES = [
   {
@@ -41,7 +41,55 @@ export function NeonChatBot() {
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [showQuickQuestions, setShowQuickQuestions] = useState(true);
-  const messagesEndRef = useRef(null);
+  const [side, setSide] = useState('right'); // 'right' | 'left'
+  const [dragY, setDragY] = useState(null); // null = use default (50%); number = px offset from top
+  const dragState = useRef({ active: false, startY: 0, startDragY: 0 });
+  const tabRef = useRef(null);
+
+  // Persist side + vertical position preference
+  useEffect(() => {
+    try {
+      const savedSide = localStorage.getItem('ns_chat_side');
+      if (savedSide === 'left' || savedSide === 'right') setSide(savedSide);
+      const savedY = localStorage.getItem('ns_chat_y');
+      if (savedY !== null) setDragY(Number(savedY));
+    } catch {}
+  }, []);
+
+  const persistY = (y) => {
+    try { localStorage.setItem('ns_chat_y', String(y)); } catch {}
+  };
+
+  const toggleSide = (e) => {
+    e.stopPropagation();
+    const next = side === 'right' ? 'left' : 'right';
+    setSide(next);
+    try { localStorage.setItem('ns_chat_side', next); } catch {}
+  };
+
+  // Drag vertically along the side edge. Horizontal movement is locked — the
+  // tab stays pinned to the left/right edge of the viewport on every screen size.
+  const onPointerDown = (e) => {
+    dragState.current = { active: true, startY: e.clientY, startDragY: dragY ?? window.innerHeight / 2 };
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+  };
+
+  const onPointerMove = (e) => {
+    if (!dragState.current.active) return;
+    const dy = e.clientY - dragState.current.startY;
+    const next = dragState.current.startDragY + dy;
+    const tabH = tabRef.current?.offsetHeight || 56;
+    const clamped = Math.max(tabH / 2, Math.min(window.innerHeight - tabH / 2, next));
+    setDragY(clamped);
+  };
+
+  const onPointerUp = () => {
+    dragState.current.active = false;
+    window.removeEventListener('pointermove', onPointerMove);
+    window.removeEventListener('pointerup', onPointerUp);
+    if (dragY !== null) persistY(dragY);
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -68,162 +116,169 @@ export function NeonChatBot() {
 
     const lowerText = text.toLowerCase();
     
-    // Intercept 1: Crisis
     const crisisKeywords = ['sad', 'suicid', 'depress', 'kill myself', 'unhappy'];
     if (crisisKeywords.some(k => lowerText.includes(k))) {
-      const aiMessage = {
-        id: `ai-${Date.now()}`,
-        sender: 'ai',
-        text: "I'm very sorry you're feeling this way. While I'm just an AI for Neon Stack, help is available. Please reach out to a professional or someone you trust.",
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-      setMessages((prev) => [...prev, aiMessage]);
+      setMessages((prev) => [...prev, { id: `ai-${Date.now()}`, sender: 'ai', text: "I'm very sorry you're feeling this way. While I'm just an AI for Neon Stack, help is available. Please reach out to a professional or someone you trust.", timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
       setIsTyping(false);
       return;
     }
 
-    // Intercept 2: Angry/Frustrated User
     const angryKeywords = ['scam', 'terrible', 'useless', 'refund', 'angry', 'fuck', 'shit', 'broken', 'damaged'];
     if (angryKeywords.some(k => lowerText.includes(k))) {
-      const aiMessage = {
-        id: `ai-${Date.now()}`,
-        sender: 'ai',
-        text: "I'm really sorry you're having a frustrating experience. Our customers' satisfaction is our top priority. Please reach out to our team so a human can help you immediately.",
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        links: [
-          { label: "📧 Contact Support", url: "/contact", isPrimary: true }
-        ]
-      };
-      setMessages((prev) => [...prev, aiMessage]);
+      setMessages((prev) => [...prev, { id: `ai-${Date.now()}`, sender: 'ai', text: "I'm really sorry you're having a frustrating experience. Our customers' satisfaction is our top priority. Please reach out to our team so a human can help you immediately.", timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), links: [{ label: "📧 Contact Support", url: "/contact", isPrimary: true }] }]);
       setIsTyping(false);
       return;
     }
 
-    // Intercept 3: Account/Billing/Orders
     const billingKeywords = ['invoice', 'billing', 'order status', 'track my order', 'credit card'];
     if (billingKeywords.some(k => lowerText.includes(k))) {
-      const aiMessage = {
-        id: `ai-${Date.now()}`,
-        sender: 'ai',
-        text: "I don't have access to your account details for security reasons, but you can check your orders in your dashboard, or our team can help you.",
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        links: [
-          { label: "📦 View My Orders", url: "/account", isPrimary: true },
-          { label: "💳 Contact Support", url: "/contact" }
-        ]
-      };
-      setMessages((prev) => [...prev, aiMessage]);
+      setMessages((prev) => [...prev, { id: `ai-${Date.now()}`, sender: 'ai', text: "I don't have access to your account details for security reasons, but you can check your orders in your dashboard, or our team can help you.", timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), links: [{ label: "📦 View My Orders", url: "/account", isPrimary: true }, { label: "💳 Contact Support", url: "/contact" }] }]);
       setIsTyping(false);
       return;
     }
 
-    // Main AI Fetch
     try {
       const apiUrl = process.env.NEXT_PUBLIC_AI_API_URL || 'http://127.0.0.1:8787';
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: text, context: 'neon_signs' }) // Context restriction hint for the backend
+        body: JSON.stringify({ query: text, context: 'neon_signs' })
       });
 
       let data = {};
       if (!response.ok) {
-        // Fallback for demo since we don't have the real backend yet
-        data = {
-          text: "I am your AI assistant! Currently, my neural backend is not fully connected, but I'm specialized in answering all your questions about Neon Stack's custom signs, UV printed signs, and business logos.",
-          links: []
-        };
+        data = { text: "I am your AI assistant! Currently, my neural backend is not fully connected, but I'm specialized in answering all your questions about Neon Stack's custom signs, UV printed signs, and business logos.", links: [] };
       } else {
         data = await response.json();
       }
       
-      const aiMessage = {
-        id: `ai-${Date.now()}`,
-        sender: 'ai',
-        text: data.text || "I am specialized in Neon Signs. How can I help you customize your space?",
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        links: data.links
-      };
-      
-      setMessages((prev) => [...prev, aiMessage]);
+      setMessages((prev) => [...prev, { id: `ai-${Date.now()}`, sender: 'ai', text: data.text || "I am specialized in Neon Signs. How can I help you customize your space?", timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), links: data.links }]);
     } catch (error) {
-      console.error('Chat error:', error);
-      const errorMessage = {
-        id: `ai-${Date.now()}`,
-        sender: 'ai',
-        text: "My connection to the cloud seems to be interrupted. Please try again or visit our contact page!",
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        links: [{ label: "📧 Contact Us", url: "/contact", isPrimary: true }]
-      };
-      setMessages((prev) => [...prev, errorMessage]);
+      setMessages((prev) => [...prev, { id: `ai-${Date.now()}`, sender: 'ai', text: "My connection to the cloud seems to be interrupted. Please try again or visit our contact page!", timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), links: [{ label: "📧 Contact Us", url: "/contact", isPrimary: true }] }]);
     } finally {
       setIsTyping(false);
     }
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleSendMessage();
-    }
+    if (e.key === 'Enter') { e.preventDefault(); handleSendMessage(); }
   };
 
-  return (
+  const isRight = side === 'right';
+  // Vertical position: dragY (px from top) when set, else default 50%.
+  const topStyle = dragY !== null ? `${dragY}px` : '50%';
+
+return (
     <>
-      <div style={{ position: 'fixed', bottom: '30px', right: '30px', zIndex: 9999 }}>
+      {/* ── SIDE TAB TRIGGER (draggable vertically; pinned to left/right edge) ── */}
+      <div
+        ref={tabRef}
+        onPointerDown={onPointerDown}
+        style={{
+          position: 'fixed',
+          top: topStyle,
+          [isRight ? 'right' : 'left']: 0,
+          transform: 'translateY(-50%)',
+          zIndex: 1000,
+          display: 'flex',
+          flexDirection: isRight ? 'row' : 'row-reverse',
+          alignItems: 'center',
+          touchAction: 'none',
+        }}
+      >
+        {/* Grip handle — click to switch sides; drag vertically to reposition */}
+        <button
+          onClick={toggleSide}
+          title={`Move to ${isRight ? 'left' : 'right'} side`}
+          style={{
+            background: 'linear-gradient(180deg, #1a0d2e, #130a1e)',
+            border: '1px solid #752eff',
+            borderRight: isRight ? 'none' : '1px solid #752eff',
+            borderLeft: isRight ? '1px solid #752eff' : 'none',
+            borderRadius: isRight ? '8px 0 0 8px' : '0 8px 8px 0',
+            color: '#00ffbc',
+            padding: '10px 7px',
+            cursor: 'grab',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '3px',
+            minHeight: '56px',
+            transition: 'all 0.2s',
+            boxShadow: isRight ? 'inset -2px 0 8px rgba(0,0,0,0.5)' : 'inset 2px 0 8px rgba(0,0,0,0.5)',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'linear-gradient(180deg, #2a1548, #1a0d2e)'; e.currentTarget.style.color = '#fff'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'linear-gradient(180deg, #1a0d2e, #130a1e)'; e.currentTarget.style.color = '#00ffbc'; }}
+        >
+          <GripVertical size={16} />
+          <span style={{ fontSize: '9px', fontWeight: 800, letterSpacing: '0.5px' }}>{isRight ? '◀' : '▶'}</span>
+        </button>
+
+        {/* Main Ask AI tab */}
         <motion.button
           onClick={() => setIsOpen(!isOpen)}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.97 }}
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '10px',
-            background: 'linear-gradient(135deg, #070910 0%, #130a1e 100%)',
+            gap: '9px',
+            background: isOpen
+              ? 'linear-gradient(135deg, #752eff, #b258ff)'
+              : 'linear-gradient(135deg, #070910 0%, #130a1e 100%)',
             color: '#fff',
             border: '1px solid #752eff',
-            borderRadius: '100px',
-            padding: '12px 22px',
+            borderRadius: isRight ? '12px 0 0 12px' : '0 12px 12px 0',
+            padding: '12px 18px 12px 16px',
             fontSize: '14px',
-            fontFamily: 'Space Grotesk',
+            fontFamily: 'Poppins',
             fontWeight: 800,
-            boxShadow: '0 10px 30px rgba(117, 46, 255, 0.3)',
-            cursor: 'pointer'
+            boxShadow: isRight
+              ? '-4px 0 20px rgba(117,46,255,0.35)'
+              : '4px 0 20px rgba(117,46,255,0.35)',
+            cursor: 'pointer',
+            writingMode: 'horizontal-tb',
+            whiteSpace: 'nowrap',
+            transition: 'background 0.25s',
           }}
         >
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-            <Sparkles size={18} color="#00ffbc" />
-            <span style={{ position: 'absolute', top: '-3px', right: '-3px', width: '8px', height: '8px', borderRadius: '50%', background: '#00ffbc', border: '2px solid #070910' }} />
+            <Sparkles size={16} color="#00ffbc" />
+            <span style={{ position: 'absolute', top: '-3px', right: '-3px', width: '7px', height: '7px', borderRadius: '50%', background: '#00ffbc', border: '2px solid #070910' }} />
           </div>
-          <span>{isOpen ? 'Close Chat' : 'Ask AI'}</span>
+          <span>{isOpen ? 'Close' : 'Ask AI'}</span>
         </motion.button>
       </div>
 
+      {/* ── CHAT PANEL ── */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 30, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            transition={{ duration: 0.25, ease: 'easeOut' }}
-            style={{
+            initial={{ opacity: 0, x: isRight ? 30 : -30, scale: 0.97 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: isRight ? 20 : -20, scale: 0.97 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+style={{
               position: 'fixed',
-              bottom: '90px',
-              right: '30px',
+              top: topStyle,
+              transform: 'translateY(-50%)',
+              [isRight ? 'right' : 'left']: '72px',
               width: 'clamp(320px, 90vw, 400px)',
               height: '560px',
-              maxHeight: '75vh',
+              maxHeight: '80vh',
               background: '#070910',
               border: '1px solid #752eff',
               borderRadius: '20px',
-              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.8)',
+              boxShadow: '0 20px 50px rgba(0,0,0,0.8)',
               display: 'flex',
               flexDirection: 'column',
               overflow: 'hidden',
-              zIndex: 9998,
+              zIndex: 999,
               fontFamily: 'sans-serif'
             }}
           >
+
             {/* Header */}
             <div style={{ background: 'linear-gradient(135deg, #130a1e 0%, #070910 100%)', padding: '15px 20px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -232,7 +287,7 @@ export function NeonChatBot() {
                 </div>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ fontSize: '15px', fontWeight: 800, color: '#fff', fontFamily: 'Space Grotesk' }}>Neon Stack AI</span>
+                    <span style={{ fontSize: '15px', fontWeight: 800, color: '#fff', fontFamily: 'Poppins' }}>Neon Stack AI</span>
                     <span style={{ fontSize: '10px', background: '#00ffbc', color: '#070910', padding: '2px 6px', borderRadius: '4px', fontWeight: 800 }}>ONLINE</span>
                   </div>
                   <span style={{ fontSize: '11px', color: '#888', display: 'block' }}>24/7 Neon Expert</span>

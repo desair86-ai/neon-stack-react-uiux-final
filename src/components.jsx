@@ -66,7 +66,53 @@ function useCategories() {
 const allCategories = ['All Neon Signs','Astronaut & Space','Bars','Beauty & Salon','Bollywood','Business','Café & Restaurant','Cricket','Gaming','Gods & Spiritual','Home Decor','Kids','Love & Romance','Music & Studio','Sports & Fitness','Quotes & Words'];
 
 function Logo(){ return <Link className="logo" href="/"><img src="/images/The Neon Stack Logo without icon.svg" alt="The Neon Stack" style={{height:'72px', filter:'drop-shadow(0 0 2px rgba(139,76,255,0.4))'}} className="svg-flicker"/></Link> }
-function Announcement(){ return <div className="announce"><Zap/> <span>SALE ENDS IN</span> <b>02d : 12h : 45m : 30s</b><i/> <span>Free Shipping Across India</span></div> }
+function Announcement(){
+  const [target, setTarget] = useState(null);
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    // Sale end date: 2026-09-12 23:59:59 IST
+    const endTime = new Date('2026-09-12T23:59:59').getTime();
+    setTarget(endTime);
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  if (!target) return null;
+
+  let diff = target - now;
+  let ended = false;
+  if (diff <= 0) {
+    ended = true;
+    diff = 0;
+  }
+
+  const d = Math.floor(diff / 86400000);
+  const h = Math.floor((diff % 86400000) / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const s = Math.floor((diff % 60000) / 1000);
+
+  const pad = (n) => String(n).padStart(2, '0');
+
+  return (
+    <div className="announce">
+      {ended ? (
+        <>
+          <Zap/>
+          <b style={{color:'#ff65bf', fontSize:'14px', fontWeight:700}}>Sale Ended</b>
+          <i/>
+          <span>Wait for new sale.</span>
+        </>
+      ) : (
+        <>
+          <Zap/> <span>SALE ENDS IN</span>
+          <b>{pad(d)}d : {pad(h)}h : {pad(m)}m : {pad(s)}s</b>
+          <i/> <span>Free Shipping Across India</span>
+        </>
+      )}
+    </div>
+  );
+}
 
 import { InfiniteTicker } from './InfiniteTicker';
 
@@ -102,6 +148,7 @@ export function Header(){
           <Link href="/custom-neon" className={pathname === '/custom-neon' ? 'active' : ''} onMouseEnter={()=>setShop(false)}>Custom Neon</Link>
           <Link href="/mojo-mix" className={pathname === '/mojo-mix' ? 'active' : ''} onMouseEnter={()=>setShop(false)}>Mojo Mix</Link>
           <Link href="/uv-printed" className={pathname === '/uv-printed' ? 'active' : ''} onMouseEnter={()=>setShop(false)}>UV Printed</Link>
+          <Link href="/business-logo" className={pathname === '/business-logo' ? 'active' : ''} onMouseEnter={()=>setShop(false)}>Business Logo</Link>
           <Link href="/category/business" className={pathname === '/category/business' ? 'active' : ''} onMouseEnter={()=>setShop(false)}>Business</Link>
           <Link href="/about" className={pathname === '/about' ? 'active' : ''} onMouseEnter={()=>setShop(false)}>About Us</Link>
           <Link href="/blogs" className={pathname === '/blogs' ? 'active' : ''} onMouseEnter={()=>setShop(false)}>Blogs</Link>
@@ -272,7 +319,7 @@ export function Footer() {
           </div>
           <div className="footerCol">
             <h4>SHOP</h4>
-            {['All Neon Signs', 'Custom Neon Sign', 'Mojo Mix Signs', 'UV Printed Neon', 'Business Logo Signs', 'Accessories'].map(l => <Link key={l} href="/collections">{l}</Link>)}
+            {['All Neon Signs', 'Custom Neon Sign', 'Mojo Mix Signs', 'UV Printed Neon', 'Business Logo Signs', 'Accessories'].map(l => <Link key={l} href={l === 'Business Logo Signs' ? '/business-logo' : l === 'All Neon Signs' ? '/collections' : '/collections'}>{l}</Link>)}
           </div>
           <div className="footerCol">
             <h4>CUSTOMER CARE</h4>
@@ -385,30 +432,30 @@ function Social(){
 export function Home(){
   const { items: products } = useCatalogData();
   return <><Header/><main>
-    <section className="homeHero" style={{ padding: 0, paddingBottom: '46px', minHeight: 'auto', background: 'transparent', display: 'block', position: 'relative' }}>
+    <section className="homeHero" style={{ padding: 0, paddingBottom: '46px', background: 'transparent', position: 'relative' }}>
       <Link href="/collections" style={{ display: 'block' }}>
         <img src="/images/hero banner.webp" alt="Launch Offer - Shop Now" style={{ width: '100%', height: 'auto', display: 'block' }} />
       </Link>
       <InfiniteTicker />
     </section>
   <section className="section container"><SectionHead eyebrow="SHOP BY SPACE" title="Find the perfect neon for every space & occasion." link="VIEW ALL COLLECTIONS"/><div className="spaceTiles">{categories.map(([n,ic],i)=>{const I=iconByName(ic); return <Link key={n} href={`/category/${slug(n)}`} className="spaceTile" style={{"--tile-delay":`${i * 40}ms`}}><span className="spaceIcon"><I/></span><b>{n}</b></Link>})}</div></section>
-  <section className="section darkSection"><div className="container"><SectionHead eyebrow="OUR SPECIAL NEON SIGNS" title="Signature neon technologies." sub="Explore the ways Neon Stack can make your space glow."/><div className="specialGrid"><Special title="CUSTOM NEON SIGN" text="Design your own text, logo or artwork." action="CUSTOMIZE NOW" bg="/images/better_together.webp" /><Special title="MOJO MIX NEON SIGN" text="Next-gen RGB neon with 200+ effects, music sync & app control." action="EXPLORE MOJO" bg="/images/mojomix.webp" /><Special title="UV PRINTED NEON" text="Intricate designs with UV printed backing for a premium finish." action="EXPLORE UV" bg="/images/UVneon.webp" /></div></div></section>
+  <section className="section darkSection"><div className="container"><SectionHead eyebrow="OUR SPECIAL NEON SIGNS" title="Signature neon technologies." sub="Explore the ways Neon Stack can make your space glow."/><div className="specialGrid"><Special title="CUSTOM NEON SIGN" text="Design your own text, logo or artwork." action="CUSTOMIZE NOW" bg="/images/better_together.webp" linkTo="/custom-neon" /><Special title="MOJO MIX NEON SIGN" text="Next-gen RGB neon with 200+ effects, music sync & app control." action="EXPLORE MOJO" bg="/images/mojomix.webp" linkTo="/mojo-mix" /><Special title="UV PRINTED NEON" text="Intricate designs with UV printed backing for a premium finish." action="EXPLORE UV" bg="/images/UVneon.webp" linkTo="/uv-printed" /><Special title="BUSINESS LOGO" text="Turn your brand into a glowing sign. Free quote & 3D mockup within 24 hrs." action="GET A QUOTE" bg="/images/backgrounds/office 1.webp" linkTo="/business-logo" /></div></div></section>
   <section className="section container"><SectionHead eyebrow="BESTSELLERS" title="Neon signs people love." link="SHOP ALL"/><div className="productStrip">{products.slice(0,6).map(p=><ProductCard key={p[0]} p={p}/>)}</div></section>
   <section className="why"><div className="container"><SectionHead eyebrow="WHY CHOOSE NEON STACK?" title="Built for glow. Designed to last."/><div className="whyGrid"><Benefit icon={<Store/>} title="Made in India" text="Proudly designed & handcrafted locally."/><Benefit icon={<WandSparkles/>} title="Custom Made" text="Your text, logo or idea brought to life."/><Benefit icon={<Gem/>} title="Premium Quality" text="High grade LED neon & materials."/><Benefit icon={<Heart/>} title="Safe & Durable" text="Low voltage, energy efficient & long lasting."/><Benefit icon={<Headphones/>} title="Premium Support" text="We're here for your experience."/></div></div></section>
   <section className="section container realGlow"><div className="realCopy"><small>REAL SPACES. REAL GLOW.</small><h2>See how Neon Stack lights up beautiful spaces.</h2><p>From living rooms to gaming setups, discover signs in their natural environment.</p><Link className="textLink" href="/collections">SEE MORE INSTALLATIONS <ArrowRight/></Link></div><div className="installGrid">{[rooms.living,rooms.gaming,rooms.party,rooms.cafe].map((r,i)=><div key={i} className="install" style={{backgroundImage:`url(${r})`}}></div>)}</div></section>
   
-  <section className="mojoSection" style={{backgroundImage: "linear-gradient(to right, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 30%, transparent 50%, rgba(0,0,0,0.6) 70%, rgba(0,0,0,0.95) 100%), url('/images/mojo_bg_clean.webp')", backgroundSize: 'cover', backgroundPosition: 'center'}}><div className="container mojoLayout"><div><small>MEET MOJO MIX</small><h2>Neon that<br/><em>moves.</em></h2><p>200+ Flow Effects • Music Sync • App Control • Unlimited Colors</p><Link className="btn primary" href="/mojo-mix">EXPLORE MOJO MIX <ArrowRight/></Link></div><div className="mojoVisual"><img src="/images/mascot-image.png" alt="Mascot" className="mojoMascot" style={{height: '340px', width: 'auto', objectFit: 'contain'}} /></div></div></section>
+  <section className="mojoSection" style={{backgroundColor: 'var(--bg)'}}><div className="container mojoLayout"><div className="mojoCopy"><span className="mojoBadge">NEW TECHNOLOGY</span><img className="mojoLogo" src="/images/The Neon Stack Logo without icon.svg" alt="The Neon Stack"/><h2><span className="mojoMeet">Meet</span><span className="mojoMix">Mojo Mix</span></h2><p>Unlimited color changing options, 200+ flow modes, music sync, and app control. It's not just a sign, it's an experience.</p><Link className="btn primary" href="/mojo-mix">Explore Mojo Mix Collection <ArrowRight/></Link></div><div className="mojoVisual"><img src="/images/mascot-image.png" alt="Mojo Mix mascot" className="mojoMascot" /></div></div></section>
   <section className="section container howBox"><div className="howGrid" style={{display: 'flex', flexDirection: 'column', gap: '80px'}}><div><SectionHead eyebrow="HOW IT WORKS" title="From idea to glow."/><div className="steps" style={{border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px'}}>{[['01','Share Your Idea','Send your text, logo or reference.', MessageCircle],['02','Get Your Mockup','We create a design & share it with you.', Palette],['03','Approve & We Craft','Once approved, we start crafting.', Sparkles],['04','Safe Delivery','Carefully packed & delivered to you.', Truck]].map(([n,t,d,Icon], i)=><React.Fragment key={n}><div className="step" style={{border: 'none', padding: '0', textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center'}}><div style={{width: '60px', height: '60px', border: '2px solid #00ffbc', borderRadius: '50%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#00ffbc', boxShadow: '0 0 15px #00ffbc55', marginBottom: '20px'}}><Icon size={20} /> <b style={{fontSize: '14px', marginTop: '4px'}}>{n}</b></div><h3 style={{margin: '0 0 10px', fontSize: '15px', whiteSpace: 'nowrap'}}>{t}</h3><p style={{margin: 0, fontSize: '14px'}}>{d}</p></div>{i < 3 && <ArrowRight size={24} color="#00ffbc" style={{flexShrink: 0}} />}</React.Fragment>)}</div></div><div className="boxContents"><SectionHead eyebrow="WHAT’S IN THE BOX" title="Everything you need to unbox, install & glow."/><div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '30px', flexWrap: 'wrap'}}><img src="/images/whats_in_the_box.webp" alt="What's in the box" style={{width: '100%', maxWidth: '350px', height: 'auto', borderRadius: '12px'}} /><img src="/images/remote_details_01.webp" alt="Remote Details" style={{width: '100%', maxWidth: '350px', height: 'auto', borderRadius: '12px'}} /></div></div></div></section>
   <section className="trustCTA container"><div className="customerProof"><h3>THOUSANDS OF HAPPY CUSTOMERS</h3><p>Trusted by 20,000+ customers across India.</p><div className="stars">⭐⭐⭐⭐⭐ <b>4.9/5</b></div><small>From 2,500+ Reviews</small></div><CTA/></section>
 </main><Footer/></>}
 function BoxItem({icon,text}){return <div><span>{icon}</span><b>{text}</b></div>}
-function Special({title,text,action,bg,linkTo}){return <article className="special"><img className="specialImage" src={bg} alt=""/><div className="specialCopy"><h3>{title}</h3><p>{text}</p><Link className="btn ghost" href={linkTo || "#"}>{action} <ArrowRight/></Link></div></article>}
+function Special({title,text,action,bg,linkTo}){return <Link href={linkTo || "#"} className="special specialLink"><img className="specialImage" src={bg} alt=""/><div className="specialCopy"><h3>{title}</h3><p>{text}</p><span className="btn ghost">{action} <ArrowRight/></span></div></Link>}
 function SectionHead({eyebrow,title,sub,link}){return <div className="sectionHead"><div><small>{eyebrow}</small><h2>{title}</h2>{sub&&<p>{sub}</p>}</div>{link&&<Link className="textLink" href="/collections">{link} <ArrowRight/></Link>}</div>}
 function NeonText({lines,colors=['pink','blue','pink']}){return <div className="neonText">{lines.map((x,i)=><span key={x} className={colors[i%colors.length]}>{x}</span>)}</div>}
 function ProductCard({p}){
   const { toggleWishlist, isInWishlist } = useWishlist() || {};
   const inWishlist = isInWishlist ? isInWishlist(p[0]) : false;
-  return <div className="productCard" onClick={() => window.location.href='/collections'} style={{cursor: 'pointer'}}><div className="productImg" style={{backgroundImage:`url("${p[2]}")`}}>{p[3] && p[3].trim() !== '' ? <span className="badge">{p[3]}</span> : null}<button onClick={e=>{e.preventDefault(); e.stopPropagation(); if(!localStorage.getItem('is_logged_in')){ window.location.href='/login'; return; } if(toggleWishlist) toggleWishlist({id:Date.now(), name: p[0], price: p[4], image: p[2], type: p[1]});}}><Heart fill={inWishlist ? "#ff65bf" : "none"} color={inWishlist ? "#ff65bf" : "currentColor"}/></button></div><div className="productInfo"><h3>{p[0]}</h3><small>{p[1]}</small><div><b>From ₹{p[4]}</b><button onClick={(e)=>{e.preventDefault(); e.stopPropagation(); try { const cart = JSON.parse(localStorage.getItem('ns_cart')||'[]'); const existing = cart.find(x => x.name === p[0] && x.type === p[1]); if(existing) { existing.qty = (existing.qty || 1) + 1; } else { const item = {id:Date.now(), name: p[0], type: p[1], price: p[4], image: p[2], product_id: p[6] || null, qty: 1}; cart.push(item); } localStorage.setItem('ns_cart',JSON.stringify(cart)); window.dispatchEvent(new Event('cartUpdated')); }catch(err){}}} style={{background:'transparent',border:'1.5px solid #752eff',borderRadius:'50%',width:'40px',height:'40px',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',cursor:'pointer'}}><ShoppingCart size={18} /></button></div></div></div>
+  return <div className="productCard"><div className="productImg" style={{backgroundImage:`url("${p[2]}")`, cursor:'pointer'}} onClick={() => window.location.href='/collections'}>{p[3] && p[3].trim() !== '' ? <span className="badge">{p[3]}</span> : null}<button onClick={e=>{e.preventDefault(); e.stopPropagation(); if(!localStorage.getItem('is_logged_in')){ window.location.href='/login'; return; } if(toggleWishlist) toggleWishlist({id:Date.now(), name: p[0], price: p[4], image: p[2], type: p[1]});}}><Heart fill={inWishlist ? "#ff65bf" : "none"} color={inWishlist ? "#ff65bf" : "currentColor"}/></button></div><div className="productInfo"><h3>{p[0]}</h3><small>{p[1]}</small><div><b>From ₹{p[4]}</b><button onClick={(e)=>{e.preventDefault(); e.stopPropagation(); try { const cart = JSON.parse(localStorage.getItem('ns_cart')||'[]'); const existing = cart.find(x => x.name === p[0] && x.type === p[1]); if(existing) { existing.qty = (existing.qty || 1) + 1; } else { const item = {id:Date.now(), name: p[0], type: p[1], price: p[4], image: p[2], product_id: p[6] || null, qty: 1}; cart.push(item); } localStorage.setItem('ns_cart',JSON.stringify(cart)); window.dispatchEvent(new Event('cartUpdated')); }catch(err){}}} style={{background:'transparent',border:'1.5px solid #752eff',borderRadius:'50%',width:'44px',height:'44px',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',cursor:'pointer',minWidth:'44px',minHeight:'44px'}}><ShoppingCart size={18} /></button></div></div></div>
 }
 
 export function Collections(){return <><Header/><main className="catalogPage"><section className="catalogHero container" style={{'--bg':`url(${rooms.hero})`}}><div><div className="crumb">Home <ChevronRight/> All Collections</div><h1>ALL <em>NEON</em> SIGNS</h1><p>Discover our complete collection of premium LED neon signs for every space, mood and occasion.</p><div className="heroIcons"><Benefit icon={<Gem/>} title="Made in India" text=""/><Benefit icon={<Heart/>} title="Premium Quality" text=""/><Benefit icon={<WandSparkles/>} title="Custom Made" text=""/><Benefit icon={<ShieldCheck/>} title="Safe & Durable" text=""/></div></div><InfiniteTicker /></section><div className="container collectionFeature"><Feature title="Custom Neon Signs" text="Make it yours." icon={<WandSparkles/>}/><Feature title="Mojo Mix Signs" text="Dynamic. Colorful. Alive." icon={<Sparkles/>}/><Feature title="UV Printed Neon" text="Detailed. Vibrant. Stunning." icon={<Palette/>}/><Feature title="Business Logo Signs" text="Stand out. Get noticed." icon={<BriefcaseBusiness/>}/></div><CatalogGrid/></main><Footer/></>}
@@ -509,21 +556,10 @@ export function CustomNeon({ type = 'custom_neon' }) {
         if (data?.options?.hardware?.length > 0) setHardware(data.options.hardware[0]);
         setLoading(false);
       }).catch(e => {
+        // WordPress is the source of truth. Never fall back to hard-coded
+        // configuration — surface the error so the configurator stays honest.
         console.error("WP API fallback", e);
-        const fb = {
-          options: {
-            sizes: [{ id: 'small', name: 'Small', price: 1499 }, { id: 'medium', name: 'Medium', price: 3499 }, { id: 'large', name: 'Large', price: 5499 }],
-            colors: COLORS,
-            backboards: [{ id: 'cut', name: 'Cut to Shape', price: 0 }, { id: 'none', name: 'No Backboard', price: 1000 }],
-            hardware: [{ id: 'screws', name: 'Screws', price: 0 }, { id: 'stand', name: 'Stand', price: 800 }],
-            shapes: SHAPES
-          },
-          fonts: FONTS
-        };
-        setConfig(fb);
-        setSelectedSize(fb.options.sizes[1]);
-        setBackboard(fb.options.backboards[0]);
-        setHardware(fb.options.hardware[0]);
+        setConfig(null);
         setLoading(false);
       });
     });
@@ -799,7 +835,7 @@ export function CustomNeon({ type = 'custom_neon' }) {
                 </div>
                 <div>
                    <small style={{color: 'var(--muted)', display: 'block', fontSize: '11px', letterSpacing: '1px', marginBottom: '5px'}}>ESTIMATED PRICE</small>
-                   <b style={{fontSize: '28px', color: '#fff', fontFamily: "'Space Grotesk', sans-serif"}}>₹{getPrice()}</b><br/>
+                   <b style={{fontSize: '28px', color: '#fff', fontFamily: "'Poppins', sans-serif"}}>₹{getPrice()}</b><br/>
                    <small style={{color: 'var(--muted)', fontSize: '10px'}}>(Inclusive of all taxes)</small>
                 </div>
                 <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
