@@ -7,14 +7,14 @@ import { useParams, usePathname } from "next/navigation";
 import { getProducts, getCategories, getSubCategories } from "./lib/api";
 import { useWishlist } from "./context/WishlistContext";
 import {
-  Menu, X, Search, UserRound, ShoppingCart, ChevronDown, ArrowRight, ArrowLeft,
+  Menu, X, UserRound, ShoppingCart, ChevronDown, ArrowRight, ArrowLeft,
   Sparkles, WandSparkles, Star, Upload, SlidersHorizontal, MessageCircle, ShieldCheck,
   Truck, Heart, Gem, Store, BriefcaseBusiness, Coffee, Martini, Dumbbell, Gift,
   Music2, Baby, Gamepad2, Building2, Home as HomeIcon ,
   MapPin, Phone, Mail, Clock3, Plus, RotateCcw, Undo2, Redo2, Image as ImageIcon,
   Package, Headphones, Leaf, BadgeCheck, Zap, Palette, PenTool, Box, ChevronRight, Lightbulb,
   Rocket, Music, ShoppingBag, HelpCircle
-, Moon, Crown, Smile, Monitor, Sun, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
+, Moon, Crown, Smile, Monitor, Sun, AlignLeft, AlignCenter, AlignRight, LogOut } from 'lucide-react';
 import './styles.css';
 
 const img = (id, w=1200) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}&q=85`;
@@ -164,7 +164,7 @@ export function Header(){
           <Link href="/contact" className={pathname === '/contact' ? 'active' : ''} onMouseEnter={()=>setShop(false)}>Contact</Link>
         </nav>
         <div className="headerActions" onMouseEnter={()=>setShop(false)}>
-          <button aria-label="Search" onClick={() => { window.location.href = '/collections'; }}><Search/></button>
+
           <Link href="/account" className={`account ${pathname.startsWith('/account') && pathname !== '/account/wishlist' ? 'active' : ''}`}><UserRound/></Link>
           <Link href="/account/wishlist" className={pathname === '/account/wishlist' ? 'active' : ''} style={{position:'relative'}}><Heart/>{wishlist?.length > 0 && <span style={{position:'absolute',top:-8,right:-8,background:'#ff65bf',color:'#fff',borderRadius:'50%',width:'18px',height:'18px',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'10px',fontWeight:'bold'}}>{wishlist.length}</span>}</Link>
           <Link href="/cart" className={pathname === '/cart' ? 'active' : ''} style={{position:'relative'}}><ShoppingCart/>{cartCount > 0 && <span style={{position:'absolute',top:-8,right:-8,background:'#00ffbc',color:'#000',borderRadius:'50%',width:'18px',height:'18px',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'10px',fontWeight:'bold'}}>{cartCount}</span>}</Link>
@@ -273,34 +273,37 @@ export function MobileMenu({ close, onMouseLeave }) {
       </div>
       <div className="mobileLinks">
         <Link href="/" onClick={close}> HOME <ChevronRight/></Link>
+        <Link href="/account" onClick={close}>ACCOUNT <ChevronRight/></Link>
+        <Link href="/account/wishlist" onClick={close}>WISHLIST <ChevronRight/></Link>
         <div className="mobAccordion">
           <button className="mobAccBtn" onClick={() => setShopOpen(!shopOpen)}>
-            <span><ShoppingBag/> SHOP</span> <ChevronDown style={{transform: shopOpen ? 'rotate(180deg)' : 'none', transition: '0.2s'}}/>
+            <span>SHOP</span> <ChevronDown style={{transform: shopOpen ? 'rotate(180deg)' : 'none', transition: '0.2s'}}/>
           </button>
           {shopOpen && (
             <div className="mobAccContent">
-              <Link href="/collections" onClick={close}><Sparkles/> All Neon Signs <ChevronRight/></Link>
+              <Link href="/collections" onClick={close}>ALL NEON SIGNS <ChevronRight/></Link>
               
-              <button className="mobAccBtn" style={{padding: '15px 20px', border: 'none', background: 'transparent', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#fff', fontSize: '15px', textTransform: 'none'}} onClick={(e) => { e.preventDefault(); setColOpen(!colOpen); }}>
-                <span style={{display: 'flex', alignItems: 'center', gap: '15px'}}><Star style={{width:'20px', height:'20px', color:'#752eff'}}/> Collections</span> 
-                <ChevronDown style={{transform: colOpen ? 'rotate(180deg)' : 'none', transition: '0.2s', width: '14px', color:'#555'}}/>
+              <button className="mobAccBtn" onClick={(e) => { e.preventDefault(); setColOpen(!colOpen); }}>
+                <span>COLLECTIONS</span>
+                <ChevronDown style={{transform: colOpen ? 'rotate(180deg)' : 'none', transition: '0.2s'}}/>
               </button>
               {colOpen && categories.map((c) => (
-                <Link key={c.id} href={"/category/" + c.slug} onClick={close} style={{paddingLeft: '50px'}}>
-                   {c.name} <ChevronRight/>
+                <Link key={c.id} href={"/category/" + c.slug} onClick={close} style={{paddingLeft: '30px'}}>
+                   {c.name.toUpperCase()} <ChevronRight/>
                 </Link>
               ))}
 
-              <Link href="/custom-neon" onClick={close}><Rocket/> Custom Neon <ChevronRight/></Link>
-              <Link href="/mojo-mix" onClick={close}><Music/> Mojo Mix <ChevronRight/></Link>
-              <Link href="/uv-printed" onClick={close}><Zap/> UV Printed Neon <ChevronRight/></Link>
-              <Link href="/category/business" onClick={close}><BriefcaseBusiness/> Business / Logos <ChevronRight/></Link>
+              <Link href="/custom-neon" onClick={close}>CUSTOM NEON <ChevronRight/></Link>
+              <Link href="/mojo-mix" onClick={close}>MOJO MIX <ChevronRight/></Link>
+              <Link href="/uv-printed" onClick={close}>UV PRINTED NEON <ChevronRight/></Link>
+              <Link href="/category/business" onClick={close}>BUSINESS / LOGOS <ChevronRight/></Link>
             </div>
           )}
         </div>
         <Link href="/about" onClick={close}>ABOUT US <ChevronRight/></Link>
         <Link href="/blogs" onClick={close}>BLOGS <ChevronRight/></Link>
         <Link href="/contact" onClick={close}>CONTACT <ChevronRight/></Link>
+        <button className="mobileLogout" onClick={() => { localStorage.removeItem('is_logged_in'); localStorage.removeItem('ns_token'); localStorage.removeItem('ns_user'); close(); window.location.href='/login'; }}>LOG OUT <ChevronRight/></button>
       </div>
       <div className="mobileMenuBottom">
         <Link href="/custom-neon" onClick={close}>Create Your Custom Neon <ArrowRight/></Link>

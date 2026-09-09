@@ -201,7 +201,7 @@ export default function CheckoutPage() {
             <div>
               <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '25px', fontFamily: "'Space Grotesk', sans-serif", color: '#fff' }}>Billing details</h2>
               
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+              <div className="checkout-billing-name-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
                 <div>
                   <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#b8bfd8' }}>First name <span style={{ color: '#ff65bf' }}>*</span></label>
                   <input type="text" name="firstName" required style={{ width: '100%', padding: '12px', background: '#11151f', border: '1px solid #2a3040', color: '#fff', borderRadius: '6px', outline: 'none' }} />
@@ -359,6 +359,11 @@ export default function CheckoutPage() {
         <style>{`
           @media (max-width: 900px) {
             .checkout-grid {
+              grid-template-columns: 1fr !important;
+            }
+          }
+          @media (max-width: 520px) {
+            .checkout-billing-name-row {
               grid-template-columns: 1fr !important;
             }
           }

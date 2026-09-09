@@ -139,9 +139,9 @@ export default function CartPage() {
                   </div>
                 </div>
               ))}
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <input type="text" placeholder="Coupon code" style={{ flex: 1, padding: '12px 15px', background: '#11151f', border: '1px solid #2a3040', color: '#fff', borderRadius: '6px', outline: 'none' }} />
-                <button className="btn ghost" style={{ borderRadius: '6px', whiteSpace: 'nowrap' }}>Apply coupon</button>
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                <input type="text" placeholder="Coupon code" style={{ flex: '1 1 160px', minWidth: 0, padding: '12px 15px', background: '#11151f', border: '1px solid #2a3040', color: '#fff', borderRadius: '6px', outline: 'none' }} />
+                <button className="btn ghost" style={{ borderRadius: '6px', whiteSpace: 'nowrap', flexShrink: 0, padding: '0 20px' }}>Apply coupon</button>
               </div>
             </div>
 

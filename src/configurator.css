@@ -1196,17 +1196,17 @@
     left: 0 !important;
     right: 0 !important;
     width: 100% !important;
-    background: #fff !important;
+    background: #05060a !important;
     padding: 10px 15px !important;
     justify-content: space-between !important;
     z-index: 9999 !important;
-    border-top: 1px solid #eee !important;
+    border-top: 1px solid #1c212e !important;
   }
   .ns-header-right-cart span {
-    color: #666 !important;
+    color: #a6a8b3 !important;
   }
   .ns-header-right-cart strong {
-    color: #e664e7 !important;
+    color: #00ffbc !important;
   }
   .ns-champ-container {
     flex-direction: column !important;
@@ -1262,38 +1262,67 @@
 }
 @media (max-width: 800px) {
   .ns-add-to-cart-btn {
-    background: #79b313 !important;
-    color: #fff !important;
     padding: 10px 24px !important;
+    font-size: 13px !important;
   }
 }
 @media (max-width: 800px) {
   .ns-header-right-cart span {
-    color: #555 !important;
+    color: #a6a8b3 !important;
   }
   .ns-header-right-cart strong {
-    color: #752eff !important;
+    color: #00ffbc !important;
   }
 }
 @media (max-width: 800px) {
   .ns-builder-sticky-header {
     background: #05060a !important; 
     border-bottom: 1px solid #161a23 !important;
+    padding: 8px 14px !important;
+  }
+}
+
+@media (max-width: 800px) {
+  .ns-champ-controls {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    min-width: 0 !important;
+    padding: 20px 14px !important;
+  }
+  .ns-champ-controls .ns-option-list {
+    width: 100%;
+    min-width: 0;
+  }
+  .ns-champ-controls .ns-option-list button {
+    width: 100%;
+    min-width: 0 !important;
+    max-width: 100%;
+    box-sizing: border-box;
+    gap: 12px;
+  }
+  .ns-champ-controls .ns-option-list button span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .ns-champ-controls .ns-option-list button strong {
+    flex: 0 0 auto;
+    white-space: nowrap;
   }
 }
 @media (max-width: 800px) {
   .ns-champ-sidebar {
-    background: #fff !important; 
-    border-bottom: 2px solid #eee !important;
+    background: #05060a !important; 
+    border-bottom: 1px solid #161a23 !important;
   }
   .ns-champ-tab {
-    background: #fff !important;
-    color: #666 !important;
+    background: #05060a !important;
+    color: #8992a5 !important;
   }
   .ns-champ-tab.active {
-    background: #1d2434 !important;
-    color: #fff !important;
-    border-bottom: none !important;
+    background: #0a0d14 !important;
+    color: #00ffbc !important;
+    border-bottom: 3px solid #00ffbc !important;
     border-right: 1px solid #161a23 !important;
   }
 }
