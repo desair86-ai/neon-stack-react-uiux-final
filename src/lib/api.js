@@ -124,6 +124,39 @@ export async function getCategories() {
 }
 
 
+export async function getSubCategories() {
+  const data = await fetchGraphQL(`
+    query GetSubCategories {
+      productCategories(where: { parent: 0 }, first: 20) {
+        nodes {
+          id name slug
+          children(first: 15) {
+            nodes {
+              id name slug image { sourceUrl }
+              products(first: 1) { nodes { image { sourceUrl } } }
+            }
+          }
+        }
+      }
+    }
+  `);
+
+  const subs = [];
+  const top = (data?.productCategories?.nodes || []).filter(c => c.name !== "Uncategorized");
+  top.forEach((parent) => {
+    parent?.children?.nodes?.forEach((child) => {
+      subs.push({
+        id: child.id,
+        name: child.name,
+        slug: child.slug,
+        image: child.image?.sourceUrl || child.products?.nodes?.[0]?.image?.sourceUrl || null,
+        parent: parent.name,
+      });
+    });
+  });
+  return subs;
+}
+
 export async function getConfiguratorOptions(configuratorType = 'custom_neon') {
   try {
     const res = await fetch(`/api/config?configurator=${configuratorType}`);

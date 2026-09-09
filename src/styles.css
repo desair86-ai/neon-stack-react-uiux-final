@@ -751,6 +751,7 @@ footer a:hover {
   padding: 12px 0;
   box-sizing: border-box;
   display: flex;
+  justify-content: center;
   white-space: nowrap;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
@@ -762,18 +763,32 @@ footer a:hover {
 
 .ticker-content {
   display: flex;
-  animation: ticker 40s linear infinite;
   align-items: center;
+  /* static — no animation */
+  width: 100%;
+  justify-content: space-evenly;
+  flex-wrap: wrap;
+  gap: 6px 0;
+}
+
+/* legacy animated version kept for Collections / Category pages */
+.ticker-content:not(.ticker-static) {
+  animation: ticker 40s linear infinite;
+  width: max-content;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
 }
 
 .ticker-item {
   display: flex;
   align-items: center;
-  margin-right: 50px;
+  padding: 0 18px;
   font-family: 'Poppins', sans-serif;
   font-size: 15px;
   font-weight: 500;
+  border-right: 1px solid rgba(255,255,255,0.1);
 }
+.ticker-item:last-child { border-right: none; }
 
 @keyframes ticker {
   0% { transform: translateX(0); }
@@ -923,7 +938,17 @@ button, a, input, select, textarea {
 html,body{background:var(--site-surface)!important}
 main,footer{background:var(--site-surface)}
 
-/* ---------- Business Logo page ---------- */
+/* ---------- Category Marquee (Shop By Space) ---------- */
+.catMarquee{overflow:hidden;width:100%;max-width:100%;-webkit-mask:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+.catMarquee:hover .catMarqueeTrack{animation-play-state:paused}
+.catMarqueeTrack{display:inline-flex;align-items:flex-start;gap:20px;width:max-content;animation:catMarqueeMove 30s linear infinite;padding:10px 0}
+.catMarqueeItem{display:inline-flex;flex-direction:column;align-items:center;gap:10px;text-decoration:none;color:inherit;min-width:110px;flex-shrink:0;padding:0 4px}
+.catMarqueeImg{width:100px;height:100px;border-radius:50%;border:2px solid #262b38;background:rgba(0,255,188,.05);display:flex;align-items:center;justify-content:center;overflow:hidden;color:#00ffbc;box-shadow:0 0 14px rgba(0,255,188,.15);transition:box-shadow .25s,border-color .25s,transform .25s;flex-shrink:0}
+.catMarqueeItem:hover .catMarqueeImg{border-color:#00ffbc;box-shadow:0 0 22px rgba(0,255,188,.45);transform:scale(1.08)}
+.catMarqueeLabel{font-size:13px;font-weight:600;color:#d8d9e4;text-align:center;max-width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .2s}
+.catMarqueeItem:hover .catMarqueeLabel{color:#00ffbc}
+@keyframes catMarqueeMove{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+@media(max-width:768px){.catMarqueeItem{min-width:90px}.catMarqueeImg{width:80px;height:80px;font-size:18px}.catMarqueeLabel{font-size:12px}}
 .specialGrid{grid-template-columns:repeat(4,1fr)}
 .businessLogoPage .quoteFormWrap{display:grid;grid-template-columns:1.15fr .85fr;gap:40px;align-items:start}
 .businessLogoPage .quoteForm{background:#0a0d14;border:1px solid #1c212e;border-radius:14px;padding:32px}
@@ -971,4 +996,50 @@ h1,h2,h3,h4,h5,h6{font-family:'Poppins','DM Sans',Arial,sans-serif}
 @media(max-width:800px){
   a.special.specialLink{pointer-events:none;cursor:default}
   a.special.specialLink .btn.ghost{pointer-events:auto;cursor:pointer}
+}
+
+/* Keep the static proof strip inside the viewport after stopping its animation. */
+@media (max-width: 800px) {
+  .ticker-wrap {
+    position: absolute;
+    padding: 6px 8px;
+  }
+
+  .ticker-content.ticker-static {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+    width: 100%;
+  }
+
+  .ticker-content.ticker-static .ticker-item {
+    min-width: 0;
+    min-height: 42px;
+    padding: 6px 8px;
+    font-size: 12px;
+    line-height: 1.2;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .ticker-content.ticker-static .ticker-item > span {
+    flex: 0 0 auto;
+    margin-right: 7px !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .ticker-content.ticker-static {
+    grid-template-columns: 1fr;
+  }
+
+  .ticker-content.ticker-static .ticker-item {
+    min-height: 36px;
+    padding: 5px 10px;
+    font-size: 13px;
+  }
+
+  .ticker-content.ticker-static .ticker-item:nth-child(odd) {
+    border-right: none;
+  }
 }

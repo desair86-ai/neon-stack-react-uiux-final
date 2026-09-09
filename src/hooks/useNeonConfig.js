@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { getNeonConfig, getNeonConfigVersion } from '../api/neonStackApi';
 
 export function useNeonConfig(configurator = 'custom_neon') {
@@ -9,36 +9,43 @@ export function useNeonConfig(configurator = 'custom_neon') {
   const [error, setError] = useState(null);
   const [disabled, setDisabled] = useState(false);
   const abortRef = useRef(null);
+  const mountedRef = useRef(false);
 
-  const fetchConfig = async (signal) => {
-    setLoading(true);
+  const fetchConfig = useCallback(async ({ signal, showLoading = false } = {}) => {
+    if (showLoading) setLoading(true);
     setError(null);
     try {
       const data = await getNeonConfig(configurator);
-      if (!signal?.aborted) {
+      if (mountedRef.current && !signal?.aborted) {
         setConfig(data);
         setRevision(data?.config_revision ?? null);
         setDisabled(Boolean(data?.enabled === false));
       }
     } catch (err) {
-      if (!signal?.aborted) {
+      if (mountedRef.current && !signal?.aborted) {
         setError(err.message);
       }
     } finally {
-      if (!signal?.aborted) {
+      if (mountedRef.current && !signal?.aborted && showLoading) {
         setLoading(false);
       }
     }
-  };
+  }, [configurator]);
 
   useEffect(() => {
     const controller = new AbortController();
+    mountedRef.current = true;
     abortRef.current = controller;
-    fetchConfig(controller.signal);
-    return () => controller.abort();
-  }, [configurator]);
+    fetchConfig({ signal: controller.signal, showLoading: true });
+    return () => {
+      mountedRef.current = false;
+      controller.abort();
+    };
+  }, [fetchConfig]);
 
-  return { config, revision, loading, error, disabled, refetch: fetchConfig, setConfig };
+  const refetch = useCallback(() => fetchConfig(), [fetchConfig]);
+
+  return { config, revision, loading, error, disabled, refetch, setConfig };
 }
 
 export function useNeonConfigRevision(configurator = 'custom_neon', intervalMs = 30000) {

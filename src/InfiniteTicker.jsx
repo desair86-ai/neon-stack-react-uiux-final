@@ -12,13 +12,10 @@ export function InfiniteTicker() {
     { text: <>4.8 <span style={{ color: '#ffd43b', textShadow: '0 0 8px #ffd43b' }}>🌟</span> Rating by 20K+ Customers</>, icon: <Users size={22} />, color: '#ffd43b', shadow: '0 0 10px rgba(255, 212, 59, 0.8)' },
   ];
 
-  // We duplicate the items to make the infinite scroll seamless
-  const repeatedItems = [...items, ...items, ...items, ...items];
-
   return (
     <div className="ticker-wrap">
-      <div className="ticker-content">
-        {repeatedItems.map((item, i) => (
+      <div className="ticker-content ticker-static">
+        {items.map((item, i) => (
           <div className="ticker-item" key={i}>
             <span style={{ 
               display: 'inline-flex', 

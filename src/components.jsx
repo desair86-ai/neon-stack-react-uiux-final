@@ -4,7 +4,7 @@ import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
-import { getProducts, getCategories } from "./lib/api";
+import { getProducts, getCategories, getSubCategories } from "./lib/api";
 import { useWishlist } from "./context/WishlistContext";
 import {
   Menu, X, Search, UserRound, ShoppingCart, ChevronDown, ArrowRight, ArrowLeft,
@@ -62,6 +62,15 @@ function useCategories() {
     getCategories().then(setCategories).catch(console.error);
   }, []);
   return categories;
+}
+
+function useSubCategories() {
+  const [subs, setSubs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    getSubCategories().then((data) => { setSubs(data); setLoading(false); }).catch((e) => { console.error(e); setLoading(false); });
+  }, []);
+  return { subs, loading };
 }
 const allCategories = ['All Neon Signs','Astronaut & Space','Bars','Beauty & Salon','Bollywood','Business','Café & Restaurant','Cricket','Gaming','Gods & Spiritual','Home Decor','Kids','Love & Romance','Music & Studio','Sports & Fitness','Quotes & Words'];
 
@@ -429,8 +438,72 @@ function Social(){
   );
 }
 
+export function CategoryMarquee({ items, loading }) {
+  const repeated = loading ? Array.from({ length: 8 }) : [...items, ...items, ...items, ...items];
+
+  const renderItem = (item, i) => {
+    if (!item) {
+      return (
+        <div key={`skeleton-${i}`} className="catMarqueeItem">
+          <div className="catMarqueeImg" style={{ background: 'rgba(255,255,255,.03)', border: '1px dashed #262b38' }}></div>
+          <div className="catMarqueeLabel" style={{ background: 'rgba(255,255,255,.04)' }}></div>
+        </div>
+      );
+    }
+
+    const { name, slug, image } = item;
+    const label = name;
+    const href = `/category/${slug || slugFromName(name)}`;
+
+    return (
+      <Link key={`${slug || name}-${i}`} href={href} className="catMarqueeItem" title={name}>
+        <div
+          className="catMarqueeImg"
+          style={{
+            backgroundImage: image ? `url(${image})` : 'linear-gradient(135deg,#00ffbc1a,#752eff1a)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        >
+          {!image && <span style={{ fontSize: '22px' }}>{iconForName(name) || Sparkles}</span>}
+        </div>
+        <b className="catMarqueeLabel">{label}</b>
+      </Link>
+    );
+  };
+
+  return (
+    <div className="catMarquee">
+      <div className="catMarqueeTrack" style={{ animationDuration: `${Math.max(10, repeated.length * 3)}s` }}>
+        {repeated.map((item, i) => renderItem(item, i))}
+      </div>
+    </div>
+  );
+}
+
+function slugFromName(name) {
+  return String(name || '')
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function iconForName(name) {
+  const n = String(name || '').toLowerCase();
+  if (n.includes('home') || n.includes('decor')) return HomeIcon;
+  if (n.includes('gaming')) return Gamepad2;
+  if (n.includes('busin')) return Building2;
+  if (n.includes('caf') || n.includes('coffee')) return Coffee;
+  if (n.includes('bar') || n.includes('night')) return Martini;
+  if (n.includes('event') || n.includes('wed')) return Heart;
+  if (n.includes('fit') || n.includes('sport')) return Dumbbell;
+  return Sparkles;
+}
+
 export function Home(){
   const { items: products } = useCatalogData();
+  const { subs: subCategories, loading: subsLoading } = useSubCategories();
   return <><Header/><main>
     <section className="homeHero">
       <Link href="/collections" className="homeHeroLink" style={{ display: 'block' }}>
@@ -438,7 +511,7 @@ export function Home(){
       </Link>
       <InfiniteTicker />
     </section>
-  <section className="section container"><SectionHead eyebrow="SHOP BY SPACE" title="Find the perfect neon for every space & occasion." link="VIEW ALL COLLECTIONS"/><div className="spaceTiles">{categories.map(([n,ic],i)=>{const I=iconByName(ic); return <Link key={n} href={`/category/${slug(n)}`} className="spaceTile" style={{"--tile-delay":`${i * 40}ms`}}><span className="spaceIcon"><I/></span><b>{n}</b></Link>})}</div></section>
+    <section className="section container"><SectionHead eyebrow="SHOP BY SPACE" title="Find the perfect neon for every space & occasion." link="VIEW ALL COLLECTIONS"/><CategoryMarquee items={subCategories} loading={subsLoading} /></section>
   <section className="section darkSection"><div className="container"><SectionHead eyebrow="OUR SPECIAL NEON SIGNS" title="Signature neon technologies." sub="Explore the ways Neon Stack can make your space glow."/><div className="specialGrid"><Special title="CUSTOM NEON SIGN" text="Design your own text, logo or artwork." action="CUSTOMIZE NOW" bg="/images/better_together.webp" linkTo="/custom-neon" /><Special title="MOJO MIX NEON SIGN" text="Next-gen RGB neon with 200+ effects, music sync & app control." action="EXPLORE MOJO" bg="/images/mojomix.webp" linkTo="/mojo-mix" /><Special title="UV PRINTED NEON" text="Intricate designs with UV printed backing for a premium finish." action="EXPLORE UV" bg="/images/UVneon.webp" linkTo="/uv-printed" /><Special title="BUSINESS LOGO" text="Turn your brand into a glowing sign. Free quote & 3D mockup within 24 hrs." action="GET A QUOTE" bg="/images/backgrounds/office 1.webp" linkTo="/business-logo" /></div></div></section>
   <section className="section container"><SectionHead eyebrow="BESTSELLERS" title="Neon signs people love." link="SHOP ALL"/><div className="productStrip">{products.slice(0,6).map(p=><ProductCard key={p[0]} p={p}/>)}</div></section>
   <section className="why"><div className="container"><SectionHead eyebrow="WHY CHOOSE NEON STACK?" title="Built for glow. Designed to last."/><div className="whyGrid"><Benefit icon={<Store/>} title="Made in India" text="Proudly designed & handcrafted locally."/><Benefit icon={<WandSparkles/>} title="Custom Made" text="Your text, logo or idea brought to life."/><Benefit icon={<Gem/>} title="Premium Quality" text="High grade LED neon & materials."/><Benefit icon={<Heart/>} title="Safe & Durable" text="Low voltage, energy efficient & long lasting."/><Benefit icon={<Headphones/>} title="Premium Support" text="We're here for your experience."/></div></div></section>
