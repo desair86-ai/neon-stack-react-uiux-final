@@ -146,7 +146,7 @@ export default function CheckoutPage() {
     return (
       <>
         <Header />
-        <main className="container" style={{ minHeight: '60vh', padding: '100px 20px', textAlign: 'center' }}>
+        <main className="container" style={{ minHeight: '60vh', padding: '32px 20px 60px', textAlign: 'center' }}>
           <CheckCircle color="#00ffbc" size={80} style={{ margin: '0 auto 20px auto' }} />
           <h1 style={{ fontSize: '2.5rem', marginBottom: '20px', fontFamily: "'Space Grotesk', sans-serif" }}>Order Received</h1>
           <p style={{ color: '#8992a5', fontSize: '1.1rem', marginBottom: '40px' }}>Thank you. Your order has been received and we'll start crafting it soon.</p>
@@ -161,7 +161,7 @@ export default function CheckoutPage() {
     return (
       <>
         <Header />
-        <main className="container" style={{ minHeight: '60vh', padding: '60px 20px', textAlign: 'center' }}>
+        <main className="container" style={{ minHeight: '60vh', padding: '32px 20px 60px', textAlign: 'center' }}>
           <h1 style={{ fontSize: '2.5rem', marginBottom: '40px', fontFamily: "'Space Grotesk', sans-serif" }}>Checkout</h1>
           <p style={{ color: '#888', fontSize: '1.2rem', marginBottom: '20px' }}>Your cart is currently empty.</p>
           <Link href="/collections" className="btn primary">Return to Shop</Link>
@@ -175,7 +175,7 @@ export default function CheckoutPage() {
     <>
       <Header />
       
-      <main className="container" style={{ minHeight: '60vh', padding: '60px 20px' }}>
+      <main className="container" style={{ minHeight: '60vh', padding: '32px 20px 60px' }}>
         
         <div onClick={() => setShowCoupon(!showCoupon)} style={{ background: '#0a121d', border: '1px solid #1a273b', borderRadius: '8px', padding: '15px 20px', color: '#66a3ff', display: 'flex', alignItems: 'center', gap: '10px', marginBottom: showCoupon ? '20px' : '40px', cursor: 'pointer', transition: '0.2s' }}>
           <Info size={20} />

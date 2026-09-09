@@ -1076,8 +1076,13 @@ h1,h2,h3,h4,h5,h6{font-family:'Poppins','DM Sans',Arial,sans-serif}
 
 /* Keep the static proof strip inside the viewport after stopping its animation. */
 @media (max-width: 800px) {
-  .ticker-wrap {
+  .ticker-wrap,
+  .catHero .ticker-wrap,
+  .catalogHero .ticker-wrap {
     position: absolute;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
     padding: 6px 8px;
   }
 
@@ -1095,7 +1100,8 @@ h1,h2,h3,h4,h5,h6{font-family:'Poppins','DM Sans',Arial,sans-serif}
     font-size: 12px;
     line-height: 1.2;
     white-space: normal;
-    overflow-wrap: anywhere;
+    overflow-wrap: normal;
+    word-break: normal;
   }
 
   .ticker-content.ticker-static .ticker-item > span {

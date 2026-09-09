@@ -89,13 +89,13 @@ export function Login() {
             <form className="authForm" onSubmit={handleLogin}>
               <div className="formGroup">
                 <label>Username or email address <span>*</span></label>
-                <input type="text" value={loginUser} onChange={e => setLoginUser(e.target.value)} required />
+                <input type="text" value={loginUser} onChange={e => setLoginUser(e.target.value)} autoComplete="username" required />
               </div>
               
               <div className="formGroup">
                 <label>Password <span>*</span></label>
                 <div className="passwordInput">
-                  <input type={showPassword ? "text" : "password"} value={loginPass} onChange={e => setLoginPass(e.target.value)} required />
+                  <input type={showPassword ? "text" : "password"} value={loginPass} onChange={e => setLoginPass(e.target.value)} autoComplete="current-password" required />
                   <button type="button" className="togglePassword" onClick={() => setShowPassword(!showPassword)}>
                     {showPassword ? <EyeOff size={18}/> : <Eye size={18}/>}
                   </button>
@@ -121,12 +121,12 @@ export function Login() {
             <form className="authForm" onSubmit={handleRegister}>
               <div className="formGroup">
                 <label>Email address <span>*</span></label>
-                <input type="email" value={regEmail} onChange={e => setRegEmail(e.target.value)} required />
+                <input type="email" value={regEmail} onChange={e => setRegEmail(e.target.value)} autoComplete="email" required />
               </div>
 
               <div className="formGroup">
                 <label>Password <span>*</span></label>
-                <input type="password" value={regPass} onChange={e => setRegPass(e.target.value)} required />
+                <input type="password" value={regPass} onChange={e => setRegPass(e.target.value)} autoComplete="new-password" required />
               </div>
               
               <div className="authNotice">

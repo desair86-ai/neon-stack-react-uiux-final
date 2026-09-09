@@ -47,8 +47,8 @@ export default function CartPage() {
     <>
       <Header />
       
-      <main className="container" style={{ minHeight: '60vh', padding: '60px 20px' }}>
-        <h1 style={{ fontSize: '2.5rem', marginBottom: '40px', fontFamily: "'Space Grotesk', sans-serif" }}>Cart</h1>
+      <main className="container" style={{ minHeight: '60vh', padding: '32px 20px 60px' }}>
+        <h1 style={{ fontSize: '2.5rem', margin: '0 0 32px', fontFamily: "'Space Grotesk', sans-serif" }}>Cart</h1>
         
         {cart.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 0' }}>
