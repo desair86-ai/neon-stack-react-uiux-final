@@ -227,7 +227,6 @@ export function ConfiguratorExperience({type="custom_neon"}){
 
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [fontPickerOpen, setFontPickerOpen] = useState(false);
   
   const neonContent = (
     <div ref={textRef} className={`ns-neon-text${mojo?" spectrum":""}`} style={{...textStyle,position:"relative",pointerEvents:"auto",cursor:isMulti?"inherit":"grab",userSelect:"none"}} onPointerDown={e=>{if(!isMulti) dragSign(e)}}>
@@ -315,21 +314,19 @@ export function ConfiguratorExperience({type="custom_neon"}){
          {step===0 && <div className="ns-champ-panel">
             <h2 style={{fontSize:'16px', fontWeight:800, marginBottom:'20px', color:'#fff', fontFamily:'Poppins'}}>CREATE YOUR OWN {valid.text&&<Check size={16} color="#00ffbc" style={{marginLeft:6, verticalAlign:'text-bottom'}}/>}</h2>
             <div className="ns-field"><label>YOUR TEXT <small>{text.length}/50</small></label><textarea value={text} maxLength={50} rows={3} onChange={e=>setText(e.target.value)}/><small style={{display:"block",marginTop:6,color:"#8992a5"}}>Press Enter only when you want another line.</small></div>
-            <div className="ns-field" style={{position:'relative'}}>
+            <div className="ns-field ns-font-field" style={{position:'relative'}}>
                <label>FONT STYLE <small>{fonts.length} Fonts</small></label>
-               <div onClick={()=>setFontPickerOpen(!fontPickerOpen)} style={{display:'flex',justifyContent:'space-between',alignItems:'center',background:'#05060a',border:fontPickerOpen?'1px solid #752eff':'1px solid #161a23',padding:'14px 16px',borderRadius:'6px',cursor:'pointer', transition:'0.2s'}}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',background:'#05060a',border:'1px solid #752eff',padding:'14px 16px',borderRadius:'6px'}}>
                   <span style={{fontFamily: fontFamily(font), fontSize:'20px', color: '#fff'}}>{font?.name || "Select Font"}</span>
-                  <ChevronDown size={18} color="#b8bfd8" style={{transform: fontPickerOpen?'rotate(180deg)':'none', transition:'0.2s'}}/>
+                <ChevronDown size={18} color="#b8bfd8" style={{transform:'rotate(180deg)'}}/>
                </div>
-               {fontPickerOpen && (
-                 <div className="ns-custom-scroll" style={{position:'absolute',top:'100%',left:0,right:0,zIndex:200,background:'#0a0d14',border:'1px solid #752eff',borderRadius:'6px',marginTop:'4px',padding:'12px',maxHeight:'340px',overflowY:'auto',overflowX:'hidden',display:'grid',gridTemplateColumns:'repeat(3, 1fr)',gap:'8px',boxShadow:'0 10px 30px rgba(0,0,0,0.5)'}}>
+              <div className="ns-custom-scroll ns-font-picker-list">
                    {fonts.map(f => (
-                      <button key={f.id||f.name} onClick={()=>{setFont(f);setFontPickerOpen(false);}} style={{background:font?.name===f.name?'#161a23':'#05060a',border:font?.name===f.name?'1px solid #8b4cff':'1px solid #161a23',borderRadius:'4px',padding:'14px 4px',cursor:'pointer',color:font?.name===f.name?'#00ffbc':'#fff',textAlign:'center',transition:'0.2s',display:'flex',alignItems:'center',justifyContent:'center',minHeight:'55px'}}>
+                   <button type="button" key={f.id||f.name} onClick={()=>setFont(f)} style={{background:font?.name===f.name?'#161a23':'#05060a',border:font?.name===f.name?'1px solid #8b4cff':'1px solid #161a23',borderRadius:'4px',padding:'14px 4px',cursor:'pointer',color:font?.name===f.name?'#00ffbc':'#fff',textAlign:'center',transition:'0.2s',display:'flex',alignItems:'center',justifyContent:'center',minHeight:'55px'}}>
                          <span style={{fontFamily: fontFamily(f), fontSize:'18px'}}>{f.name}</span>
                       </button>
                    ))}
-                 </div>
-               )}
+              </div>
             </div>
             <div className="ns-field"><label>ALIGNMENT</label><div className="ns-align"><button className={align==="left"?"selected":""} onClick={()=>setAlign("left")}><AlignLeft/></button><button className={align==="center"?"selected":""} onClick={()=>setAlign("center")}><AlignCenter/></button><button className={align==="right"?"selected":""} onClick={()=>setAlign("right")}><AlignRight/></button></div></div>
             <button className="btn primary" onClick={()=>setStep(1)} style={{width:'100%', marginTop:20}}>NEXT: SELECT SIZE</button>
