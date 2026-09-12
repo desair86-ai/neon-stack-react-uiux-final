@@ -41,12 +41,12 @@ export function ConfiguratorExperience({type="custom_neon"}){
   // A shared URL must not render the default design even for one frame.
   // Keep the loading shell up until the saved selections AND the saved font
   // are ready, then reveal the builder in its final state.
-  const [shareLoading, setShareLoading] = useState(() => {
-    if (typeof window !== "undefined") {
-      return Boolean(new URLSearchParams(window.location.search).get("share"));
-    }
-    return false;
-  });
+  // Keep the builder hidden from the very first render while we determine
+  // whether this is a shared URL and, if so, restore the saved design.
+  // Starting TRUE is important: the component can be server-rendered before
+  // window/searchParams exist, so a client-only check here would still allow
+  // the default builder to flash for a few seconds.
+  const [shareLoading, setShareLoading] = useState(true);
   const [step,setStep]=useState(0),[text,setText]=useState("The Neon Stack"),[font,setFont]=useState(null),[fontReadyCount,setFontReadyCount]=useState(0),[align,setAlign]=useState("center"),[size,setSize]=useState(null),[color,setColor]=useState(null),[isMulti,setIsMulti]=useState(false),[letterColors,setLetterColors]=useState({}),[selectedLetter,setSelectedLetter]=useState(null),[shapes,setShapes]=useState([]),[backboard,setBackboard]=useState(null),[hardware,setHardware]=useState(null),[background,setBackground]=useState(BACKGROUNDS[0][1]),[wallFile,setWallFile]=useState(null),[mood,setMood]=useState("day"),[lightOn,setLightOn]=useState(true),[showRuler,setShowRuler]=useState(true),[calibrating,setCalibrating]=useState(false),[calibrationInches,setCalibrationInches]=useState("50"),[calibrationRatio,setCalibrationRatio]=useState(null),[calibrationWidth,setCalibrationWidth]=useState(295),[calibrationPos,setCalibrationPos]=useState({x:.5,y:.52}),[signPos,setSignPos]=useState({x:.5,y:.5}),[fontSize,setFontSize]=useState(80),[bounds,setBounds]=useState(null),[notification,setNotification]=useState(null),[sharing,setSharing]=useState(false);
   const previewRef=useRef(null),textRef=useRef(null),sharedDesignLoadedRef=useRef(false),sharePromiseRef=useRef(null);
 
@@ -454,8 +454,6 @@ export function ConfiguratorExperience({type="custom_neon"}){
 
     if(!wpConfig || !text.trim() || !size || !font || !backboard || !hardware || (!mojo && !color)) return;
 
-    if (!mojo && !color) return;
-
     const design={
       text:text||"",
       fontId:font?.id||font?.name,
@@ -504,12 +502,14 @@ export function ConfiguratorExperience({type="custom_neon"}){
   const dragSign=e=>{if(calibrating)return;e.preventDefault();const box=previewRef.current?.getBoundingClientRect();if(!box)return;const sx=e.clientX,sy=e.clientY,ox=signPos.x,oy=signPos.y;const move=ev=>setSignPos({x:Math.max(.08,Math.min(.92,ox+(ev.clientX-sx)/box.width)),y:Math.max(.12,Math.min(.88,oy+(ev.clientY-sy)/box.height))});const up=()=>{window.removeEventListener("pointermove",move);window.removeEventListener("pointerup",up)};window.addEventListener("pointermove",move);window.addEventListener("pointerup",up)};
   const dragCalibration=e=>{if(!calibrating)return;e.preventDefault();const box=previewRef.current?.getBoundingClientRect();if(!box)return;const sx=e.clientX,sy=e.clientY,ox=calibrationPos.x,oy=calibrationPos.y;const move=ev=>setCalibrationPos({x:Math.max(.08,Math.min(.92,ox+(ev.clientX-sx)/box.width)),y:Math.max(.08,Math.min(.88,oy+(ev.clientY-sy)/box.height))});const up=()=>{window.removeEventListener("pointermove",move);window.removeEventListener("pointerup",up)};window.addEventListener("pointermove",move);window.addEventListener("pointerup",up)};
   const setCalibration=()=>{const inches=Number(calibrationInches);if(inches>0)setCalibrationRatio(calibrationWidth/inches);setCalibrating(false);};
-  const neonColor=color?.hex||"#63df21",lighting=LIGHTING[mood],leftShapes=shapes.filter(s=>s.position==="left"),rightShapes=shapes.filter(s=>s.position==="right");
+  // White is the Custom Neon default colour. Keep the fallback white so an
+  // uninitialised state can never briefly render green.
+  const neonColor=color?.hex||"#fff",lighting=LIGHTING[mood],leftShapes=shapes.filter(s=>s.position==="left"),rightShapes=shapes.filter(s=>s.position==="right");
   const cutToShapeColor = '#b7b8c2';
   const darkenHex=h=>{if(!h||!h.startsWith("#"))return "#1a1a24";let r=parseInt(h.slice(1,3),16)*0.2,g=parseInt(h.slice(3,5),16)*0.2,b=parseInt(h.slice(5,7),16)*0.2;return `#${Math.floor(r).toString(16).padStart(2,'0')}${Math.floor(g).toString(16).padStart(2,'0')}${Math.floor(b).toString(16).padStart(2,'0')}`};
   const getShadow=c=>"none";
   const textStyle={fontFamily:fontFamily(font),fontSize:`${fontSize}px`,lineHeight:1.02,whiteSpace:"pre",display:"inline-block",textAlign:align,color:mojo?"transparent":(isMulti?undefined:(lightOn?neonColor:darkenHex(neonColor))),backgroundImage:mojo?"linear-gradient(90deg,#ffde00,#ff7b00,#ff007b,#c400ff,#00d4ff,#ffde00)":undefined,WebkitBackgroundClip:mojo?"text":undefined,backgroundSize:mojo?"300% 100%":undefined,animation:mojo?"nsMojoSpectrum 3s linear infinite":undefined,textShadow:mojo?"none":(isMulti?undefined:getShadow(neonColor)),filter:"none",opacity:lightOn?1:.9};
-  const renderText=()=>{if(mojo||!isMulti)return text||"Preview";return (text||"Preview").split("").map((char,i)=>{const c=letterColors[i]||color,cHex=lightOn?(c?.hex||"#63df21"):darkenHex(c?.hex||"#63df21");return <span key={i} onClick={(e)=>{if(isMulti){e.stopPropagation();setSelectedLetter(i)}}} style={{color:cHex,textShadow:getShadow(cHex),cursor:isMulti?"pointer":"inherit",display:"inline-block",transform:isMulti&&selectedLetter===i?"scale(1.1)":"none",transition:"transform 0.2s",zIndex:isMulti&&selectedLetter===i?10:1,position:"relative"}}>{char}</span>})};
+  const renderText=()=>{if(mojo||!isMulti)return text||"Preview";return (text||"Preview").split("").map((char,i)=>{const c=letterColors[i]||color,cHex=lightOn?(c?.hex||"#fff"):darkenHex(c?.hex||"#fff");return <span key={i} onClick={(e)=>{if(isMulti){e.stopPropagation();setSelectedLetter(i)}}} style={{color:cHex,textShadow:getShadow(cHex),cursor:isMulti?"pointer":"inherit",display:"inline-block",transform:isMulti&&selectedLetter===i?"scale(1.1)":"none",transition:"transform 0.2s",zIndex:isMulti&&selectedLetter===i?10:1,position:"relative"}}>{char}</span>})};
   const shapePosition=(s,side,index)=>{
      const offsetGap=0.6+index*0.9;
      const isShapeMojo = mojo && (!s.color || s.color.id === 'mojo');
@@ -773,7 +773,8 @@ export function ConfiguratorExperience({type="custom_neon"}){
     </div>
   );
 
-  if(loading)return <main className="ns-config-loading">Loading your neon builder…</main>;
+  // Never paint the default configurator while a share URL is being restored.
+  if(loading || shareLoading)return <main className="ns-config-loading">Loading your neon builder…</main>;
   if(configError)return <main className="ns-config-loading">Unable to load configurator. Please refresh or try again later.</main>;
   if(configDisabled)return <main className="ns-config-loading">This configurator is currently unavailable.</main>;
 
@@ -895,7 +896,7 @@ export function ConfiguratorExperience({type="custom_neon"}){
 
          {step===3 && <div className="ns-champ-panel">
             <h2 style={{fontSize:'16px', fontWeight:800, marginBottom:'20px', color:'#fff', fontFamily:'Poppins'}}>COLOR {valid.color&&<Check size={16} color="#00ffbc" style={{marginLeft:6, verticalAlign:'text-bottom'}}/>}</h2>
-            {!mojo&&<div className="ns-field"><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}><label style={{margin:0}}>TEXT COLOUR</label><button onClick={()=>{setIsMulti(!isMulti);if(!isMulti&&selectedLetter===null)setSelectedLetter(0)}} style={{background:isMulti?"#8b4cff":"transparent",color:isMulti?"#fff":"#8b4cff",border:"1px solid #8b4cff",borderRadius:6,fontSize:9,padding:"4px 8px",fontWeight:800,cursor:"pointer"}}>{isMulti?"SINGLE COLOUR":"MULTI COLOUR"}</button></div>{isMulti&&<div style={{background:"#0a0d14",padding:12,borderRadius:8,marginBottom:15,border:"1px solid #2a3040"}}><div style={{fontSize:10,color:"#aeb5c4",marginBottom:10}}>Click a letter below, then choose a colour.</div><div style={{display:"flex",flexWrap:"wrap",gap:6}}>{(text||"Preview").split("").map((char,i)=>{if(char.trim()==="")return null;const isSel=selectedLetter===i,c=letterColors[i]||color,cHex=c?.hex||"#63df21";return <button key={i} onClick={()=>setSelectedLetter(i)} style={{width:32,height:32,borderRadius:6,background:isSel?"#752eff":"#161a24",border:isSel?"1px solid #9a6cff":"1px solid #333",color:isSel?"#fff":cHex,fontSize:14,fontWeight:"bold",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>{char}</button>})}</div></div>}<div className="ns-color-grid">{(options.colors?.length?options.colors:COLORS).map(c=>{const isSelected=isMulti?letterColors[selectedLetter]?.id===c.id:color?.id===c.id;return <button key={c.id||c.name} className={isSelected?"selected":""} style={{background:c.hex}} onClick={()=>{if(isMulti){if(selectedLetter!==null)setLetterColors(prev=>({...prev,[selectedLetter]:c}))}else{setColor(c)}}} title={c.name}/>})}</div></div>}
+            {!mojo&&<div className="ns-field"><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}><label style={{margin:0}}>TEXT COLOUR</label><button onClick={()=>{setIsMulti(!isMulti);if(!isMulti&&selectedLetter===null)setSelectedLetter(0)}} style={{background:isMulti?"#8b4cff":"transparent",color:isMulti?"#fff":"#8b4cff",border:"1px solid #8b4cff",borderRadius:6,fontSize:9,padding:"4px 8px",fontWeight:800,cursor:"pointer"}}>{isMulti?"SINGLE COLOUR":"MULTI COLOUR"}</button></div>{isMulti&&<div style={{background:"#0a0d14",padding:12,borderRadius:8,marginBottom:15,border:"1px solid #2a3040"}}><div style={{fontSize:10,color:"#aeb5c4",marginBottom:10}}>Click a letter below, then choose a colour.</div><div style={{display:"flex",flexWrap:"wrap",gap:6}}>{(text||"Preview").split("").map((char,i)=>{if(char.trim()==="")return null;const isSel=selectedLetter===i,c=letterColors[i]||color,cHex=c?.hex||"#fff";return <button key={i} onClick={()=>setSelectedLetter(i)} style={{width:32,height:32,borderRadius:6,background:isSel?"#752eff":"#161a24",border:isSel?"1px solid #9a6cff":"1px solid #333",color:isSel?"#fff":cHex,fontSize:14,fontWeight:"bold",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>{char}</button>})}</div></div>}<div className="ns-color-grid">{(options.colors?.length?options.colors:COLORS).map(c=>{const isSelected=isMulti?letterColors[selectedLetter]?.id===c.id:color?.id===c.id;return <button key={c.id||c.name} className={isSelected?"selected":""} style={{background:c.hex}} onClick={()=>{if(isMulti){if(selectedLetter!==null)setLetterColors(prev=>({...prev,[selectedLetter]:c}))}else{setColor(c)}}} title={c.name}/>})}</div></div>}
             {mojo&&<div className="ns-field"><label>MOJO SPECTRUM</label><p style={{color:"#aeb5c4",lineHeight:1.6}}>Mojo Mix uses a continuous moving multicolour spectrum. The text and shapes animate independently from Custom Neon colours.</p></div>}
             <button className="btn primary" onClick={()=>setStep(4)} style={{width:'100%', marginTop:20}}>NEXT: BACKBOARD</button>
          </div>}
