@@ -6,7 +6,7 @@ import "./configurator.css";
 import { useNeonConfig, useNeonConfigRevision } from "./hooks/useNeonConfig";
 import { useNeonQuote } from "./hooks/useNeonQuote";
 import { uploadNeonScreenshot, createNeonShare, getNeonShare } from "./api/neonStackApi";
-import { loadConfiguratorFont, onFontLoaded } from "./ConfiguratorFontLoader";
+import { loadConfiguratorFont, isFontLoaded, onFontLoaded } from "./ConfiguratorFontLoader";
 const STEPS=["text","size","shapes","color","backboard","hardware"],LABELS={text:"TEXT",size:"SIZE",shapes:"SHAPES",color:"COLOUR",backboard:"BACKBOARD",hardware:"HARDWARE"};
 const COLORS=[{id:"pink",name:"Pink",hex:"#ff2aa8"},{id:"purple",name:"Purple",hex:"#8d3cff"},{id:"blue",name:"Blue",hex:"#198cff"},{id:"cyan",name:"Cyan",hex:"#12dfe5"},{id:"green",name:"Green",hex:"#63df21"},{id:"yellow",name:"Yellow",hex:"#ffd11a"},{id:"orange",name:"Orange",hex:"#ff8618"},{id:"white",name:"White",hex:"#fff"}];
 const BACKGROUNDS=[
@@ -38,9 +38,15 @@ export function ConfiguratorExperience({type="custom_neon"}){
   const { config: wpConfig, revision, loading, error: configError, disabled: configDisabled, refetch } = useNeonConfig(type);
   const { revision: liveRevision, version } = useNeonConfigRevision(type, 30000);
   const { pricing, loading: pricingLoading, quote, debouncedQuote } = useNeonQuote(type);
-  // Share restoration is asynchronous and must never block the whole builder.
-  // The builder can render immediately while the saved design is restored.
-  const [shareLoading, setShareLoading] = useState(false);
+  // A shared URL must not render the default design even for one frame.
+  // Keep the loading shell up until the saved selections AND the saved font
+  // are ready, then reveal the builder in its final state.
+  const [shareLoading, setShareLoading] = useState(() => {
+    if (typeof window !== "undefined") {
+      return Boolean(new URLSearchParams(window.location.search).get("share"));
+    }
+    return false;
+  });
   const [step,setStep]=useState(0),[text,setText]=useState("The Neon Stack"),[font,setFont]=useState(null),[fontReadyCount,setFontReadyCount]=useState(0),[align,setAlign]=useState("center"),[size,setSize]=useState(null),[color,setColor]=useState(null),[isMulti,setIsMulti]=useState(false),[letterColors,setLetterColors]=useState({}),[selectedLetter,setSelectedLetter]=useState(null),[shapes,setShapes]=useState([]),[backboard,setBackboard]=useState(null),[hardware,setHardware]=useState(null),[background,setBackground]=useState(BACKGROUNDS[0][1]),[wallFile,setWallFile]=useState(null),[mood,setMood]=useState("day"),[lightOn,setLightOn]=useState(true),[showRuler,setShowRuler]=useState(true),[calibrating,setCalibrating]=useState(false),[calibrationInches,setCalibrationInches]=useState("50"),[calibrationRatio,setCalibrationRatio]=useState(null),[calibrationWidth,setCalibrationWidth]=useState(295),[calibrationPos,setCalibrationPos]=useState({x:.5,y:.52}),[signPos,setSignPos]=useState({x:.5,y:.5}),[fontSize,setFontSize]=useState(80),[bounds,setBounds]=useState(null),[notification,setNotification]=useState(null),[sharing,setSharing]=useState(false);
   const previewRef=useRef(null),textRef=useRef(null),sharedDesignLoadedRef=useRef(false),sharePromiseRef=useRef(null);
 
@@ -160,14 +166,18 @@ export function ConfiguratorExperience({type="custom_neon"}){
             chosenFont = matchedFont;
           }
         }
-        setFont(chosenFont);
-        // Do not block share restoration on the font network request.
-        // The [font] effect above loads the active font on demand and updates
-        // the preview when it finishes. Keeping this async prevents a slow
-        // font request from leaving the whole builder stuck on the loading screen.
+        // Load the saved font BEFORE revealing the builder. Otherwise the
+        // first rendered frame uses a browser fallback (often Times/serif),
+        // which looks like the share link briefly loaded the wrong design.
+        // A timeout prevents one bad/slow font URL from trapping the builder.
         if (chosenFont) {
-          loadConfiguratorFont(chosenFont).catch(() => {});
+          await Promise.race([
+            loadConfiguratorFont(chosenFont),
+            new Promise(resolve => setTimeout(resolve, 5000)),
+          ]);
         }
+        if (isCancelled) return;
+        setFont(chosenFont);
 
         // 3. Restore size
         const sizeKey = typeof d.size === 'object' ? (d.size?.id || d.size?.name) : d.size;
@@ -379,6 +389,18 @@ export function ConfiguratorExperience({type="custom_neon"}){
       observer.observe(el);
     });
 
+    // Bootstrap the first viewport immediately. IntersectionObserver can fire
+    // a little later than the first paint; loading the first visible rows here
+    // removes the noticeable fallback-font flash in the picker itself.
+    const listRect = list.getBoundingClientRect();
+    list.querySelectorAll('[data-font-preview="true"]').forEach((el) => {
+      const rect = el.getBoundingClientRect();
+      if (rect.bottom >= listRect.top && rect.top <= listRect.bottom + 100) {
+        const index = Number(el.getAttribute('data-font-index'));
+        if (Number.isFinite(index)) loadByIndex(index);
+      }
+    });
+
     return () => observer.disconnect();
   }, [fonts]);
 
@@ -430,7 +452,7 @@ export function ConfiguratorExperience({type="custom_neon"}){
     // intermediate design to WordPress.
     if (hasShareToken && !sharedDesignLoadedRef.current) return;
 
-    if(!wpConfig || !text.trim() || !size || !font || !backboard || !hardware) return;
+    if(!wpConfig || !text.trim() || !size || !font || !backboard || !hardware || (!mojo && !color)) return;
 
     if (!mojo && !color) return;
 
@@ -848,7 +870,7 @@ export function ConfiguratorExperience({type="custom_neon"}){
                       data-font-index={fonts.indexOf(f)}
                       onPointerEnter={() => loadConfiguratorFont(f)}
                       onClick={() => { setFont(f); loadConfiguratorFont(f); }} 
-                      style={{background:font?.name===f.name?'#161a23':'#05060a',border:font?.name===f.name?'1px solid #8b4cff':'1px solid #161a23',borderRadius:'4px',padding:'14px 4px',cursor:'pointer',color:font?.name===f.name?'#00ffbc':'#fff',textAlign:'center',transition:'0.2s',display:'flex',alignItems:'center',justifyContent:'center',minHeight:'55px'}}
+                      style={{background:font?.name===f.name?'#161a23':'#05060a',border:font?.name===f.name?'1px solid #8b4cff':'1px solid #161a23',borderRadius:'4px',padding:'14px 4px',cursor:'pointer',color:font?.name===f.name?'#00ffbc':'#fff',textAlign:'center',transition:'opacity 0.18s, background 0.2s, border 0.2s',display:'flex',alignItems:'center',justifyContent:'center',minHeight:'55px',opacity:isFontLoaded(f)?1:0.72}}
                     >
                           <span style={{fontFamily: fontFamily(f), fontSize:'18px'}}>{f.name}</span>
                        </button>
