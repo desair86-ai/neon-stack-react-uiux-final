@@ -6,7 +6,7 @@ import "./configurator.css";
 import { useNeonConfig, useNeonConfigRevision } from "./hooks/useNeonConfig";
 import { useNeonQuote } from "./hooks/useNeonQuote";
 import { uploadNeonScreenshot, createNeonShare, getNeonShare } from "./api/neonStackApi";
-import { loadConfiguratorFont, isFontLoaded, onFontLoaded } from "./ConfiguratorFontLoader";
+import { loadConfiguratorFont, preloadConfiguratorFont, isFontLoaded, onFontLoaded } from "./ConfiguratorFontLoader";
 import { NeonSiteLoader } from "./NeonSiteLoader";
 const STEPS=["text","size","shapes","color","backboard","hardware"],LABELS={text:"TEXT",size:"SIZE",shapes:"SHAPES",color:"COLOUR",backboard:"BACKBOARD",hardware:"HARDWARE"};
 const COLORS=[{id:"pink",name:"Pink",hex:"#ff2aa8"},{id:"purple",name:"Purple",hex:"#8d3cff"},{id:"blue",name:"Blue",hex:"#198cff"},{id:"cyan",name:"Cyan",hex:"#12dfe5"},{id:"green",name:"Green",hex:"#63df21"},{id:"yellow",name:"Yellow",hex:"#ffd11a"},{id:"orange",name:"Orange",hex:"#ff8618"},{id:"white",name:"White",hex:"#fff"}];
@@ -66,7 +66,8 @@ export function ConfiguratorExperience({type="custom_neon"}){
   useEffect(() => {
     if (!font) return;
     let active = true;
-    loadConfiguratorFont(font).then((loaded) => {
+    preloadConfiguratorFont(font, "high");
+    loadConfiguratorFont(font, { priority: "high" }).then((loaded) => {
       if (active && loaded) {
         setFontReadyCount(c => c + 1);
       }
@@ -103,7 +104,8 @@ export function ConfiguratorExperience({type="custom_neon"}){
       const defaultFont = fs[0] || null;
       setFont(defaultFont);
       if (defaultFont) {
-        loadConfiguratorFont(defaultFont);
+        preloadConfiguratorFont(defaultFont, "high");
+        loadConfiguratorFont(defaultFont, { priority: "high" });
       }
       setSize(prev => {
         const sizes = o.sizes || [];
@@ -169,14 +171,15 @@ export function ConfiguratorExperience({type="custom_neon"}){
             chosenFont = matchedFont;
           }
         }
-        // Load the saved font BEFORE revealing the builder. Otherwise the
-        // first rendered frame uses a browser fallback (often Times/serif),
-        // which looks like the share link briefly loaded the wrong design.
-        // A timeout prevents one bad/slow font URL from trapping the builder.
+        // PRIORITY FONT BOOTSTRAP:
+        // A shared link must load its saved font before the builder is painted.
+        // Start the browser preload first so the font request gets high priority,
+        // then let FontFace consume the same cached request.
         if (chosenFont) {
+          preloadConfiguratorFont(chosenFont, "high");
           await Promise.race([
-            loadConfiguratorFont(chosenFont),
-            new Promise(resolve => setTimeout(resolve, 5000)),
+            loadConfiguratorFont(chosenFont, { priority: "high" }),
+            new Promise(resolve => setTimeout(resolve, 4500)),
           ]);
         }
         if (isCancelled) return;
@@ -383,7 +386,7 @@ export function ConfiguratorExperience({type="custom_neon"}){
         const rect = el.getBoundingClientRect();
         // Small look-ahead prevents a new fallback-font flash when the user
         // scrolls one row further.
-        if (rect.bottom >= visibleTop - 120 && rect.top <= visibleBottom + 120) {
+        if (rect.bottom >= visibleTop - 60 && rect.top <= visibleBottom + 60) {
           const index = Number(el.getAttribute("data-font-index"));
           if (Number.isFinite(index) && fonts[index]) {
             loadConfiguratorFont(fonts[index]);
@@ -406,7 +409,7 @@ export function ConfiguratorExperience({type="custom_neon"}){
               loadConfiguratorFont(fonts[index]);
             }
           });
-        }, { root: null, rootMargin: "120px 0px", threshold: 0.01 })
+        }, { root: null, rootMargin: "60px 0px", threshold: 0.01 })
       : null;
 
     cards().forEach((el) => observer?.observe(el));
@@ -903,7 +906,7 @@ export function ConfiguratorExperience({type="custom_neon"}){
                       data-font-preview="true"
                       data-font-index={fonts.indexOf(f)}
                       onPointerEnter={() => loadConfiguratorFont(f)}
-                      onClick={() => { setFont(f); loadConfiguratorFont(f); }} 
+                      onClick={() => { preloadConfiguratorFont(f, "high"); setFont(f); loadConfiguratorFont(f, { priority: "high" }); }} 
                       style={{background:font?.name===f.name?'#161a23':'#05060a',border:font?.name===f.name?'1px solid #8b4cff':'1px solid #161a23',borderRadius:'4px',padding:'14px 4px',cursor:'pointer',color:font?.name===f.name?'#00ffbc':'#fff',textAlign:'center',transition:'opacity 0.18s, background 0.2s, border 0.2s',display:'flex',alignItems:'center',justifyContent:'center',minHeight:'55px',opacity:isFontLoaded(f)?1:0.72}}
                     >
                           <span style={{fontFamily: fontFamily(f), fontSize:'18px'}}>{f.name}</span>
