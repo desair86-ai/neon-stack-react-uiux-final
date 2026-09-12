@@ -1,7 +1,7 @@
 "use client";
 import React,{useEffect,useMemo,useRef,useState} from "react";
 import {Footer, MobileMenu} from "./components";
-import {AlignCenter,AlignLeft,AlignRight,ArrowLeft,ArrowRight,Check,ChevronDown,Crown,Heart,Menu,Minus,Moon,Plus,Ruler,RotateCcw,Smile,Sparkles,Star,Sun,Sunset,Trash2,Upload,WandSparkles,Zap} from "lucide-react";
+import {AlignCenter,AlignLeft,AlignRight,ArrowLeft,ArrowRight,Check,ChevronDown,Crown,Heart,Menu,Minus,Moon,Plus,Ruler,RotateCcw,Smile,Sparkles,Star,Sun,Sunset,Trash2,Upload,WandSparkles,X,Zap} from "lucide-react";
 import "./configurator.css";
 import { useNeonConfig, useNeonConfigRevision } from "./hooks/useNeonConfig";
 import { useNeonQuote } from "./hooks/useNeonQuote";
@@ -37,7 +37,7 @@ export function ConfiguratorExperience({type="custom_neon"}){
   const { config: wpConfig, revision, loading, error: configError, disabled: configDisabled, refetch } = useNeonConfig(type);
   const { revision: liveRevision, version } = useNeonConfigRevision(type, 30000);
   const { pricing, loading: pricingLoading, quote, debouncedQuote } = useNeonQuote(type);
-  const [step,setStep]=useState(0),[text,setText]=useState("The Neon Stack"),[font,setFont]=useState(null),[align,setAlign]=useState("center"),[size,setSize]=useState(null),[color,setColor]=useState(null),[isMulti,setIsMulti]=useState(false),[letterColors,setLetterColors]=useState({}),[selectedLetter,setSelectedLetter]=useState(null),[shapes,setShapes]=useState([]),[backboard,setBackboard]=useState(null),[hardware,setHardware]=useState(null),[background,setBackground]=useState(BACKGROUNDS[0][1]),[wallFile,setWallFile]=useState(null),[mood,setMood]=useState("day"),[lightOn,setLightOn]=useState(true),[showRuler,setShowRuler]=useState(true),[calibrating,setCalibrating]=useState(false),[calibrationInches,setCalibrationInches]=useState("50"),[calibrationRatio,setCalibrationRatio]=useState(null),[calibrationWidth,setCalibrationWidth]=useState(295),[calibrationPos,setCalibrationPos]=useState({x:.5,y:.52}),[signPos,setSignPos]=useState({x:.5,y:.5}),[fontSize,setFontSize]=useState(80),[bounds,setBounds]=useState(null);
+  const [step,setStep]=useState(0),[text,setText]=useState("The Neon Stack"),[font,setFont]=useState(null),[align,setAlign]=useState("center"),[size,setSize]=useState(null),[color,setColor]=useState(null),[isMulti,setIsMulti]=useState(false),[letterColors,setLetterColors]=useState({}),[selectedLetter,setSelectedLetter]=useState(null),[shapes,setShapes]=useState([]),[backboard,setBackboard]=useState(null),[hardware,setHardware]=useState(null),[background,setBackground]=useState(BACKGROUNDS[0][1]),[wallFile,setWallFile]=useState(null),[mood,setMood]=useState("day"),[lightOn,setLightOn]=useState(true),[showRuler,setShowRuler]=useState(true),[calibrating,setCalibrating]=useState(false),[calibrationInches,setCalibrationInches]=useState("50"),[calibrationRatio,setCalibrationRatio]=useState(null),[calibrationWidth,setCalibrationWidth]=useState(295),[calibrationPos,setCalibrationPos]=useState({x:.5,y:.52}),[signPos,setSignPos]=useState({x:.5,y:.5}),[fontSize,setFontSize]=useState(80),[bounds,setBounds]=useState(null),[notification,setNotification]=useState(null);
   const previewRef=useRef(null),textRef=useRef(null);
   useEffect(()=>{if(!wpConfig)return;const o=wpConfig.options||{},fs=wpConfig.fonts?.length?wpConfig.fonts:[];setFont(fs[0]||null);setSize(prev=>{const sizes=o.sizes||[];if(prev&&sizes.find(s=>s.id===prev.id))return prev;return sizes[0]||null;});setColor(mojo?null:(o.colors?.[0]||null));setBackboard(null);setHardware(null)},[wpConfig]);
   const options=wpConfig?.options||{},fonts=wpConfig?.fonts?.length?wpConfig.fonts:[],presentation=wpConfig?.presentation||{},current=STEPS[step],baseShapeColors=presentation.shape_color_options?.length?presentation.shape_color_options:(options.colors?.length?options.colors:COLORS),shapeColors=mojo?[{id:"mojo",name:"Mojo Mix (Animated)",hex:"linear-gradient(135deg, #ff007b, #00d4ff)"},...baseShapeColors]:baseShapeColors;
@@ -124,7 +124,7 @@ export function ConfiguratorExperience({type="custom_neon"}){
        };
        const productId = Number(wpConfig?.product_id) || Number(woocommerce?.product_id);
        if (!Number.isInteger(productId) || productId < 1) {
-         alert("This configurator is not connected to a WooCommerce product yet.");
+         setNotification({ title: "Configuration Notice", message: "This configurator is not connected to a WooCommerce product yet.", actionLabel: "GOT IT" });
          return;
        }
 
@@ -221,14 +221,21 @@ export function ConfiguratorExperience({type="custom_neon"}){
        if (btn) btn.innerHTML = 'ADD TO CART';
        window.location.href='/cart';
      } else {
+       const LABELS = { text: 'TEXT', size: 'SIZE', color: 'COLOUR', backboard: 'BACKBOARD', hardware: 'HARDWARE' };
        const missing = STEPS.find(k => !valid[k]);
-       let msg = "Please select all options.";
-       if (missing === 'text') msg = "Please enter your text.";
-       if (missing === 'size') msg = "Please select a size.";
-       if (missing === 'color') msg = "Please select a colour.";
-       if (missing === 'backboard') msg = "Please add a backboard.";
-       if (missing === 'hardware') msg = "Please add hardware.";
-       alert(msg);
+       let msg = "Please complete all configuration steps to proceed.";
+       let targetStep = 0;
+       if (missing === 'text') { msg = "Please enter your custom text to design your sign."; targetStep = 0; }
+       if (missing === 'size') { msg = "Please select a size for your neon sign."; targetStep = 1; }
+       if (missing === 'color') { msg = "Please choose a colour for your neon sign."; targetStep = 3; }
+       if (missing === 'backboard') { msg = "Please select a backboard style."; targetStep = 4; }
+       if (missing === 'hardware') { msg = "Please choose your power & hardware option."; targetStep = 5; }
+       setNotification({
+         title: "Almost There!",
+         message: msg,
+         step: targetStep,
+         actionLabel: missing ? `CHOOSE ${LABELS[missing] || "OPTION"}` : "GOT IT"
+       });
      }
    };
 
@@ -459,5 +466,128 @@ export function ConfiguratorExperience({type="custom_neon"}){
          
       </section>
     </section>
+
+    {/* Premium UI/UX Notification Modal */}
+    {notification && (
+      <div 
+        onClick={() => setNotification(null)}
+        style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(3, 4, 8, 0.78)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          zIndex: 999999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px'
+        }}
+      >
+        <div 
+          onClick={e => e.stopPropagation()}
+          style={{
+            background: 'linear-gradient(145deg, #0d1017 0%, #06080e 100%)',
+            border: '1.5px solid #752eff',
+            boxShadow: '0 25px 60px rgba(0,0,0,0.85), 0 0 35px rgba(117, 46, 255, 0.3)',
+            borderRadius: '20px',
+            padding: '28px 24px',
+            width: '100%',
+            maxWidth: '390px',
+            position: 'relative',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            textAlign: 'center',
+            fontFamily: "'Poppins', sans-serif"
+          }}
+        >
+          <button 
+            onClick={() => setNotification(null)}
+            style={{
+              position: 'absolute',
+              top: '16px',
+              right: '16px',
+              background: 'rgba(255,255,255,0.06)',
+              border: 'none',
+              color: '#8992a5',
+              cursor: 'pointer',
+              padding: '6px',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: '0.2s'
+            }}
+            onMouseEnter={e => e.currentTarget.style.color = '#fff'}
+            onMouseLeave={e => e.currentTarget.style.color = '#8992a5'}
+          >
+            <X size={18} />
+          </button>
+
+          <div style={{
+            width: '52px',
+            height: '52px',
+            borderRadius: '16px',
+            background: 'rgba(0, 255, 188, 0.08)',
+            border: '1.5px solid rgba(0, 255, 188, 0.35)',
+            boxShadow: '0 0 20px rgba(0, 255, 188, 0.2)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#00ffbc',
+            marginBottom: '16px'
+          }}>
+            <Sparkles size={24} />
+          </div>
+
+          <h3 style={{
+            fontSize: '18px',
+            fontWeight: 800,
+            color: '#fff',
+            margin: '0 0 8px 0',
+            letterSpacing: '0.02em'
+          }}>
+            {notification.title}
+          </h3>
+
+          <p style={{
+            fontSize: '14px',
+            color: '#aeb5c4',
+            lineHeight: 1.55,
+            margin: '0 0 22px 0'
+          }}>
+            {notification.message}
+          </p>
+
+          <button
+            onClick={() => {
+              if (typeof notification.step === 'number') {
+                setStep(notification.step);
+              }
+              setNotification(null);
+            }}
+            style={{
+              width: '100%',
+              padding: '13px 20px',
+              background: 'linear-gradient(90deg, #752eff, #00ffbc)',
+              border: 'none',
+              borderRadius: '12px',
+              color: '#05060a',
+              fontSize: '13px',
+              fontWeight: 800,
+              letterSpacing: '0.04em',
+              cursor: 'pointer',
+              boxShadow: '0 0 20px rgba(0, 255, 188, 0.35)',
+              transition: 'transform 0.15s'
+            }}
+            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'}
+            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+          >
+            {notification.actionLabel || "GOT IT"}
+          </button>
+        </div>
+      </div>
+    )}
   </main>;
 }
