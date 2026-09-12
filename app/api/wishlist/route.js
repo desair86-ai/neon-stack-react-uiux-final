@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const WP_URL = process.env.NEXT_PUBLIC_WORDPRESS_REST_URL || 'https://darkblue-raven-747036.hostingersite.com/wp-json';
+const WP_URL = (process.env.NEXT_PUBLIC_WORDPRESS_REST_URL || '').replace(/\/+$/, '');
 const CK = process.env.WC_CONSUMER_KEY;
 const CS = process.env.WC_CONSUMER_SECRET;
 

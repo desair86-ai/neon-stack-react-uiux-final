@@ -1,1 +1,0 @@
-fetch('https://darkblue-raven-747036.hostingersite.com/graphql', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: 'mutation { login(input: { clientMutationId: \"1\", username: \"test\", password: \"test\" }) { authToken } }' }) }).then(r=>r.json()).then(console.log)
