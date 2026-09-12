@@ -1,6 +1,6 @@
 "use client";
 
-// Cache tracking status of each font family:
+// Tracks only fonts that have actually been requested.
 // Map<familyName, 'loaded' | Promise<FontFace>>
 const fontLoadMap = new Map();
 const listeners = new Set();
@@ -23,20 +23,44 @@ export function onFontLoaded(fn) {
 }
 
 export function getFontFamilyName(font) {
-  return String(font?.class || font?.family || font?.name || font?.id || "").trim();
+  return String(
+    font?.class ||
+    font?.family ||
+    font?.name ||
+    font?.id ||
+    ""
+  ).trim();
 }
 
 export function fontUrl(font) {
-  return font?.file_url || font?.fileUrl || font?.url || font?.src || font?.source_url || font?.sourceUrl || "";
+  return (
+    font?.file_url ||
+    font?.fileUrl ||
+    font?.url ||
+    font?.src ||
+    font?.source_url ||
+    font?.sourceUrl ||
+    ""
+  );
 }
 
 /**
- * Loads a single configurator font on-demand.
- * Deduplicates requests: if already loaded or loading, reuses state.
- * Returns a Promise that resolves when the font is ready.
+ * Load exactly one font on demand.
+ *
+ * A font is downloaded only when the UI actually needs it:
+ * - the active/selected font
+ * - a font whose preview card is visible in the picker
+ * - a font the user hovers/selects as a fallback
+ *
+ * Requests are deduplicated so the same font cannot be downloaded twice
+ * concurrently.
  */
 export async function loadConfiguratorFont(font) {
-  if (!font || typeof window === "undefined" || !("FontFace" in window)) {
+  if (
+    !font ||
+    typeof window === "undefined" ||
+    !("FontFace" in window)
+  ) {
     return null;
   }
 
@@ -45,17 +69,16 @@ export async function loadConfiguratorFont(font) {
 
   if (!family || !src) return null;
 
-  // 1. If already successfully loaded, return immediately
+  // Already loaded.
   if (fontLoadMap.get(family) === "loaded") {
     return null;
   }
 
-  // 2. If currently in-flight, return the existing loading promise
+  // Already loading. Reuse the same request.
   if (fontLoadMap.has(family)) {
     return fontLoadMap.get(family);
   }
 
-  // 3. Create and load the font face
   const proxy = `/api/config-font?url=${encodeURIComponent(src)}`;
   const face = new FontFace(family, `url(${JSON.stringify(proxy)})`);
 
@@ -68,8 +91,11 @@ export async function loadConfiguratorFont(font) {
       return loadedFace;
     })
     .catch((error) => {
-      console.warn(`[FontLoader] Failed to load font "${family}":`, error);
-      fontLoadMap.delete(family); // allow retry on next attempt
+      console.warn(
+        `[FontLoader] Failed to load font "${family}":`,
+        error
+      );
+      fontLoadMap.delete(family);
       return null;
     });
 
@@ -78,7 +104,7 @@ export async function loadConfiguratorFont(font) {
 }
 
 /**
- * Check if a font family is already loaded.
+ * True only when this font has actually been loaded by this loader.
  */
 export function isFontLoaded(font) {
   const family = getFontFamilyName(font);
@@ -87,64 +113,19 @@ export function isFontLoaded(font) {
 }
 
 /**
- * Progressively loads a list of fonts in the background with small delays
- * between requests to avoid saturating network or blocking initial rendering.
+ * Kept as a compatibility export because older callers may import it.
+ *
+ * IMPORTANT:
+ * This no longer downloads the remaining font catalogue in the background.
+ * Fonts are instead loaded by ConfiguratorExperience as preview cards enter
+ * the visible area of the font picker.
  */
-let bgQueueActive = false;
-let bgTimer = null;
-
-export function loadRemainingFontsProgressive(fonts, priorityFamily, delayMs = 1000) {
-  if (typeof window === "undefined" || !Array.isArray(fonts) || !fonts.length) return;
-  if (bgQueueActive) return;
-
-  bgQueueActive = true;
-
-  // Filter out priority font and already loaded fonts
-  const pending = fonts.filter((f) => {
-    const fam = getFontFamilyName(f);
-    return fam && fam !== priorityFamily && fontLoadMap.get(fam) !== "loaded";
-  });
-
-  let index = 0;
-  const concurrency = 2;
-  let activeWorkers = 0;
-
-  function pump() {
-    while (activeWorkers < concurrency && index < pending.length) {
-      const font = pending[index++];
-      const fam = getFontFamilyName(font);
-
-      if (fontLoadMap.get(fam) === "loaded") {
-        continue;
-      }
-
-      activeWorkers++;
-      loadConfiguratorFont(font).finally(() => {
-        activeWorkers--;
-        bgTimer = setTimeout(pump, 80);
-      });
-    }
-
-    if (index >= pending.length && activeWorkers === 0) {
-      bgQueueActive = false;
-    }
-  }
-
-  // Start progressive loading after initial render has settled
-  if (typeof window.requestIdleCallback === "function") {
-    window.requestIdleCallback(
-      () => {
-        bgTimer = setTimeout(pump, delayMs);
-      },
-      { timeout: 3000 }
-    );
-  } else {
-    bgTimer = setTimeout(pump, delayMs);
-  }
+export function loadRemainingFontsProgressive() {
+  return;
 }
 
 /**
- * RootLayout component export: intentionally does NOT download fonts eagerly.
+ * RootLayout component export: intentionally does not download fonts.
  */
 export function ConfiguratorFontLoader() {
   return null;

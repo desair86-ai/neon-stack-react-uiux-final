@@ -38,12 +38,9 @@ export function ConfiguratorExperience({type="custom_neon"}){
   const { config: wpConfig, revision, loading, error: configError, disabled: configDisabled, refetch } = useNeonConfig(type);
   const { revision: liveRevision, version } = useNeonConfigRevision(type, 30000);
   const { pricing, loading: pricingLoading, quote, debouncedQuote } = useNeonQuote(type);
-  const [shareLoading, setShareLoading] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return Boolean(new URLSearchParams(window.location.search).get('share'));
-    }
-    return false;
-  });
+  // Share restoration is asynchronous and must never block the whole builder.
+  // The builder can render immediately while the saved design is restored.
+  const [shareLoading, setShareLoading] = useState(false);
   const [step,setStep]=useState(0),[text,setText]=useState("The Neon Stack"),[font,setFont]=useState(null),[fontReadyCount,setFontReadyCount]=useState(0),[align,setAlign]=useState("center"),[size,setSize]=useState(null),[color,setColor]=useState(null),[isMulti,setIsMulti]=useState(false),[letterColors,setLetterColors]=useState({}),[selectedLetter,setSelectedLetter]=useState(null),[shapes,setShapes]=useState([]),[backboard,setBackboard]=useState(null),[hardware,setHardware]=useState(null),[background,setBackground]=useState(BACKGROUNDS[0][1]),[wallFile,setWallFile]=useState(null),[mood,setMood]=useState("day"),[lightOn,setLightOn]=useState(true),[showRuler,setShowRuler]=useState(true),[calibrating,setCalibrating]=useState(false),[calibrationInches,setCalibrationInches]=useState("50"),[calibrationRatio,setCalibrationRatio]=useState(null),[calibrationWidth,setCalibrationWidth]=useState(295),[calibrationPos,setCalibrationPos]=useState({x:.5,y:.52}),[signPos,setSignPos]=useState({x:.5,y:.5}),[fontSize,setFontSize]=useState(80),[bounds,setBounds]=useState(null),[notification,setNotification]=useState(null),[sharing,setSharing]=useState(false);
   const previewRef=useRef(null),textRef=useRef(null),sharedDesignLoadedRef=useRef(false),sharePromiseRef=useRef(null);
 
@@ -67,7 +64,6 @@ export function ConfiguratorExperience({type="custom_neon"}){
     });
     return () => { active = false; };
   }, [font]);
-
 
   // Start fetching share token immediately on mount in parallel with wpConfig!
   useEffect(() => {
@@ -348,6 +344,45 @@ export function ConfiguratorExperience({type="custom_neon"}){
     };
   }, [wpConfig, type, mojo]);
   const options=wpConfig?.options||{},fonts=wpConfig?.fonts?.length?wpConfig.fonts:[],presentation=wpConfig?.presentation||{},current=STEPS[step],baseShapeColors=presentation.shape_color_options?.length?presentation.shape_color_options:(options.colors?.length?options.colors:COLORS),shapeColors=mojo?[{id:"mojo",name:"Mojo Mix (Animated)",hex:"linear-gradient(135deg, #ff007b, #00d4ff)"},...baseShapeColors]:baseShapeColors;
+  // Load font previews only when their cards are actually visible in the
+  // scrollable picker (plus a small 100px look-ahead). This keeps the initial
+  // page light without showing a catalogue full of fallback-font previews.
+  useEffect(() => {
+    const list = document.querySelector('.ns-font-picker-list');
+    if (!list || !fonts.length) return;
+
+    const loadByIndex = (index) => {
+      const f = fonts[index];
+      if (f) loadConfiguratorFont(f);
+    };
+
+    if (!('IntersectionObserver' in window)) {
+      const visibleFallbackCount = Math.min(8, fonts.length);
+      for (let i = 0; i < visibleFallbackCount; i += 1) loadByIndex(i);
+      return;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        const index = Number(entry.target.getAttribute('data-font-index'));
+        if (Number.isFinite(index)) loadByIndex(index);
+        observer.unobserve(entry.target);
+      });
+    }, {
+      root: list,
+      rootMargin: '100px 0px',
+      threshold: 0.01,
+    });
+
+    list.querySelectorAll('[data-font-preview="true"]').forEach((el) => {
+      observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, [fonts]);
+
+
   const valid={text:Boolean(text.trim())&&Boolean(font),size:Boolean(size),shapes:true,color:mojo||Boolean(color),backboard:Boolean(backboard),hardware:Boolean(hardware)},complete=STEPS.every(k=>valid[k]);
   const clientPrice=useMemo(()=>{
     const billableLetters=(text||"").match(/[\p{L}\p{N}]/gu)?.length||0;
@@ -387,7 +422,17 @@ export function ConfiguratorExperience({type="custom_neon"}){
     // Do not call the quote endpoint until the design contains every required
     // selection. During a shared-link restore React applies state asynchronously;
     // firing here with only text/font/size produces a 400 from WordPress.
+    const hasShareToken =
+      typeof window !== 'undefined' &&
+      Boolean(new URLSearchParams(window.location.search).get('share'));
+
+    // While a shared design is still being restored, don't send an incomplete
+    // intermediate design to WordPress.
+    if (hasShareToken && !sharedDesignLoadedRef.current) return;
+
     if(!wpConfig || !text.trim() || !size || !font || !backboard || !hardware) return;
+
+    if (!mojo && !color) return;
 
     const design={
       text:text||"",
@@ -706,7 +751,7 @@ export function ConfiguratorExperience({type="custom_neon"}){
     </div>
   );
 
-  if(loading || shareLoading)return <main className="ns-config-loading">Loading your neon builder…</main>;
+  if(loading)return <main className="ns-config-loading">Loading your neon builder…</main>;
   if(configError)return <main className="ns-config-loading">Unable to load configurator. Please refresh or try again later.</main>;
   if(configDisabled)return <main className="ns-config-loading">This configurator is currently unavailable.</main>;
 
@@ -794,15 +839,13 @@ export function ConfiguratorExperience({type="custom_neon"}){
                   <span style={{fontFamily: fontFamily(font), fontSize:'20px', color: '#fff'}}>{font?.name || "Select Font"}</span>
                 <ChevronDown size={18} color="#b8bfd8" style={{transform:'rotate(180deg)'}}/>
                </div>
-               <div 
-                    className="ns-custom-scroll ns-font-picker-list"
-                    onMouseEnter={() => { /* intentionally do not preload fonts */ }}
-                    onTouchStart={() => { /* intentionally do not preload fonts */ }}
-               >
+               <div className="ns-custom-scroll ns-font-picker-list">
                     {fonts.map(f => (
                     <button 
                       type="button" 
-                      key={f.id||f.name} 
+                      key={f.id||f.name}
+                      data-font-preview="true"
+                      data-font-index={fonts.indexOf(f)}
                       onPointerEnter={() => loadConfiguratorFont(f)}
                       onClick={() => { setFont(f); loadConfiguratorFont(f); }} 
                       style={{background:font?.name===f.name?'#161a23':'#05060a',border:font?.name===f.name?'1px solid #8b4cff':'1px solid #161a23',borderRadius:'4px',padding:'14px 4px',cursor:'pointer',color:font?.name===f.name?'#00ffbc':'#fff',textAlign:'center',transition:'0.2s',display:'flex',alignItems:'center',justifyContent:'center',minHeight:'55px'}}
