@@ -6,7 +6,7 @@ import "./configurator.css";
 import { useNeonConfig, useNeonConfigRevision } from "./hooks/useNeonConfig";
 import { useNeonQuote } from "./hooks/useNeonQuote";
 import { uploadNeonScreenshot, createNeonShare, getNeonShare } from "./api/neonStackApi";
-import { loadConfiguratorFont, loadRemainingFontsProgressive, onFontLoaded } from "./ConfiguratorFontLoader";
+import { loadConfiguratorFont, onFontLoaded } from "./ConfiguratorFontLoader";
 const STEPS=["text","size","shapes","color","backboard","hardware"],LABELS={text:"TEXT",size:"SIZE",shapes:"SHAPES",color:"COLOUR",backboard:"BACKBOARD",hardware:"HARDWARE"};
 const COLORS=[{id:"pink",name:"Pink",hex:"#ff2aa8"},{id:"purple",name:"Purple",hex:"#8d3cff"},{id:"blue",name:"Blue",hex:"#198cff"},{id:"cyan",name:"Cyan",hex:"#12dfe5"},{id:"green",name:"Green",hex:"#63df21"},{id:"yellow",name:"Yellow",hex:"#ffd11a"},{id:"orange",name:"Orange",hex:"#ff8618"},{id:"white",name:"White",hex:"#fff"}];
 const BACKGROUNDS=[
@@ -68,13 +68,6 @@ export function ConfiguratorExperience({type="custom_neon"}){
     return () => { active = false; };
   }, [font]);
 
-  // Once fonts list is loaded, kick off progressive background loading for picker
-  const fontList = wpConfig?.fonts;
-  useEffect(() => {
-    if (fontList && fontList.length > 0) {
-      loadRemainingFontsProgressive(fontList, fontFamily(font), 800);
-    }
-  }, [fontList, font]);
 
   // Start fetching share token immediately on mount in parallel with wpConfig!
   useEffect(() => {
@@ -107,7 +100,6 @@ export function ConfiguratorExperience({type="custom_neon"}){
       if (defaultFont) {
         loadConfiguratorFont(defaultFont);
       }
-      loadRemainingFontsProgressive(fs, fontFamily(defaultFont), 2500);
       setSize(prev => {
         const sizes = o.sizes || [];
         if (prev && sizes.find(s => s.id === prev.id)) return prev;
@@ -175,9 +167,8 @@ export function ConfiguratorExperience({type="custom_neon"}){
         }
         setFont(chosenFont);
         if (chosenFont) {
-          loadConfiguratorFont(chosenFont);
+          await loadConfiguratorFont(chosenFont);
         }
-        loadRemainingFontsProgressive(fs, fontFamily(chosenFont), 3500);
 
         // 3. Restore size
         const sizeKey = typeof d.size === 'object' ? (d.size?.id || d.size?.name) : d.size;
@@ -388,7 +379,27 @@ export function ConfiguratorExperience({type="custom_neon"}){
    probe.style.cssText=`position:fixed;left:-99999px;top:-99999px;visibility:hidden;white-space:pre;display:inline-block;font-family:${JSON.stringify(fontFamily(font))};font-weight:${cs?.fontWeight||"400"};letter-spacing:${cs?.letterSpacing||"normal"};line-height:1.02;padding-left:${leftPad}em;padding-right:${rightPad}em;`;
    probe.textContent=text||"Preview";document.body.appendChild(probe);const sIdx=options?.sizes?.findIndex(s=>s.id===size?.id);const sizeRatios=[0.75,1.0,1.25,1.5];const ratio=(sIdx!==undefined&&sIdx>=0&&sIdx<sizeRatios.length)?sizeRatios[sIdx]:(physicalHeight(size)?physicalHeight(size)/13:1.0);const lines=String(text||"").split("\n").length;const isDesktop=typeof window!=="undefined"?window.innerWidth>800:true;const hardMaxW=isDesktop?(box.clientWidth*0.68):(box.clientWidth*0.70);const hardMaxH=isDesktop?(box.clientHeight*0.45/lines):(box.clientHeight*0.48/lines);const targetW=Math.min(hardMaxW,Math.max(60,box.clientWidth*(isDesktop?0.48:0.50)*ratio));const targetH=Math.min(hardMaxH,Math.max(28,(box.clientHeight*(isDesktop?0.32:0.34)/lines)*ratio));let low=6,high=200;for(let i=0;i<20;i++){const mid=(low+high)/2;probe.style.fontSize=`${mid}px`;if(probe.scrollWidth<=targetW&&probe.scrollHeight<=targetH)low=mid;else high=mid}setFontSize(Math.max(6,Math.floor(low)));document.body.removeChild(probe)};fit();const ro=new ResizeObserver(fit);ro.observe(box);return()=>ro.disconnect()},[text,font,size,shapes,options,fontReadyCount]);
   useEffect(()=>{const box=previewRef.current,el=textRef.current;if(!box||!el)return;const update=()=>{const a=box.getBoundingClientRect(),r=el.getBoundingClientRect();setBounds({left:r.left-a.left,top:r.top-a.top,width:r.width,height:r.height})};update();const ro=new ResizeObserver(update);ro.observe(el);ro.observe(box);return()=>ro.disconnect()},[fontSize,text,align,signPos,shapes]);
-  useEffect(()=>{if(!wpConfig||!size||!font)return;const design={text:text||"",fontId:font?.id||font?.name,language:"english",size:size?.id||size?.name,textColor:mojo?"#ff007b":(color?.hex||"#fff"),glowStyle:"classic",colors:shapes.map(s=>({id:s.id,name:s.name,hex:s.color?.hex||"#fff",position:s.position})),shapes:shapes.map(s=>({id:s.id,name:s.name,position:s.position,color:s.color?.id||s.color?.name||"white"})),backboard:backboard?.id||backboard?.name,hardware:hardware?.id||hardware?.name};debouncedQuote(design,250)},[type,text,font,size,color,shapes,backboard,hardware,mojo,wpConfig,debouncedQuote]);
+  useEffect(()=>{
+    // Do not call the quote endpoint until the design contains every required
+    // selection. During a shared-link restore React applies state asynchronously;
+    // firing here with only text/font/size produces a 400 from WordPress.
+    if(!wpConfig || !text.trim() || !size || !font || !backboard || !hardware) return;
+
+    const design={
+      text:text||"",
+      fontId:font?.id||font?.name,
+      language:"english",
+      size:size?.id||size?.name,
+      textColor:mojo?"#ff007b":(color?.hex||"#fff"),
+      glowStyle:"classic",
+      colors:shapes.map(s=>({id:s.id,name:s.name,hex:s.color?.hex||"#fff",position:s.position})),
+      shapes:shapes.map(s=>({id:s.id,name:s.name,position:s.position,color:s.color?.id||s.color?.name||"white"})),
+      backboard:backboard?.id||backboard?.name,
+      hardware:hardware?.id||hardware?.name
+    };
+
+    debouncedQuote(design,250);
+  },[type,text,font,size,color,shapes,backboard,hardware,mojo,wpConfig,debouncedQuote]);
   const addShape=s=>setShapes(prev=>{const l=prev.filter(x=>x.position==="left").length,r=prev.filter(x=>x.position==="right").length;return [...prev,{...s,uid:`${s.id}-${Date.now()}-${Math.random()}`,position:l<=r?"left":"right",color:shapeColors[0]||COLORS[0]}]});
   const removeShape=uid=>setShapes(prev=>prev.filter(s=>s.uid!==uid));
   const updateShape=(uid,patch)=>setShapes(prev=>prev.map(s=>s.uid===uid?{...s,...patch}:s));
@@ -781,8 +792,8 @@ export function ConfiguratorExperience({type="custom_neon"}){
                </div>
                <div 
                     className="ns-custom-scroll ns-font-picker-list"
-                    onMouseEnter={() => loadRemainingFontsProgressive(fonts, fontFamily(font), 50)}
-                    onTouchStart={() => loadRemainingFontsProgressive(fonts, fontFamily(font), 50)}
+                    onMouseEnter={() => { /* intentionally do not preload fonts */ }}
+                    onTouchStart={() => { /* intentionally do not preload fonts */ }}
                >
                     {fonts.map(f => (
                     <button 
