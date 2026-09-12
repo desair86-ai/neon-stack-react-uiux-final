@@ -1,0 +1,197 @@
+* [33m4aa20ed[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m Fix share V1 restore flow lifecycle, matching, and logging
+* [33ma11c488[m screenshot share
+* [33m3cde77b[m Fix screenshot abcking
+* [33m2946cdb[m Update screenshot API route headers
+* [33mb83f3e5[m screenshot fix
+* [33m85e54ed[m Fix add to cart button from custom neon
+* [33m12bf1df[m Fix pop up notice
+* [33m9a2f382[m Fix size issue
+* [33m0f279a1[m Fix sizr ration
+* [33m7b9431d[m Fix bug of final
+* [33m92a1a1a[m[33m ([m[1;32magents/on-mobile-account-and-wishlist-pages-arent-showi[m[33m)[m Fix mojo
+* [33m71c3042[m feat: swap Mojo Mix section — mascot image left, text right
+* [33mf034ca0[m Fix text
+* [33ma95568c[m Fix dislay pricing
+* [33mb6ea62d[m Fix pricing
+* [33mf861cdd[m Fix
+* [33m44c2f21[m Fix bug in
+* [33m6dbf676[m Fix bug
+* [33mffa3a0b[m fix: export Home component; fix React #31 icon render in CategoryMarquee; make ticker static
+* [33m6226177[m Fix bug in moving marquee
+* [33m1f112a4[m Fix bug in custom neon
+* [33m5b2d859[m feat: headless WooCommerce configurator + Business Logo page + draggable Ask AI
+[31m|[m * [33mbd1dd1d[m Agent host session 5f33037f-ef82-47ea-8fb4-2a54ea12a513 - turn 1
+[31m|[m * [33m774232e[m Agent host session 5f33037f-ef82-47ea-8fb4-2a54ea12a513 - turn 1 start
+[31m|[m * [33mf499a4b[m Agent host session 5f33037f-ef82-47ea-8fb4-2a54ea12a513 - baseline checkpoint
+[31m|[m *   [33m64ae71d[m cline checkpoint session=1788964901514_beyvj run=1
+[31m|[m[31m/[m[34m|[m[35m\[m  
+[31m|[m [34m|[m * [33mb1d0c7e[m untracked files on cline checkpoint
+[31m|[m * [33m40274c5[m index on master: 7edfb71 Merge branches: fix-cut-to-shape-visual, fix-product-mapping-payload, and audit-security-answers into master
+[31m|[m[31m/[m  
+[31m|[m *   [33m95fcc3a[m cline checkpoint session=1788938154715_8u39k run=1
+[31m|[m[31m/[m[1;31m|[m[1;32m\[m  
+[31m|[m [1;31m|[m * [33m8de74a6[m untracked files on cline checkpoint
+[31m|[m * [33md2d20c6[m index on master: 7edfb71 Merge branches: fix-cut-to-shape-visual, fix-product-mapping-payload, and audit-security-answers into master
+[31m|[m[31m/[m  
+*   [33m7edfb71[m Merge branches: fix-cut-to-shape-visual, fix-product-mapping-payload, and audit-security-answers into master
+[1;33m|[m[1;34m\[m  
+[1;33m|[m * [33m105eae5[m[33m ([m[1;31morigin/audit-security-answers-15364250983312434540[m[33m, [m[1;32maudit-security-answers-15364250983312434540[m[33m)[m feat: Headless WooCommerce auth and Cut-to-Shape visualizer fixes
+[1;33m|[m * [33m7572621[m Fix Cut-to-Shape backboard geometry
+[1;33m|[m * [33mace857a[m fix: Implement SVG filter for backboard visualizer
+[1;33m|[m * [33mca4afde[m feat: implement visual backboard rendering
+[1;33m|[m * [33mbbd9d46[m feat: Add secure headless account creation flow
+[1;33m|[m * [33mf1bc860[m feat: Add secure headless account creation flow
+[1;33m|[m * [33m58cfc38[m feat: Add secure headless account creation flow
+[1;33m|[m * [33mb926df2[m Implement two-layer secure checkout, headless user registration, and headless password reset flow.
+[1;33m|[m * [33m1c7e59f[m feat: add account creation support during checkout and blur background for location dropdowns
+[1;33m|[m * [33m353a3bb[m refactor: apply recommended security and structure changes to checkout flow and update php plugin
+[1;33m|[m * [33mf6b2378[m fix: ensure stale screenshot tokens correctly migrate to neon_stack metadata during checkout
+[1;33m|[m * [33m3a6061a[m fix: ensure stale cart screenshot tokens are properly nested in neon_stack for WooCommerce checkout
+[1;33m|[m * [33mb734619[m Security audit of Next.js WooCommerce integration
+[1;33m|[m * [33m0f092c4[m feat: verify screenshot token flow
+[1;33m|[m * [33mef624fc[m fix: remove background from custom sign screenshots
+[1;33m|[m * [33mcc29895[m fix: adjust react-country-state-city dark styling
+[1;33m|[m * [33mac221be[m feat: finalize security architecture
+[1;33m|[m * [33m435c1e6[m feat: harden checkout api route with rate limiting and product validation
+[1;33m|[m * [33m6b58603[m chore: security audit answers
+* [1;34m|[m   [33m4b62dd0[m Merge branch 'fix-product-mapping-payload-11951825671034364939'
+[1;35m|[m[1;36m\[m [1;34m\[m  
+[1;35m|[m * [1;34m|[m [33m9f672c2[m[33m ([m[1;31morigin/fix/product-mapping-payload-11951825671034364939[m[33m, [m[1;32mfix-product-mapping-payload-11951825671034364939[m[33m)[m Fix configurator API payload mapping
+[1;35m|[m [1;34m|[m[1;34m/[m  
+* [1;34m|[m [33m51581f1[m[33m ([m[1;31morigin/fix-cut-to-shape-visual-5730544637161152938[m[33m, [m[1;32mfix-cut-to-shape-visual-5730544637161152938[m[33m)[m Fix: Improve cut-to-shape backboard visual effect
+* [1;34m|[m [33m7e3b5b7[m Fix: Improve cut-to-shape backboard visual effect
+[1;34m|[m[1;34m/[m  
+*   [33m3f0b3bd[m Merge checkout fixes into master
+[31m|[m[32m\[m  
+[31m|[m * [33mbcec05f[m Refresh configurator product mappings
+[31m|[m * [33m358cf52[m Fix catalog assets and configurator mapping
+[31m|[m * [33mc1e9354[m Harden headless WooCommerce checkout
+[31m|[m * [33m356838b[m Fix React.useState reference error in Account.jsx
+[31m|[m * [33me59a71c[m Implement real User Login, Registration, and Order History via WPGraphQL
+[31m|[m * [33mb0f4515[m Fix syntax errors in route.js and import error in UvPrintedNeon
+[31m|[m * [33m0c01242[m Wire up real WooCommerce checkout via API route and secure keys
+[31m|[m * [33mdd8f250[m Checkout: Reorder State/City and make City dependent on State dropdown
+[31m|[m * [33m4b21620[m Show 6 products instead of 'no subcategories found' in MegaMenu
+[31m|[m * [33mabc366d[m Move InfiniteTicker to sit inside hero sections at the bottom for instant visibility
+[31m|[m * [33m2f69698[m Remove max-width from neon-text to fix Mojo Mix text clipping
+[31m|[m * [33me5f126c[m Make phone number compulsory and add +91 prefix
+[31m|[m * [33m364d785[m Make coupon banner clickable to reveal input field on checkout
+[31m|[m * [33m537d65f[m Remove unnecessary Update Cart button
+[31m|[m * [33md9aa02c[m Hide horizontal scrollbar on font picker dropdown
+[31m|[m * [33m4c40157[m Update state dropdown to include all Indian states and UTs
+[31m|[m * [33mdf52d33[m Revert cart and checkout pages to project dark theme while keeping WordPress structure
+[31m|[m * [33m1b87d44[m Update cart and checkout pages to light theme matching WordPress UI
+[31m|[m * [33mb376e65[m style: center checkout button text and change to black text on gradient backgrounds
+[31m|[m * [33m819b637[m feat: implement full checkout page and link cart to complete purchase flow
+[31m|[m * [33m20893a9[m fix: resolve solid gradient block in html2canvas for mojo mix screenshots
+[31m|[m * [33mcac1ada[m feat: capture full preview container with background for cart thumbnails instead of just text
+[31m|[m * [33mf802c9e[m fix: drastically increase html2canvas resolution for cart thumbnail and manufacturing screenshot
+[31m|[m * [33meea36e2[m style: increase width of hamburger menu and update toolbar buttons to pill shape with gradient border
+[31m|[m * [33md4c2593[m fix: make shapes visible in Mojo Mix and add toggle for animated vs solid shape colors
+[31m|[m * [33m6376b9d[m feat: implement WP-style dashboard, add InfiniteTicker to hero sections
+[31m|[m * [33md7db3a0[m Update cart badge to sum quantities instead of distinct items
+[31m|[m * [33md09e1c9[m Restrict wishlist features to logged in users
+[31m|[m * [33md3f2ed0[m Replace wishlist section with featured WordPress products in account overview
+[31m|[m * [33m8774e5d[m Fix blurry cart thumbnails and image cropping on cart/wishlist pages
+[31m|[m * [33me4ef3df[m Add plus minus quantity buttons to cart page
+[31m|[m * [33m068eaaf[m Ensure identical items are grouped correctly from all add-to-cart locations
+[31m|[m * [33ma0c09c5[m Refactor account pages to use shared layout matching classdev structure
+[31m|[m * [33m79fe05c[m Fix account 404 pages, replace designs with wishlist, add promo background
+[31m|[m * [33m59e152d[m Group identical cart items and add tiny thumbnail to custom neon cart payload
+[31m|[m * [33m9753425[m Update custom neon to use secure image storage endpoint and token
+[31m|[m * [33mac01565[m Fix Link navigation on ProductCard, add cart badge to header, and capture custom neon canvas screenshot
+[31m|[m * [33m3744750[m Fix image in custom neon cart item, add stopPropagation to product card cart btn, and fix unquoted url paths
+[31m|[m * [33m456b3bb[m Fix cart UI and functionality issues
+[31m|[m * [33mab257e6[m Update UV Printed Neon page with correct images
+[31m|[m * [33md7ec72a[m Fix category pagination logic and forcefully remove header active gradient and homeHero overlay
+[31m|[m * [33m23e048f[m Finalize UI layout updates: update hero banner, remove Uncategorized category, fix mobile menu collections, add dropdown dim overlay
+[31m|[m * [33m2dab73c[m Fix footer social icons layout and correct megaMenu layout styling
+[31m|[m * [33m7bb0779[m Fix banner path, make megaMenu full width
+[31m|[m * [33m019b6bb[m Remove all gradient bars from nav, only keep text hover color change
+[31m|[m * [33m3bc7d5b[m Fix footer hover CSS selector
+[31m|[m * [33mdc9f1b7[m Fix About page carousel image references to webp
+[31m|[m * [33m4fcc5d1[m Fix active states in header and footer hover colors
+[31m|[m * [33m7d3682c[m Update image paths, use webp format everywhere, fix mascot image
+[31m|[m * [33mce6016d[m Update configurator mobile layout, add to cart validation, and UI polish
+[31m|[m[31m/[m  
+* [33m9c78c94[m style: fix controls panel width when stacked on mobile
+* [33mc915b4e[m style: switch configurator layout to column-reverse at hamburger breakpoint
+* [33m9aa97c6[m feat: setup cart and account links and redirect configurator to cart
+* [33mc73bb29[m fix: pass category down to api to filter products
+* [33m07d4b61[m fix: remove font-size override for stepper buttons to prevent overlap
+* [33m7b9aba4[m fix: account for shapes in text scaling logic so they never overflow
+* [33me16b628[m feat: change default text and increase configurator font sizes
+* [33m819dad1[m style: implement sticky flex layout for preview panel to fit screen without scrolling
+* [33m227fae3[m style: replicate original project shape rendering logic using em-based positioning
+* [33m916e976[m feat: visually scale text size in preview when small/medium/large is selected
+* [33md87e2ee[m style: remove ALL blur and glow from light on state permanently
+* [33m8c3f3c6[m fix: explicitly map light off color to dark blackish hex and restore light on glow
+* [33m5269d4a[m fix: make light off state even darker and fix reset button for multi-color mode
+* [33m7c3c637[m style: remove ALL blur from light on state and make light off state extremely dark
+* [33m7e7cbe2[m style: perfect final neon state with zero blur for light ON and heavy blackish tint for light OFF
+* [33me19d7f9[m feat: restore 8-layer ambient neon bloom for stunning light-on effect now that toxic css is cleared
+* [33m8eede49[m feat: render solid darker version of neon color for light off state
+* [33m2543cbc[m style: completely remove text stroke and reduce blur to near zero for solid sharp color
+* [33ma37d585[m fix: eradicate rogue !important CSS rules that were aggressively overriding React state colors and forcing a green blurred smudge
+* [33m7c2696b[m style: remove massive neon blur layers for completely sharp text
+* [33medfe91d[m feat: perfectly replicate legacy neon styling for pure color core and subtle off state
+* [33me383f13[m fix: resolve function scope brace mismatch
+* [33m587d294[m fix: resolve missing closing brace syntax error
+* [33me25af73[m feat: enhance multi-color selector with inline letter grid and tighten neon drop-shadow for clarity
+* [33mf77033d[m fix: remove drop-shadow blur for solid hex colors and improve multi-color selection UX
+* [33m7458a8c[m fix: remove trailing syntax error in ConfiguratorExperience
+* [33m3b1fc3b[m feat: fix single color bug by deleting invasive DOM patch and add multi-color support to custom neon
+* [33m9caafb5[m feat: fix ruler dashed layout and apply massive realistic neon glow effects
+* [33m0f7a749[m style: distinguish CONTINUE (hollow gradient border) and ADD TO CART (solid gradient pill)
+* [33me4362e4[m style: update ADD TO CART button to match Calibrate Room Size styling
+* [33m2fbc6cd[m fix: dynamically calculate physical ruler dimensions based on character count and shapes as per C:\dev\neon logic
+* [33m41b9516[m feat: update configurator backgrounds to use new local images
+* [33m444845a[m style: force gradient border on all CTA buttons and prevent text wrap on studio tools
+* [33m22e8831[m Anchor ruler and shapes to rendered text
+* [33mdff20b7[m Restore configurator CTA and control styling
+* [33mfb42106[m Stop overriding selected neon colours
+* [33mf815a94[m Wire targeted configurator behaviour patch
+* [33m4013f14[m Add targeted configurator behaviour patch
+* [33m1e6b348[m Fix configurator behaviours without changing architecture
+* [33m60c5c54[m Stabilize measured neon canvas implementation
+* [33m82e9dd2[m Fix Mojo selector for animated spectrum
+* [33m4097e36[m Finalize neon glow and Mojo rendering
+* [33m2ae8b1f[m Implement measured neon canvas interactions
+* [33mfdc59e2[m Refine configurator visual behavior fixes
+* [33mc3da8ab[m Fix per-shape colour, real positioning, no-wrap text fitting and calibration scaling
+* [33md44e76b[m Load configurator behavior styles
+* [33mb8854c5[m Transplant configurator behaviours while keeping WP config architecture
+* [33m1c21e2c[m Add configurator behavior and preview styling
+* [33m86b546b[m Proxy configured font files through Next.js
+* [33mb8dddda[m Proxy configured neon fonts through same origin
+* [33mbd1ed0f[m Load final configurator styles and fonts globally
+* [33ma9333d4[m Load configured neon fonts dynamically
+* [33m17a420f[m Polish configurator preview controls and neon visibility
+* [33m5d11729[m Load configurator brand overrides globally
+* [33m34b1aaf[m Polish configurator brand colors and preview controls
+* [33mca94d97[m Remove temporary configurator fix file
+* [33me99bbb1[m Fix configurator JSX parse error
+* [33mef1c99e[m Add syntax-safe configurator component for build fix
+* [33m1e4395a[m Fix configurator preview controls and scaling
+* [33me19879c[m Rework Custom Neon and Mojo Mix configurator UX
+* [33md7dd959[m feat: add secure Next.js API proxy to bypass CORS and hide WP URL
+* [33mcec4a87[m feat: parse API nested options accurately to render dynamic shape/backboard cards
+* [33m9eb4f0b[m feat: complete rebuild of Configurator with Backboard, Hardware, Calibration and layout fixes
+* [33m2b8d30c[m fix: resolve Monitor not defined and handle empty WP API fallback
+* [33mb7ab736[m fix: resolve missing useRef import causing Vercel build failure
+* [33ma4a2475[m fix: syntax error missing parenthesis in CustomNeon return
+* [33m1928d4f[m feat: integrate interactive Custom Neon logic from legacy project
+* [33mf024204[m fix: rename Public to public for Vercel deployment, fix API url schema
+* [33m8cdf7ff[m feat: rebuild complex custom neon and mojo mix configurator UI
+* [33mf8f834c[m fix: button gradients, special grid alignment, megamenu images
+* [33m315106f[m feat: UI/UX updates, AI chatbot integration, layout fixes and global font sizes
+* [33m8215f31[m Remove BESTSELLER tags, configure animated badge to only show WooCommerce discount %
+* [33m9591607[m Update badge styles with larger font, black text, and animated gradient
+* [33m02fd3f9[m Add vercel.json to force Next.js framework preset
+* [33m934b9ba[m Fix lucide-react icon rendering for Next.js prerender
+* [33m53886a9[m plugin interation
+[32m|[m *   [33m84aadbe[m cline checkpoint session=1788351844524_1htmo run=1
+[32m|[m[32m/[m[34m|[m[35m\[m  
+[32m|[m [34m|[m * [33mca5a36a[m untracked files on cline checkpoint
+[32m|[m * [33m07ae33e[m index on master: a230fcf Update default products to use local neon photos
+[32m|[m[32m/[m  
