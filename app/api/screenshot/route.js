@@ -22,6 +22,8 @@ export async function POST(request) {
   try {
     const formData = await request.formData();
 
+    const origin = request.headers.get('origin');
+
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000);
 
@@ -30,6 +32,11 @@ export async function POST(request) {
     try {
       response = await fetch(targetUrl, {
         method: 'POST',
+        headers: origin
+          ? {
+              Origin: origin,
+            }
+          : {},
         body: formData,
         cache: 'no-store',
         signal: controller.signal,
@@ -67,10 +74,7 @@ export async function POST(request) {
     });
 
     return NextResponse.json(
-      {
-        error: message,
-        targetUrl,
-      },
+      { error: message },
       { status: 500 }
     );
   }
