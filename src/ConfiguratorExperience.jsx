@@ -374,7 +374,29 @@ export function ConfiguratorExperience({type="custom_neon"}){
          {step===5 && <div className="ns-champ-panel">
             <h2 style={{fontSize:'16px', fontWeight:800, marginBottom:'20px', color:'#fff', fontFamily:'Poppins'}}>POWER & HARDWARE {valid.hardware&&<Check size={16} color="#00ffbc" style={{marginLeft:6, verticalAlign:'text-bottom'}}/>}</h2>
             <div className="ns-field"><div className="ns-option-list">{options.hardware?.map(x=><button key={x.id} className={hardware?.id===x.id?"selected":""} onClick={()=>setHardware(x)}><span><b>{x.name}</b></span><strong>{money(x.price)}</strong></button>)}</div></div>
-            <button className="btn primary ns-add-to-cart" disabled={!complete} onClick={handleAddToCart} style={{width:'100%', marginTop:20}}>ADD TO CART</button>
+            <button 
+              className="ns-add-to-cart-btn" 
+              onClick={handleAddToCart} 
+              style={{
+                width: '100%', 
+                marginTop: 20,
+                padding: '14px 32px', 
+                fontSize: '15px', 
+                fontWeight: 700, 
+                borderRadius: '50px', 
+                background: complete ? 'linear-gradient(90deg, #98eccb, #7f5ef9)' : '#2a3040', 
+                color: complete ? '#000' : '#8992a5', 
+                border: 'none', 
+                cursor: 'pointer', 
+                letterSpacing: '1px',
+                transition: '0.3s',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              ADD TO CART
+            </button>
          </div>}
       </aside>
 
