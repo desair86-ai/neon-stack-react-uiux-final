@@ -12,7 +12,7 @@ import React from "react";
  */
 export function NeonSiteLoader({
   message = "Loading…",
-  fullScreen = true,
+  fullScreen = false,
 }) {
   const containerClass = fullScreen
     ? "ns-site-loader-overlay"

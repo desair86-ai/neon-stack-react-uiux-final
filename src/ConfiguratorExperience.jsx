@@ -802,7 +802,11 @@ export function ConfiguratorExperience({type="custom_neon"}){
   );
 
   if(loading || shareLoading) {
-    return <NeonSiteLoader message={shareLoading ? "Restoring your shared design…" : "Loading your neon builder…"} fullScreen={true} />;
+    return (
+      <main className="ns-config-loading" style={{ minHeight: "70vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <NeonSiteLoader message={shareLoading ? "Restoring your shared design…" : "Loading your neon builder…"} fullScreen={false} />
+      </main>
+    );
   }
   if(configError)return <main className="ns-config-loading">Unable to load configurator. Please refresh or try again later.</main>;
   if(configDisabled)return <main className="ns-config-loading">This configurator is currently unavailable.</main>;
