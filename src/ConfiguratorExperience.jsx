@@ -37,37 +37,65 @@ export function ConfiguratorExperience({type="custom_neon"}){
   const { config: wpConfig, revision, loading, error: configError, disabled: configDisabled, refetch } = useNeonConfig(type);
   const { revision: liveRevision, version } = useNeonConfigRevision(type, 30000);
   const { pricing, loading: pricingLoading, quote, debouncedQuote } = useNeonQuote(type);
-  const [step,setStep]=useState(0),[text,setText]=useState("The Neon Stack"),[font,setFont]=useState(null),[align,setAlign]=useState("center"),[size,setSize]=useState(null),[color,setColor]=useState(null),[isMulti,setIsMulti]=useState(false),[letterColors,setLetterColors]=useState({}),[selectedLetter,setSelectedLetter]=useState(null),[shapes,setShapes]=useState([]),[backboard,setBackboard]=useState(null),[hardware,setHardware]=useState(null),[background,setBackground]=useState(BACKGROUNDS[0][1]),[wallFile,setWallFile]=useState(null),[mood,setMood]=useState("day"),[lightOn,setLightOn]=useState(true),[showRuler,setShowRuler]=useState(true),[calibrating,setCalibrating]=useState(false),[calibrationInches,setCalibrationInches]=useState("50"),[calibrationRatio,setCalibrationRatio]=useState(null),[calibrationWidth,setCalibrationWidth]=useState(295),[calibrationPos,setCalibrationPos]=useState({x:.5,y:.52}),[signPos,setSignPos]=useState({x:.5,y:.5}),[fontSize,setFontSize]=useState(80),[bounds,setBounds]=useState(null),[notification,setNotification]=useState(null),[sharing,setSharing]=useState(false);
-  const previewRef=useRef(null),textRef=useRef(null),shareRestoredRef=useRef(false);
-  useEffect(()=>{
-    if(!wpConfig)return;
-    const hasShareToken = typeof window !== 'undefined' && Boolean(new URLSearchParams(window.location.search).get('share'));
-    if (hasShareToken && !shareRestoredRef.current) {
-      return;
+  const [shareLoading, setShareLoading] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return Boolean(new URLSearchParams(window.location.search).get('share'));
     }
-    if (shareRestoredRef.current) return;
-    const o=wpConfig.options||{},fs=wpConfig.fonts?.length?wpConfig.fonts:[];
-    setFont(fs[0]||null);
-    setSize(prev=>{const sizes=o.sizes||[];if(prev&&sizes.find(s=>s.id===prev.id))return prev;return sizes[0]||null;});
-    setColor(mojo?null:(o.colors?.[0]||null));
-    setBackboard(null);
-    setHardware(null);
-  },[wpConfig, mojo]);
+    return false;
+  });
+  const [step,setStep]=useState(0),[text,setText]=useState("The Neon Stack"),[font,setFont]=useState(null),[align,setAlign]=useState("center"),[size,setSize]=useState(null),[color,setColor]=useState(null),[isMulti,setIsMulti]=useState(false),[letterColors,setLetterColors]=useState({}),[selectedLetter,setSelectedLetter]=useState(null),[shapes,setShapes]=useState([]),[backboard,setBackboard]=useState(null),[hardware,setHardware]=useState(null),[background,setBackground]=useState(BACKGROUNDS[0][1]),[wallFile,setWallFile]=useState(null),[mood,setMood]=useState("day"),[lightOn,setLightOn]=useState(true),[showRuler,setShowRuler]=useState(true),[calibrating,setCalibrating]=useState(false),[calibrationInches,setCalibrationInches]=useState("50"),[calibrationRatio,setCalibrationRatio]=useState(null),[calibrationWidth,setCalibrationWidth]=useState(295),[calibrationPos,setCalibrationPos]=useState({x:.5,y:.52}),[signPos,setSignPos]=useState({x:.5,y:.5}),[fontSize,setFontSize]=useState(80),[bounds,setBounds]=useState(null),[notification,setNotification]=useState(null),[sharing,setSharing]=useState(false);
+  const previewRef=useRef(null),textRef=useRef(null),sharedDesignLoadedRef=useRef(false);
 
   useEffect(() => {
-    if (!wpConfig || typeof window === 'undefined' || shareRestoredRef.current) return;
+    if (!wpConfig || typeof window === 'undefined') return;
+    if (sharedDesignLoadedRef.current) return;
+
     const searchParams = new URLSearchParams(window.location.search);
     const token = searchParams.get('share');
-    if (!token) return;
 
-    shareRestoredRef.current = true;
+    const o = wpConfig.options || {};
+    const fs = wpConfig.fonts?.length ? wpConfig.fonts : [];
+
+    if (!token) {
+      // Normal visit: initialize with WordPress defaults
+      sharedDesignLoadedRef.current = true;
+      setFont(fs[0] || null);
+      setSize(prev => {
+        const sizes = o.sizes || [];
+        if (prev && sizes.find(s => s.id === prev.id)) return prev;
+        return sizes[0] || null;
+      });
+      setColor(mojo ? null : (o.colors?.[0] || null));
+      setBackboard(null);
+      setHardware(null);
+      setShareLoading(false);
+      return;
+    }
+
+    // Share token detected!
+    console.log("[NEON SHARE] token detected", token);
+    sharedDesignLoadedRef.current = true;
     let isCancelled = false;
 
     (async () => {
       try {
         const res = await getNeonShare(token);
-        if (isCancelled || !res || !res.success || !res.design) return;
+        console.log("[NEON SHARE] response", res);
 
+        if (isCancelled || !res || !res.success || !res.design) {
+          // If share fetch failed or was invalid, fallback to defaults
+          if (!isCancelled) {
+            setFont(fs[0] || null);
+            setSize(o.sizes?.[0] || null);
+            setColor(mojo ? null : (o.colors?.[0] || null));
+            setBackboard(null);
+            setHardware(null);
+            setShareLoading(false);
+          }
+          return;
+        }
+
+        // Check if design belongs to a different configurator
         const shareType = res.configurator || res.design?.configurator;
         if (shareType && shareType !== type) {
           const targetPath = shareType === 'mojo_mix' ? '/mojo-mix' : '/custom-neon';
@@ -76,62 +104,152 @@ export function ConfiguratorExperience({type="custom_neon"}){
         }
 
         const d = res.design;
-        const o = wpConfig.options || {};
-        const fs = wpConfig.fonts?.length ? wpConfig.fonts : [];
+        console.log("[NEON SHARE] restoring design", d);
 
+        // 1. Restore text
         if (typeof d.text === 'string') {
           setText(d.text);
         }
 
-        if (d.fontId || d.font) {
-          const matchedFont = fs.find(f => f.id === d.fontId || f.name === d.fontId || f.id === d.font || f.name === d.font);
-          if (matchedFont) setFont(matchedFont);
-          else if (fs[0]) setFont(fs[0]);
-        } else if (fs[0]) {
-          setFont(fs[0]);
+        // 2. Restore font
+        const fontKey = d.fontId || d.font;
+        if (fontKey) {
+          const rawFk = typeof fontKey === 'object' ? (fontKey.id || fontKey.name) : String(fontKey);
+          const cleanFk = String(rawFk).toLowerCase().trim().replace(/[\s_-]+/g, '');
+          const matchedFont = fs.find(f => {
+            const fId = String(f.id || '').toLowerCase().trim().replace(/[\s_-]+/g, '');
+            const fName = String(f.name || '').toLowerCase().trim().replace(/[\s_-]+/g, '');
+            return fId === cleanFk || fName === cleanFk || f.id === rawFk || f.name?.toLowerCase() === String(rawFk).toLowerCase();
+          });
+          if (matchedFont) {
+            setFont(matchedFont);
+          } else {
+            setFont(fs[0] || null);
+          }
+        } else {
+          setFont(fs[0] || null);
         }
 
-        if (d.size) {
-          const matchedSize = (o.sizes || []).find(s => s.id === d.size || s.name === d.size);
-          if (matchedSize) setSize(matchedSize);
-          else if (o.sizes?.[0]) setSize(o.sizes[0]);
-        } else if (o.sizes?.[0]) {
-          setSize(o.sizes[0]);
+        // 3. Restore size
+        const sizeKey = typeof d.size === 'object' ? (d.size?.id || d.size?.name) : d.size;
+        if (sizeKey) {
+          const rawSk = String(sizeKey).toLowerCase().trim();
+          const matchedSize = (o.sizes || []).find(s => {
+            const sId = String(s.id || '').toLowerCase().trim();
+            const sName = String(s.name || '').toLowerCase().trim();
+            return sId === rawSk || sName === rawSk || sId.replace(/_/g, '') === rawSk.replace(/_/g, '') || sName.startsWith(rawSk);
+          });
+          if (matchedSize) {
+            setSize(matchedSize);
+          } else {
+            setSize(o.sizes?.[0] || null);
+          }
+        } else {
+          setSize(o.sizes?.[0] || null);
         }
 
+        // 4. Restore color (for Custom Neon)
         if (!mojo) {
           const colorsList = o.colors?.length ? o.colors : COLORS;
-          if (d.color || d.textColor) {
-            const matchedColor = colorsList.find(c => c.id === d.color || c.name === d.color || c.hex === d.textColor);
-            if (matchedColor) setColor(matchedColor);
-            else if (colorsList[0]) setColor(colorsList[0]);
-          } else if (colorsList[0]) {
-            setColor(colorsList[0]);
+          const colorKey = typeof d.color === 'object' ? (d.color?.id || d.color?.name || d.color?.hex) : d.color;
+          const textColorKey = d.textColor;
+          let matchedColor = null;
+
+          if (colorKey) {
+            const rawCk = String(colorKey).toLowerCase().trim();
+            matchedColor = colorsList.find(c => 
+              String(c.id || '').toLowerCase() === rawCk || 
+              String(c.name || '').toLowerCase() === rawCk || 
+              (c.hex && c.hex.toLowerCase() === rawCk)
+            );
+          }
+          if (!matchedColor && textColorKey) {
+            const rawTk = String(textColorKey).toLowerCase().trim();
+            matchedColor = colorsList.find(c => 
+              c.hex && c.hex.toLowerCase() === rawTk
+            );
+          }
+          setColor(matchedColor || colorsList[0] || null);
+        }
+
+        // 5. Restore backboard
+        // BACKBOARD IS IMPORTANT:
+        // If sharedDesign.backboard is "cut_to_shape", select Cut to Shape.
+        // If "whole_board", select Whole Board / Square.
+        // If "no_backing", select No Backing / Minimal.
+        if (d.backboard) {
+          const rawBb = typeof d.backboard === 'object' ? (d.backboard?.id || d.backboard?.name) : String(d.backboard);
+          const bbKey = String(rawBb).toLowerCase().trim();
+          const backboards = o.backboards || [];
+
+          let matchedBackboard = backboards.find(b => 
+            b.id?.toLowerCase() === bbKey || 
+            b.name?.toLowerCase() === bbKey
+          );
+
+          if (!matchedBackboard) {
+            if (bbKey.includes('cut')) {
+              matchedBackboard = backboards.find(b => b.id === 'cut_to_shape' || b.name?.toLowerCase().includes('cut'));
+            } else if (bbKey.includes('whole') || bbKey.includes('square')) {
+              matchedBackboard = backboards.find(b => b.id === 'whole_board' || b.name?.toLowerCase().includes('whole') || b.name?.toLowerCase().includes('square'));
+            } else if (bbKey.includes('no_backing') || bbKey.includes('minimal') || bbKey.includes('none')) {
+              matchedBackboard = backboards.find(b => b.id === 'no_backing' || b.name?.toLowerCase().includes('no back') || b.name?.toLowerCase().includes('minimal'));
+            }
+          }
+
+          if (matchedBackboard) {
+            setBackboard(matchedBackboard);
           }
         }
 
-        if (d.backboard) {
-          const matchedBackboard = (o.backboards || []).find(b => b.id === d.backboard || b.name === d.backboard);
-          if (matchedBackboard) setBackboard(matchedBackboard);
-        }
-
+        // 6. Restore hardware
         if (d.hardware) {
-          const matchedHardware = (o.hardware || []).find(h => h.id === d.hardware || h.name === d.hardware);
-          if (matchedHardware) setHardware(matchedHardware);
+          const rawHw = typeof d.hardware === 'object' ? (d.hardware?.id || d.hardware?.name) : String(d.hardware);
+          const hwKey = String(rawHw).toLowerCase().trim();
+          const hardwares = o.hardware || [];
+
+          let matchedHardware = hardwares.find(h => 
+            h.id?.toLowerCase() === hwKey || 
+            h.name?.toLowerCase() === hwKey
+          );
+
+          if (!matchedHardware) {
+            if (hwKey.includes('wifi') || hwKey.includes('remote')) {
+              matchedHardware = hardwares.find(h => h.id === 'smart_wifi' || h.name?.toLowerCase().includes('wifi'));
+            } else if (hwKey.includes('screw') || hwKey.includes('drill')) {
+              matchedHardware = hardwares.find(h => h.id === 'wall_screws' || h.name?.toLowerCase().includes('screw'));
+            } else if (hwKey.includes('wire') || hwKey.includes('hang')) {
+              matchedHardware = hardwares.find(h => h.id === 'hanging_wire' || h.name?.toLowerCase().includes('wire'));
+            } else if (hwKey.includes('dimmer')) {
+              matchedHardware = hardwares.find(h => h.id === 'standard_dimmer' || h.name?.toLowerCase().includes('dimmer'));
+            } else if (hwKey.includes('waterproof') || hwKey.includes('outdoor') || hwKey.includes('ip67')) {
+              matchedHardware = hardwares.find(h => h.id === 'ip67' || h.name?.toLowerCase().includes('waterproof'));
+            } else if (hwKey.includes('indoor')) {
+              matchedHardware = hardwares.find(h => h.id === 'indoor' || h.name?.toLowerCase().includes('indoor'));
+            }
+          }
+
+          if (matchedHardware) {
+            setHardware(matchedHardware);
+          }
         }
 
+        // 7. Restore alignment
         if (d.align && ['left', 'center', 'right'].includes(d.align)) {
           setAlign(d.align);
         }
 
+        // 8. Restore mood
         if (d.mood && LIGHTING[d.mood]) {
           setMood(d.mood);
         }
 
+        // 9. Restore background
         if (d.background && BACKGROUNDS.some(b => b[1] === d.background)) {
           setBackground(d.background);
         }
 
+        // 10. Restore multi-color and letterColors
         if (typeof d.isMulti === 'boolean') {
           setIsMulti(d.isMulti);
         }
@@ -139,26 +257,45 @@ export function ConfiguratorExperience({type="custom_neon"}){
           setLetterColors(d.letterColors);
         }
 
-        if (Array.isArray(d.shapes)) {
+        // 11. Restore shapes
+        if (Array.isArray(d.shapes) && d.shapes.length > 0) {
           const colorsList = o.colors?.length ? o.colors : COLORS;
           const restoredShapes = d.shapes.map((s, idx) => {
-            const matchedShapeColor = colorsList.find(c => c.id === (s.color?.id || s.color) || c.name === (s.color?.name || s.color))
-              || s.colorObj
-              || colorsList[0]
-              || COLORS[0];
+            const shapeColorKey = typeof s.color === 'object' ? (s.color?.id || s.color?.name || s.color?.hex) : s.color;
+            let matchedShapeColor = null;
+            if (shapeColorKey) {
+              const rawSck = String(shapeColorKey).toLowerCase().trim();
+              matchedShapeColor = colorsList.find(c => 
+                String(c.id || '').toLowerCase() === rawSck || 
+                String(c.name || '').toLowerCase() === rawSck ||
+                (c.hex && c.hex.toLowerCase() === rawSck)
+              );
+            }
+            if (!matchedShapeColor && s.colorObj) {
+              matchedShapeColor = s.colorObj;
+            }
+
             return {
               id: s.id,
               name: s.name,
-              uid: `${s.id}-${Date.now()}-${idx}-${Math.random()}`,
+              uid: s.uid || `${s.id}-${Date.now()}-${idx}-${Math.random()}`,
               position: s.position || (idx % 2 === 0 ? "left" : "right"),
-              color: matchedShapeColor,
+              color: matchedShapeColor || colorsList[0] || COLORS[0],
               price: s.price || 0,
             };
           });
           setShapes(restoredShapes);
+        } else if (Array.isArray(d.shapes)) {
+          setShapes([]);
         }
+
+        console.log("[NEON SHARE] restored");
       } catch (err) {
-        console.error("Failed to restore shared design:", err);
+        console.error("[NEON SHARE] error restoring design:", err);
+      } finally {
+        if (!isCancelled) {
+          setShareLoading(false);
+        }
       }
     })();
 
@@ -505,7 +642,7 @@ export function ConfiguratorExperience({type="custom_neon"}){
     </div>
   );
 
-  if(loading)return <main className="ns-config-loading">Loading your neon builder…</main>;
+  if(loading || shareLoading)return <main className="ns-config-loading">Loading your neon builder…</main>;
   if(configError)return <main className="ns-config-loading">Unable to load configurator. Please refresh or try again later.</main>;
   if(configDisabled)return <main className="ns-config-loading">This configurator is currently unavailable.</main>;
 
