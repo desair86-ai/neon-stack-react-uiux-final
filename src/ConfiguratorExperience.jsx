@@ -112,7 +112,6 @@ export function ConfiguratorExperience({type="custom_neon"}){
       return;
     }
 
-    sharedDesignLoadedRef.current = true;
     let isCancelled = false;
 
     (async () => {
@@ -334,6 +333,7 @@ export function ConfiguratorExperience({type="custom_neon"}){
         console.error("[NEON SHARE] error restoring design:", err);
       } finally {
         if (!isCancelled) {
+          sharedDesignLoadedRef.current = true;
           setShareLoading(false);
         }
       }
