@@ -1,11 +1,11 @@
 "use client";
 import React,{useEffect,useMemo,useRef,useState} from "react";
 import {Footer, MobileMenu} from "./components";
-import {AlignCenter,AlignLeft,AlignRight,ArrowLeft,ArrowRight,Check,ChevronDown,Crown,Heart,Menu,Minus,Moon,Plus,Ruler,RotateCcw,Smile,Sparkles,Star,Sun,Sunset,Trash2,Upload,WandSparkles,X,Zap} from "lucide-react";
+import {AlignCenter,AlignLeft,AlignRight,ArrowLeft,ArrowRight,Check,ChevronDown,Crown,Heart,Menu,Minus,Moon,Plus,Ruler,RotateCcw,Share2,Smile,Sparkles,Star,Sun,Sunset,Trash2,Upload,WandSparkles,X,Zap} from "lucide-react";
 import "./configurator.css";
 import { useNeonConfig, useNeonConfigRevision } from "./hooks/useNeonConfig";
 import { useNeonQuote } from "./hooks/useNeonQuote";
-import { uploadNeonScreenshot } from "./api/neonStackApi";
+import { uploadNeonScreenshot, createNeonShare, getNeonShare } from "./api/neonStackApi";
 const STEPS=["text","size","shapes","color","backboard","hardware"],LABELS={text:"TEXT",size:"SIZE",shapes:"SHAPES",color:"COLOUR",backboard:"BACKBOARD",hardware:"HARDWARE"};
 const COLORS=[{id:"pink",name:"Pink",hex:"#ff2aa8"},{id:"purple",name:"Purple",hex:"#8d3cff"},{id:"blue",name:"Blue",hex:"#198cff"},{id:"cyan",name:"Cyan",hex:"#12dfe5"},{id:"green",name:"Green",hex:"#63df21"},{id:"yellow",name:"Yellow",hex:"#ffd11a"},{id:"orange",name:"Orange",hex:"#ff8618"},{id:"white",name:"White",hex:"#fff"}];
 const BACKGROUNDS=[
@@ -37,9 +37,135 @@ export function ConfiguratorExperience({type="custom_neon"}){
   const { config: wpConfig, revision, loading, error: configError, disabled: configDisabled, refetch } = useNeonConfig(type);
   const { revision: liveRevision, version } = useNeonConfigRevision(type, 30000);
   const { pricing, loading: pricingLoading, quote, debouncedQuote } = useNeonQuote(type);
-  const [step,setStep]=useState(0),[text,setText]=useState("The Neon Stack"),[font,setFont]=useState(null),[align,setAlign]=useState("center"),[size,setSize]=useState(null),[color,setColor]=useState(null),[isMulti,setIsMulti]=useState(false),[letterColors,setLetterColors]=useState({}),[selectedLetter,setSelectedLetter]=useState(null),[shapes,setShapes]=useState([]),[backboard,setBackboard]=useState(null),[hardware,setHardware]=useState(null),[background,setBackground]=useState(BACKGROUNDS[0][1]),[wallFile,setWallFile]=useState(null),[mood,setMood]=useState("day"),[lightOn,setLightOn]=useState(true),[showRuler,setShowRuler]=useState(true),[calibrating,setCalibrating]=useState(false),[calibrationInches,setCalibrationInches]=useState("50"),[calibrationRatio,setCalibrationRatio]=useState(null),[calibrationWidth,setCalibrationWidth]=useState(295),[calibrationPos,setCalibrationPos]=useState({x:.5,y:.52}),[signPos,setSignPos]=useState({x:.5,y:.5}),[fontSize,setFontSize]=useState(80),[bounds,setBounds]=useState(null),[notification,setNotification]=useState(null);
-  const previewRef=useRef(null),textRef=useRef(null);
-  useEffect(()=>{if(!wpConfig)return;const o=wpConfig.options||{},fs=wpConfig.fonts?.length?wpConfig.fonts:[];setFont(fs[0]||null);setSize(prev=>{const sizes=o.sizes||[];if(prev&&sizes.find(s=>s.id===prev.id))return prev;return sizes[0]||null;});setColor(mojo?null:(o.colors?.[0]||null));setBackboard(null);setHardware(null)},[wpConfig]);
+  const [step,setStep]=useState(0),[text,setText]=useState("The Neon Stack"),[font,setFont]=useState(null),[align,setAlign]=useState("center"),[size,setSize]=useState(null),[color,setColor]=useState(null),[isMulti,setIsMulti]=useState(false),[letterColors,setLetterColors]=useState({}),[selectedLetter,setSelectedLetter]=useState(null),[shapes,setShapes]=useState([]),[backboard,setBackboard]=useState(null),[hardware,setHardware]=useState(null),[background,setBackground]=useState(BACKGROUNDS[0][1]),[wallFile,setWallFile]=useState(null),[mood,setMood]=useState("day"),[lightOn,setLightOn]=useState(true),[showRuler,setShowRuler]=useState(true),[calibrating,setCalibrating]=useState(false),[calibrationInches,setCalibrationInches]=useState("50"),[calibrationRatio,setCalibrationRatio]=useState(null),[calibrationWidth,setCalibrationWidth]=useState(295),[calibrationPos,setCalibrationPos]=useState({x:.5,y:.52}),[signPos,setSignPos]=useState({x:.5,y:.5}),[fontSize,setFontSize]=useState(80),[bounds,setBounds]=useState(null),[notification,setNotification]=useState(null),[sharing,setSharing]=useState(false);
+  const previewRef=useRef(null),textRef=useRef(null),shareRestoredRef=useRef(false);
+  useEffect(()=>{
+    if(!wpConfig)return;
+    const hasShareToken = typeof window !== 'undefined' && Boolean(new URLSearchParams(window.location.search).get('share'));
+    if (hasShareToken && !shareRestoredRef.current) {
+      return;
+    }
+    if (shareRestoredRef.current) return;
+    const o=wpConfig.options||{},fs=wpConfig.fonts?.length?wpConfig.fonts:[];
+    setFont(fs[0]||null);
+    setSize(prev=>{const sizes=o.sizes||[];if(prev&&sizes.find(s=>s.id===prev.id))return prev;return sizes[0]||null;});
+    setColor(mojo?null:(o.colors?.[0]||null));
+    setBackboard(null);
+    setHardware(null);
+  },[wpConfig, mojo]);
+
+  useEffect(() => {
+    if (!wpConfig || typeof window === 'undefined' || shareRestoredRef.current) return;
+    const searchParams = new URLSearchParams(window.location.search);
+    const token = searchParams.get('share');
+    if (!token) return;
+
+    shareRestoredRef.current = true;
+    let isCancelled = false;
+
+    (async () => {
+      try {
+        const res = await getNeonShare(token);
+        if (isCancelled || !res || !res.success || !res.design) return;
+
+        const shareType = res.configurator || res.design?.configurator;
+        if (shareType && shareType !== type) {
+          const targetPath = shareType === 'mojo_mix' ? '/mojo-mix' : '/custom-neon';
+          window.location.href = `${targetPath}?share=${encodeURIComponent(token)}`;
+          return;
+        }
+
+        const d = res.design;
+        const o = wpConfig.options || {};
+        const fs = wpConfig.fonts?.length ? wpConfig.fonts : [];
+
+        if (typeof d.text === 'string') {
+          setText(d.text);
+        }
+
+        if (d.fontId || d.font) {
+          const matchedFont = fs.find(f => f.id === d.fontId || f.name === d.fontId || f.id === d.font || f.name === d.font);
+          if (matchedFont) setFont(matchedFont);
+          else if (fs[0]) setFont(fs[0]);
+        } else if (fs[0]) {
+          setFont(fs[0]);
+        }
+
+        if (d.size) {
+          const matchedSize = (o.sizes || []).find(s => s.id === d.size || s.name === d.size);
+          if (matchedSize) setSize(matchedSize);
+          else if (o.sizes?.[0]) setSize(o.sizes[0]);
+        } else if (o.sizes?.[0]) {
+          setSize(o.sizes[0]);
+        }
+
+        if (!mojo) {
+          const colorsList = o.colors?.length ? o.colors : COLORS;
+          if (d.color || d.textColor) {
+            const matchedColor = colorsList.find(c => c.id === d.color || c.name === d.color || c.hex === d.textColor);
+            if (matchedColor) setColor(matchedColor);
+            else if (colorsList[0]) setColor(colorsList[0]);
+          } else if (colorsList[0]) {
+            setColor(colorsList[0]);
+          }
+        }
+
+        if (d.backboard) {
+          const matchedBackboard = (o.backboards || []).find(b => b.id === d.backboard || b.name === d.backboard);
+          if (matchedBackboard) setBackboard(matchedBackboard);
+        }
+
+        if (d.hardware) {
+          const matchedHardware = (o.hardware || []).find(h => h.id === d.hardware || h.name === d.hardware);
+          if (matchedHardware) setHardware(matchedHardware);
+        }
+
+        if (d.align && ['left', 'center', 'right'].includes(d.align)) {
+          setAlign(d.align);
+        }
+
+        if (d.mood && LIGHTING[d.mood]) {
+          setMood(d.mood);
+        }
+
+        if (d.background && BACKGROUNDS.some(b => b[1] === d.background)) {
+          setBackground(d.background);
+        }
+
+        if (typeof d.isMulti === 'boolean') {
+          setIsMulti(d.isMulti);
+        }
+        if (d.letterColors && typeof d.letterColors === 'object') {
+          setLetterColors(d.letterColors);
+        }
+
+        if (Array.isArray(d.shapes)) {
+          const colorsList = o.colors?.length ? o.colors : COLORS;
+          const restoredShapes = d.shapes.map((s, idx) => {
+            const matchedShapeColor = colorsList.find(c => c.id === (s.color?.id || s.color) || c.name === (s.color?.name || s.color))
+              || s.colorObj
+              || colorsList[0]
+              || COLORS[0];
+            return {
+              id: s.id,
+              name: s.name,
+              uid: `${s.id}-${Date.now()}-${idx}-${Math.random()}`,
+              position: s.position || (idx % 2 === 0 ? "left" : "right"),
+              color: matchedShapeColor,
+              price: s.price || 0,
+            };
+          });
+          setShapes(restoredShapes);
+        }
+      } catch (err) {
+        console.error("Failed to restore shared design:", err);
+      }
+    })();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [wpConfig, type, mojo]);
   const options=wpConfig?.options||{},fonts=wpConfig?.fonts?.length?wpConfig.fonts:[],presentation=wpConfig?.presentation||{},current=STEPS[step],baseShapeColors=presentation.shape_color_options?.length?presentation.shape_color_options:(options.colors?.length?options.colors:COLORS),shapeColors=mojo?[{id:"mojo",name:"Mojo Mix (Animated)",hex:"linear-gradient(135deg, #ff007b, #00d4ff)"},...baseShapeColors]:baseShapeColors;
   const valid={text:Boolean(text.trim())&&Boolean(font),size:Boolean(size),shapes:true,color:mojo||Boolean(color),backboard:Boolean(backboard),hardware:Boolean(hardware)},complete=STEPS.every(k=>valid[k]);
   const clientPrice=useMemo(()=>{
@@ -84,7 +210,29 @@ export function ConfiguratorExperience({type="custom_neon"}){
   const chooseBackground=u=>{if(wallFile)URL.revokeObjectURL(wallFile);setWallFile(null);setBackground(u);setCalibrationRatio(null)};
   const nextBg = () => { const idx = BACKGROUNDS.findIndex(b => b[1] === background); chooseBackground(BACKGROUNDS[(Math.max(0, idx) + 1) % BACKGROUNDS.length][1]); };
   const prevBg = () => { const idx = BACKGROUNDS.findIndex(b => b[1] === background); chooseBackground(BACKGROUNDS[(Math.max(0, idx) - 1 + BACKGROUNDS.length) % BACKGROUNDS.length][1]); };
-  const reset=()=>{if(wallFile)URL.revokeObjectURL(wallFile);setText("The Neon Stack");setShapes([]);setBackground(BACKGROUNDS[0][1]);setWallFile(null);setMood("day");setLightOn(true);setShowRuler(true);setCalibrating(false);setCalibrationRatio(null);setCalibrationWidth(295);setCalibrationPos({x:.5,y:.52});setSignPos({x:.5,y:.5});setStep(0);setIsMulti(false);setLetterColors({});setSelectedLetter(null);setColor(options.colors?.[0]||COLORS[0])};
+  const reset=()=>{
+    if(wallFile)URL.revokeObjectURL(wallFile);
+    setText("The Neon Stack");
+    setShapes([]);
+    setBackground(BACKGROUNDS[0][1]);
+    setWallFile(null);
+    setMood("day");
+    setLightOn(true);
+    setShowRuler(true);
+    setCalibrating(false);
+    setCalibrationRatio(null);
+    setCalibrationWidth(295);
+    setCalibrationPos({x:.5,y:.52});
+    setSignPos({x:.5,y:.5});
+    setStep(0);
+    setIsMulti(false);
+    setLetterColors({});
+    setSelectedLetter(null);
+    setColor(options.colors?.[0]||COLORS[0]);
+    if (typeof window !== 'undefined' && window.location.search.includes('share=')) {
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  };
   const dragSign=e=>{if(calibrating)return;e.preventDefault();const box=previewRef.current?.getBoundingClientRect();if(!box)return;const sx=e.clientX,sy=e.clientY,ox=signPos.x,oy=signPos.y;const move=ev=>setSignPos({x:Math.max(.08,Math.min(.92,ox+(ev.clientX-sx)/box.width)),y:Math.max(.12,Math.min(.88,oy+(ev.clientY-sy)/box.height))});const up=()=>{window.removeEventListener("pointermove",move);window.removeEventListener("pointerup",up)};window.addEventListener("pointermove",move);window.addEventListener("pointerup",up)};
   const dragCalibration=e=>{if(!calibrating)return;e.preventDefault();const box=previewRef.current?.getBoundingClientRect();if(!box)return;const sx=e.clientX,sy=e.clientY,ox=calibrationPos.x,oy=calibrationPos.y;const move=ev=>setCalibrationPos({x:Math.max(.08,Math.min(.92,ox+(ev.clientX-sx)/box.width)),y:Math.max(.08,Math.min(.88,oy+(ev.clientY-sy)/box.height))});const up=()=>{window.removeEventListener("pointermove",move);window.removeEventListener("pointerup",up)};window.addEventListener("pointermove",move);window.addEventListener("pointerup",up)};
   const setCalibration=()=>{const inches=Number(calibrationInches);if(inches>0)setCalibrationRatio(calibrationWidth/inches);setCalibrating(false);};
@@ -115,7 +263,77 @@ export function ConfiguratorExperience({type="custom_neon"}){
      };
   };
   const ruler=useMemo(()=>{if(!bounds)return null;const gap=Math.max(44,Math.min(78,fontSize*.55)),left=bounds.left-leftShapes.length*gap-gap/2,right=bounds.left+bounds.width+rightShapes.length*gap+gap/2,top=bounds.top-Math.min(24,fontSize*.1),bottom=bounds.top+bounds.height+Math.min(24,fontSize*.1);return {left:Math.max(8,left),top:Math.max(8,top),width:Math.max(100,right-left),height:Math.max(70,bottom-top)}},[bounds,leftShapes.length,rightShapes.length,fontSize]);
-   const handleAddToCart = async () => { 
+
+  const handleShare = async () => {
+    if (sharing) return;
+    setSharing(true);
+    try {
+      const designPayload = {
+        configurator: type,
+        text: text || "",
+        fontId: font?.id || font?.name,
+        font: font?.id || font?.name,
+        language: "english",
+        size: size?.id || size?.name,
+        textColor: mojo ? "#ff007b" : (color?.hex || "#fff"),
+        color: mojo ? "mojo_mix" : (color?.id || color?.name),
+        isMulti,
+        letterColors,
+        shapes: shapes.map(s => ({
+          id: s.id,
+          name: s.name,
+          position: s.position,
+          color: s.color?.id || s.color?.name || "white",
+          colorObj: s.color,
+          price: s.price || 0,
+        })),
+        backboard: backboard?.id || backboard?.name,
+        hardware: hardware?.id || hardware?.name,
+        align,
+        mood,
+        background: wallFile ? BACKGROUNDS[0][1] : background,
+      };
+
+      const result = await createNeonShare(designPayload);
+      if (result?.success && result?.token) {
+        const shareUrl = `${window.location.origin}${window.location.pathname}?share=${encodeURIComponent(result.token)}`;
+        let copied = false;
+        try {
+          if (navigator?.clipboard?.writeText) {
+            await navigator.clipboard.writeText(shareUrl);
+            copied = true;
+          }
+        } catch (clipErr) {
+          console.warn("Clipboard copy failed, fallback prompt", clipErr);
+        }
+
+        setNotification({
+          title: "Link Copied!",
+          message: copied
+            ? "Your persistent neon design link has been copied to your clipboard. Anyone opening this link will see your exact custom neon design!"
+            : `Here is your shareable link:\n${shareUrl}`,
+          actionLabel: "GOT IT"
+        });
+      } else {
+        setNotification({
+          title: "Share Error",
+          message: result?.message || result?.error || "Could not generate share link. Please try again.",
+          actionLabel: "CLOSE"
+        });
+      }
+    } catch (err) {
+      console.error("Error creating share:", err);
+      setNotification({
+        title: "Share Error",
+        message: "Failed to generate share link. Please try again later.",
+        actionLabel: "CLOSE"
+      });
+    } finally {
+      setSharing(false);
+    }
+  };
+
+  const handleAddToCart = async () => {
      if (complete) {
        const woocommerce = {
          product_id: wpConfig?.product_id,
@@ -307,6 +525,7 @@ export function ConfiguratorExperience({type="custom_neon"}){
           <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
             <button onClick={()=>setLightOn(v=>!v)} style={{padding:'5px 14px', background:'linear-gradient(#05060a, #05060a) padding-box, linear-gradient(90deg, #00ffbc, #8b4cff) border-box', border:'1px solid transparent', borderRadius:'999px', color:lightOn?'#fff':'#b8bfd8', fontSize:'11px', display:'flex', alignItems:'center', gap:'6px', cursor:'pointer'}}>Light {lightOn?'on':'off'}</button>
             <button onClick={()=>setShowRuler(v=>!v)} style={{padding:'5px 14px', background:'linear-gradient(#05060a, #05060a) padding-box, linear-gradient(90deg, #00ffbc, #8b4cff) border-box', border:'1px solid transparent', borderRadius:'999px', color:showRuler?'#fff':'#b8bfd8', fontSize:'11px', display:'flex', alignItems:'center', gap:'6px', cursor:'pointer'}}><Ruler size={12}/> {showRuler?'Hide':'Show'} ruler</button>
+            <button onClick={handleShare} disabled={sharing} title="Share Design" style={{padding:'5px 14px', background:'linear-gradient(#05060a, #05060a) padding-box, linear-gradient(90deg, #00ffbc, #8b4cff) border-box', border:'1px solid transparent', borderRadius:'999px', color:'#fff', fontSize:'11px', display:'flex', alignItems:'center', gap:'6px', cursor:sharing?'wait':'pointer'}}><Share2 size={12}/> {sharing?'Sharing...':'Share'}</button>
             <button onClick={reset} title="Reset" style={{padding:'5px 10px', background:'linear-gradient(#05060a, #05060a) padding-box, linear-gradient(90deg, #00ffbc, #8b4cff) border-box', border:'1px solid transparent', borderRadius:'999px', color:'#b8bfd8', fontSize:'11px', display:'flex', alignItems:'center', gap:'6px', cursor:'pointer'}}><RotateCcw size={12}/></button>
           </div>
       </div>
@@ -363,7 +582,10 @@ export function ConfiguratorExperience({type="custom_neon"}){
       {/* 2. CONTROLS PANEL */}
       <aside className="ns-champ-controls" style={{width:'340px', flexShrink:0, background:'#0a0d14', borderRight:'1px solid #161a23', overflowY:'auto', padding:'25px 20px'}}>
          {step===0 && <div className="ns-champ-panel">
-            <h2 style={{fontSize:'16px', fontWeight:800, marginBottom:'20px', color:'#fff', fontFamily:'Poppins'}}>CREATE YOUR OWN {valid.text&&<Check size={16} color="#00ffbc" style={{marginLeft:6, verticalAlign:'text-bottom'}}/>}</h2>
+            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'20px'}}>
+              <h2 style={{fontSize:'16px', fontWeight:800, margin:0, color:'#fff', fontFamily:'Poppins'}}>CREATE YOUR OWN {valid.text&&<Check size={16} color="#00ffbc" style={{marginLeft:6, verticalAlign:'text-bottom'}}/>}</h2>
+              <button onClick={handleShare} disabled={sharing} title="Share Design" style={{padding:'4px 10px', background:'linear-gradient(#05060a, #05060a) padding-box, linear-gradient(90deg, #00ffbc, #8b4cff) border-box', border:'1px solid transparent', borderRadius:'6px', color:'#00ffbc', fontSize:'11px', display:'flex', alignItems:'center', gap:'5px', cursor:sharing?'wait':'pointer', fontWeight:600}}><Share2 size={12}/> {sharing?'Sharing...':'Share'}</button>
+            </div>
             <div className="ns-field"><label>YOUR TEXT <small>{text.length}/50</small></label><textarea value={text} maxLength={50} rows={3} onChange={e=>setText(e.target.value)}/><small style={{display:"block",marginTop:6,color:"#8992a5"}}>Press Enter only when you want another line.</small></div>
             <div className="ns-field ns-font-field" style={{position:'relative'}}>
                <label>FONT STYLE <small>{fonts.length} Fonts</small></label>
@@ -475,6 +697,14 @@ export function ConfiguratorExperience({type="custom_neon"}){
                    </button>
                 </div>
                 
+                {/* Mobile Share Button */}
+                <div className="ns-mobile-share-toggle" style={{display:'none', position:'absolute', top:12, right:12, zIndex:20}}>
+                   <button onClick={handleShare} disabled={sharing} style={{display:'flex', alignItems:'center', background:'rgba(5, 6, 10, 0.85)', border:'1px solid rgba(0, 255, 188, 0.5)', borderRadius:'20px', padding:'5px 12px', color:'#fff', fontWeight:700, fontSize:'10px', cursor:sharing?'wait':'pointer', gap:'5px', backdropFilter:'blur(4px)'}}>
+                      <Share2 size={12} color="#00ffbc"/>
+                      {sharing ? 'SHARING...' : 'SHARE'}
+                   </button>
+                </div>
+
                 {showRuler&&ruler&&<div className="ns-sign-ruler" style={{left:ruler.left,top:ruler.top,width:ruler.width,height:ruler.height}}><div className="ns-sign-ruler-h"><i/><b>{signW.toFixed(2)}&quot;</b><i/></div><div className="ns-sign-ruler-v"><i/><b>{signH.toFixed(2)}&quot;</b><i/></div></div>}
                 {/*                 {/* Whole Board Backboard Layer
                     Centre the board on the actual neon bounds.

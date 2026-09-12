@@ -105,3 +105,49 @@ export async function getNeonHealth() {
   if (!res.ok) throw new Error(`Health check failed: ${res.status}`);
   return res.json();
 }
+
+export async function createNeonShare(design) {
+  if (typeof window !== 'undefined') {
+    const proxyRes = await fetch('/api/share', {
+      method: 'POST',
+      cache: 'no-store',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ design }),
+    });
+    if (!proxyRes.ok) throw new Error(`Share creation failed: ${proxyRes.status}`);
+    return proxyRes.json();
+  }
+
+  const base = getNeonStackApiBase();
+  if (!base) throw new Error('WordPress API base URL is not configured');
+  const url = `${base}/share`;
+  const res = await fetch(url, {
+    method: 'POST',
+    cache: 'no-store',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ design }),
+  });
+  if (!res.ok) throw new Error(`Share creation failed: ${res.status}`);
+  return res.json();
+}
+
+export async function getNeonShare(token) {
+  if (typeof window !== 'undefined') {
+    const proxyRes = await fetch(`/api/share/${encodeURIComponent(token)}`, {
+      cache: 'no-store',
+      headers: { Accept: 'application/json' },
+    });
+    if (!proxyRes.ok) throw new Error(`Share fetch failed: ${proxyRes.status}`);
+    return proxyRes.json();
+  }
+
+  const base = getNeonStackApiBase();
+  if (!base) throw new Error('WordPress API base URL is not configured');
+  const url = `${base}/share/${encodeURIComponent(token)}`;
+  const res = await fetch(url, {
+    cache: 'no-store',
+    headers: { Accept: 'application/json' },
+  });
+  if (!res.ok) throw new Error(`Share fetch failed: ${res.status}`);
+  return res.json();
+}

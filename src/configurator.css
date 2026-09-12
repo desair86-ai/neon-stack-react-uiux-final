@@ -1256,7 +1256,8 @@
     border-right: none !important;
     flex: 1 1 auto !important;
   }
-  .ns-mobile-light-toggle {
+  .ns-mobile-light-toggle,
+  .ns-mobile-share-toggle {
     display: block !important;
   }
 }
