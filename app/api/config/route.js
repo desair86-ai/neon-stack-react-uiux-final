@@ -17,18 +17,22 @@ export async function GET(request) {
   
   try {
     const res = await fetch(targetUrl, {
-        headers: {
-            'Accept': 'application/json'
-        },
-      cache: 'no-store'
+      headers: {
+        'Accept': 'application/json'
+      },
+      next: { revalidate: 60 }
     });
     
     if (!res.ok) {
-        return NextResponse.json({ error: `WP API responded with ${res.status}` }, { status: res.status });
+      return NextResponse.json({ error: `WP API responded with ${res.status}` }, { status: res.status });
     }
     
     const data = await res.json();
-    return NextResponse.json(data);
+    return NextResponse.json(data, {
+      headers: {
+        'Cache-Control': 'public, max-age=60, s-maxage=60, stale-while-revalidate=300',
+      }
+    });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

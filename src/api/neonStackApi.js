@@ -134,7 +134,7 @@ export async function createNeonShare(design) {
 export async function getNeonShare(token) {
   if (typeof window !== 'undefined') {
     const proxyRes = await fetch(`/api/share/${encodeURIComponent(token)}`, {
-      cache: 'no-store',
+      cache: 'default',
       headers: { Accept: 'application/json' },
     });
     if (!proxyRes.ok) throw new Error(`Share fetch failed: ${proxyRes.status}`);

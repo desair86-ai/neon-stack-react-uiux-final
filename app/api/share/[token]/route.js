@@ -47,7 +47,7 @@ export async function GET(request, context) {
           Accept: 'application/json',
           ...(origin ? { Origin: origin } : {}),
         },
-        cache: 'no-store',
+        next: { revalidate: 86400 },
         signal: controller.signal,
       });
     } finally {
@@ -65,7 +65,15 @@ export async function GET(request, context) {
       };
     }
 
-    return NextResponse.json(data, { status: response.status });
+    const headers = {};
+    if (response.ok && data?.success) {
+      headers['Cache-Control'] = 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800';
+    }
+
+    return NextResponse.json(data, {
+      status: response.status,
+      headers: Object.keys(headers).length > 0 ? headers : undefined,
+    });
   } catch (error) {
     return NextResponse.json(
       { error: error?.message || 'Failed to fetch share' },

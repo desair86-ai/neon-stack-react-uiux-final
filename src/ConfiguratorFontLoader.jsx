@@ -12,7 +12,7 @@ export function ConfiguratorFontLoader() {
     async function load() {
       try {
         const types = ["custom_neon", "mojo_mix"];
-        const responses = await Promise.all(types.map((type) => fetch(`/api/config?configurator=${type}`, { cache: "no-store" }).then((r) => r.ok ? r.json() : null).catch(() => null)));
+        const responses = await Promise.all(types.map((type) => fetch(`/api/config?configurator=${type}`, { cache: "default" }).then((r) => r.ok ? r.json() : null).catch(() => null)));
         const fonts = responses.flatMap((data) => Array.isArray(data?.fonts) ? data.fonts : []);
         const seen = new Set();
         for (const font of fonts) {

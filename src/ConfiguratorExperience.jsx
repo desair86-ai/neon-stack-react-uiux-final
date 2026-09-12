@@ -44,7 +44,20 @@ export function ConfiguratorExperience({type="custom_neon"}){
     return false;
   });
   const [step,setStep]=useState(0),[text,setText]=useState("The Neon Stack"),[font,setFont]=useState(null),[align,setAlign]=useState("center"),[size,setSize]=useState(null),[color,setColor]=useState(null),[isMulti,setIsMulti]=useState(false),[letterColors,setLetterColors]=useState({}),[selectedLetter,setSelectedLetter]=useState(null),[shapes,setShapes]=useState([]),[backboard,setBackboard]=useState(null),[hardware,setHardware]=useState(null),[background,setBackground]=useState(BACKGROUNDS[0][1]),[wallFile,setWallFile]=useState(null),[mood,setMood]=useState("day"),[lightOn,setLightOn]=useState(true),[showRuler,setShowRuler]=useState(true),[calibrating,setCalibrating]=useState(false),[calibrationInches,setCalibrationInches]=useState("50"),[calibrationRatio,setCalibrationRatio]=useState(null),[calibrationWidth,setCalibrationWidth]=useState(295),[calibrationPos,setCalibrationPos]=useState({x:.5,y:.52}),[signPos,setSignPos]=useState({x:.5,y:.5}),[fontSize,setFontSize]=useState(80),[bounds,setBounds]=useState(null),[notification,setNotification]=useState(null),[sharing,setSharing]=useState(false);
-  const previewRef=useRef(null),textRef=useRef(null),sharedDesignLoadedRef=useRef(false);
+  const previewRef=useRef(null),textRef=useRef(null),sharedDesignLoadedRef=useRef(false),sharePromiseRef=useRef(null);
+
+  // Start fetching share token immediately on mount in parallel with wpConfig!
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const token = new URLSearchParams(window.location.search).get('share');
+    if (token && !sharePromiseRef.current) {
+      console.log("[NEON SHARE] token detected", token);
+      sharePromiseRef.current = getNeonShare(token).catch(err => {
+        console.error("[NEON SHARE] parallel fetch error:", err);
+        return null;
+      });
+    }
+  }, []);
 
   useEffect(() => {
     if (!wpConfig || typeof window === 'undefined') return;
@@ -72,14 +85,13 @@ export function ConfiguratorExperience({type="custom_neon"}){
       return;
     }
 
-    // Share token detected!
-    console.log("[NEON SHARE] token detected", token);
     sharedDesignLoadedRef.current = true;
     let isCancelled = false;
 
     (async () => {
       try {
-        const res = await getNeonShare(token);
+        const sharePromise = sharePromiseRef.current || getNeonShare(token);
+        const res = await sharePromise;
         console.log("[NEON SHARE] response", res);
 
         if (isCancelled || !res || !res.success || !res.design) {
