@@ -112,6 +112,7 @@ export function ConfiguratorExperience({type="custom_neon"}){
       return;
     }
 
+    sharedDesignLoadedRef.current = true;
     let isCancelled = false;
 
     (async () => {
@@ -333,7 +334,6 @@ export function ConfiguratorExperience({type="custom_neon"}){
         console.error("[NEON SHARE] error restoring design:", err);
       } finally {
         if (!isCancelled) {
-          sharedDesignLoadedRef.current = true;
           setShareLoading(false);
         }
       }
@@ -391,8 +391,10 @@ export function ConfiguratorExperience({type="custom_neon"}){
       language:"english",
       size:size?.id||size?.name,
       textColor:mojo?"#ff007b":(color?.hex||"#fff"),
-      glowStyle:"classic",
-      colors:shapes.map(s=>({id:s.id,name:s.name,hex:s.color?.hex||"#fff",position:s.position})),
+      // glowStyle is intentionally omitted here. The WordPress configurator
+      // currently exposes steady/pulse/flash/chase, not "classic".
+      // Sending the old "classic" value causes the quote endpoint to return 400.
+      colors:color ? [{id:color.id,name:color.name,hex:color.hex}] : [],
       shapes:shapes.map(s=>({id:s.id,name:s.name,position:s.position,color:s.color?.id||s.color?.name||"white"})),
       backboard:backboard?.id||backboard?.name,
       hardware:hardware?.id||hardware?.name
