@@ -146,18 +146,55 @@ export function ConfiguratorExperience({type="custom_neon"}){
              const html2canvas = (await import('html2canvas')).default;
              
              // Generate high-res blob for WordPress
-             const canvas = await html2canvas(previewRef.current, {
+             const screenshotCanvasOptions = {
                useCORS: true,
-               scale: 2, // 2x is plenty for a full-size preview
-               backgroundColor: null 
-             });
+               scale: 2,
+               backgroundColor: null,
+               // html2canvas does not reliably render SVG/CSS filters. The live
+               // configurator uses an SVG filter for the cut-to-shape board,
+               // so make a screenshot-safe version of that layer in the clone.
+               onclone: (clonedDoc) => {
+                 const cutBoard = clonedDoc.querySelector('.ns-cut-to-shape-board');
+                 if (cutBoard) {
+                   cutBoard.style.filter = 'none';
+                   cutBoard.style.opacity = '1';
+                   cutBoard.style.color = '#b7b8c2';
+                   cutBoard.style.webkitTextFillColor = '#b7b8c2';
+                   cutBoard.style.webkitTextStroke = '10px #b7b8c2';
+                   cutBoard.style.paintOrder = 'stroke fill';
+                   cutBoard.style.textShadow = '0 4px 8px rgba(0,0,0,0.18)';
+
+                   // Force the duplicated text/shapes used for the backing to
+                   // use the board colour so inline neon colours do not leak
+                   // into the screenshot.
+                   cutBoard.querySelectorAll('*').forEach((el) => {
+                     el.style.color = '#b7b8c2';
+                     el.style.webkitTextFillColor = '#b7b8c2';
+                     if (el.tagName === 'SPAN') {
+                       el.style.webkitTextStroke = '10px #b7b8c2';
+                       el.style.paintOrder = 'stroke fill';
+                       el.style.textShadow = 'none';
+                     }
+                   });
+                 }
+
+                 // Whole-board is already a normal HTML layer. Preserve it in
+                 // the screenshot clone, above the room and below the neon.
+                 const wholeBoard = clonedDoc.querySelector('.ns-backboard-visualizer');
+                 if (wholeBoard) {
+                   wholeBoard.style.zIndex = '1';
+                   wholeBoard.style.display = 'block';
+                 }
+               }
+             };
+
+             const canvas = await html2canvas(previewRef.current, screenshotCanvasOptions);
              const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
              
              // Generate crisp base64 for local cart UI
              const tinyCanvas = await html2canvas(previewRef.current, {
-               useCORS: true,
-               scale: 1.5, // 1.5x of the full preview box gives a great sharp thumbnail
-               backgroundColor: null
+               ...screenshotCanvasOptions,
+               scale: 1.5
              });
              cartThumb = tinyCanvas.toDataURL('image/png', 0.9);
              
@@ -439,14 +476,17 @@ export function ConfiguratorExperience({type="custom_neon"}){
                 </div>
                 
                 {showRuler&&ruler&&<div className="ns-sign-ruler" style={{left:ruler.left,top:ruler.top,width:ruler.width,height:ruler.height}}><div className="ns-sign-ruler-h"><i/><b>{signW.toFixed(2)}&quot;</b><i/></div><div className="ns-sign-ruler-v"><i/><b>{signH.toFixed(2)}&quot;</b><i/></div></div>}
-                {/* Whole Board Backboard Layer */}
-                {backboard && (backboard.id === 'whole_board' || backboard.name === 'Whole Board' || backboard.name === 'Square') && ruler && (
+                {/*                 {/* Whole Board Backboard Layer
+                    Centre the board on the actual neon bounds.
+                    The ruler has minimum dimensions, so using ruler.top/left
+                    directly can make the board appear vertically offset. */}
+                {backboard && (backboard.id === 'whole_board' || backboard.name === 'Whole Board' || backboard.name === 'Square') && ruler && bounds && (
                     <div
                         className="ns-backboard-visualizer"
                         style={{
                             position: 'absolute',
-                            left: ruler.left,
-                            top: ruler.top,
+                            left: bounds.left + (bounds.width / 2) - (ruler.width / 2),
+                            top: bounds.top + (bounds.height / 2) - (ruler.height / 2),
                             width: ruler.width,
                             height: ruler.height,
                             background: 'rgba(255, 255, 255, 0.1)',
@@ -456,11 +496,13 @@ export function ConfiguratorExperience({type="custom_neon"}){
                             zIndex: 1,
                             backdropFilter: 'blur(2px) contrast(0.9)',
                             WebkitBackdropFilter: 'blur(2px) contrast(0.9)',
+                            boxSizing: 'border-box',
                         }}
                     />
                 )}
 
                 <div className="ns-neon-art" style={{left:`${signPos.x*100}%`,top:`${signPos.y*100}%`,transform:"translate(-50%,-50%)",width:"100%",height:"100%",position:"absolute",pointerEvents:"none",display:"flex",alignItems:"center",justifyContent:"center",zIndex: 2}}>
+
                    {/* Cut to Shape Backboard Layer */}
                      {backboard && backboard.id !== 'whole_board' && backboard.name !== 'Whole Board' && backboard.name !== 'Square' && backboard.id !== 'no_backing' && backboard.name !== 'No Backing' && (
                        <div className="ns-cut-to-shape-board" style={{...textStyle, position: "absolute", filter: 'url(#cut-to-shape-filter)', zIndex: 1, pointerEvents: "none", color: cutToShapeColor, WebkitTextFillColor: cutToShapeColor, backgroundImage: 'none', WebkitBackgroundClip: 'initial', textShadow: 'none', opacity: 1}}>
