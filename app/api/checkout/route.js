@@ -21,8 +21,38 @@ async function getConfiguratorProduct(siteUrl, configurator) {
   return getProductId(await response.json());
 }
 
+// In-memory sliding-window checkout rate limiter (prevents automated bot flooding)
+const checkoutRateLimit = new Map();
+const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
+const MAX_CHECKOUTS_PER_WINDOW = 10;
+
+function isCheckoutRateLimited(ip) {
+  const now = Date.now();
+  if (checkoutRateLimit.size > 1000) {
+    for (const [key, record] of checkoutRateLimit.entries()) {
+      if (now - record.firstRequestTime > RATE_LIMIT_WINDOW_MS) {
+        checkoutRateLimit.delete(key);
+      }
+    }
+  }
+
+  const record = checkoutRateLimit.get(ip);
+  if (!record || (now - record.firstRequestTime > RATE_LIMIT_WINDOW_MS)) {
+    checkoutRateLimit.set(ip, { firstRequestTime: now, count: 1 });
+    return false;
+  }
+
+  record.count += 1;
+  return record.count > MAX_CHECKOUTS_PER_WINDOW;
+}
+
 export async function POST(req) {
   try {
+    const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'unknown';
+    if (isCheckoutRateLimited(clientIp)) {
+      return NextResponse.json({ message: 'Too many checkout attempts. Please wait a few minutes before trying again.' }, { status: 429 });
+    }
+
     const payload = await req.json();
     
     const consumerKey = process.env.WC_CONSUMER_KEY;
@@ -36,6 +66,51 @@ export async function POST(req) {
     if (!payload || !Array.isArray(payload.line_items) || payload.line_items.length === 0) {
       return NextResponse.json({ message: 'At least one order item is required.' }, { status: 400 });
     }
+
+    if (payload.line_items.length > 25) {
+      return NextResponse.json({ message: 'Too many order items. Maximum 25 items allowed per order.' }, { status: 400 });
+    }
+
+    // Strict validation and sanitization of customer contact and shipping details
+    const billing = payload.billing;
+    if (!billing || typeof billing !== 'object') {
+      return NextResponse.json({ message: 'Valid billing details are required.' }, { status: 400 });
+    }
+
+    const firstName = String(billing.first_name || '').trim().slice(0, 100);
+    const lastName = String(billing.last_name || '').trim().slice(0, 100);
+    const email = String(billing.email || '').trim().slice(0, 254);
+    const phone = String(billing.phone || '').trim().slice(0, 25);
+    const address1 = String(billing.address_1 || '').trim().slice(0, 200);
+    const address2 = String(billing.address_2 || '').trim().slice(0, 200);
+    const city = String(billing.city || '').trim().slice(0, 100);
+    const state = String(billing.state || '').trim().slice(0, 100);
+    const postcode = String(billing.postcode || '').trim().slice(0, 20);
+
+    if (!firstName || !email || !phone || !address1 || !city || !state || !postcode) {
+      return NextResponse.json({ message: 'Please provide all required billing and delivery address details.' }, { status: 400 });
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json({ message: 'Please provide a valid email address.' }, { status: 400 });
+    }
+
+    const cleanBilling = {
+      first_name: firstName,
+      last_name: lastName,
+      email,
+      phone,
+      address_1: address1,
+      address_2: address2,
+      city,
+      state,
+      postcode,
+      country: 'IN'
+    };
+
+    const customerNote = typeof payload.customer_note === 'string'
+      ? payload.customer_note.trim().slice(0, 500)
+      : '';
 
     const lineItems = [];
     for (const item of payload.line_items) {
@@ -73,9 +148,9 @@ export async function POST(req) {
       payment_method: 'cod',
       payment_method_title: 'Cash on Delivery',
       set_paid: false,
-      billing: payload.billing,
-      shipping: payload.shipping || payload.billing,
-      customer_note: payload.customer_note,
+      billing: cleanBilling,
+      shipping: cleanBilling,
+      customer_note: customerNote,
       line_items: lineItems
     };
 
