@@ -1240,15 +1240,16 @@
   }
   .ns-champ-preview {
     order: 2 !important;
-    height: 400px !important;
+    height: auto !important;
+    min-height: 0 !important;
     flex: none !important;
   }
-  .ns-champ-preview > div {
-    padding: 20px !important;
+  .ns-champ-canvas-wrapper {
+    padding: 12px 10px !important;
   }
   .ns-canvas {
     max-width: 100% !important;
-    max-height: 100% !important;
+    max-height: 52vh !important;
   }
   .ns-champ-controls {
     order: 3 !important;

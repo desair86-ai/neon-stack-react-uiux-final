@@ -6,6 +6,7 @@ import "./configurator.css";
 import { useNeonConfig, useNeonConfigRevision } from "./hooks/useNeonConfig";
 import { useNeonQuote } from "./hooks/useNeonQuote";
 import { uploadNeonScreenshot, createNeonShare, getNeonShare } from "./api/neonStackApi";
+import { loadConfiguratorFont, loadRemainingFontsProgressive } from "./ConfiguratorFontLoader";
 const STEPS=["text","size","shapes","color","backboard","hardware"],LABELS={text:"TEXT",size:"SIZE",shapes:"SHAPES",color:"COLOUR",backboard:"BACKBOARD",hardware:"HARDWARE"};
 const COLORS=[{id:"pink",name:"Pink",hex:"#ff2aa8"},{id:"purple",name:"Purple",hex:"#8d3cff"},{id:"blue",name:"Blue",hex:"#198cff"},{id:"cyan",name:"Cyan",hex:"#12dfe5"},{id:"green",name:"Green",hex:"#63df21"},{id:"yellow",name:"Yellow",hex:"#ffd11a"},{id:"orange",name:"Orange",hex:"#ff8618"},{id:"white",name:"White",hex:"#fff"}];
 const BACKGROUNDS=[
@@ -43,8 +44,20 @@ export function ConfiguratorExperience({type="custom_neon"}){
     }
     return false;
   });
-  const [step,setStep]=useState(0),[text,setText]=useState("The Neon Stack"),[font,setFont]=useState(null),[align,setAlign]=useState("center"),[size,setSize]=useState(null),[color,setColor]=useState(null),[isMulti,setIsMulti]=useState(false),[letterColors,setLetterColors]=useState({}),[selectedLetter,setSelectedLetter]=useState(null),[shapes,setShapes]=useState([]),[backboard,setBackboard]=useState(null),[hardware,setHardware]=useState(null),[background,setBackground]=useState(BACKGROUNDS[0][1]),[wallFile,setWallFile]=useState(null),[mood,setMood]=useState("day"),[lightOn,setLightOn]=useState(true),[showRuler,setShowRuler]=useState(true),[calibrating,setCalibrating]=useState(false),[calibrationInches,setCalibrationInches]=useState("50"),[calibrationRatio,setCalibrationRatio]=useState(null),[calibrationWidth,setCalibrationWidth]=useState(295),[calibrationPos,setCalibrationPos]=useState({x:.5,y:.52}),[signPos,setSignPos]=useState({x:.5,y:.5}),[fontSize,setFontSize]=useState(80),[bounds,setBounds]=useState(null),[notification,setNotification]=useState(null),[sharing,setSharing]=useState(false);
+  const [step,setStep]=useState(0),[text,setText]=useState("The Neon Stack"),[font,setFont]=useState(null),[fontReadyCount,setFontReadyCount]=useState(0),[align,setAlign]=useState("center"),[size,setSize]=useState(null),[color,setColor]=useState(null),[isMulti,setIsMulti]=useState(false),[letterColors,setLetterColors]=useState({}),[selectedLetter,setSelectedLetter]=useState(null),[shapes,setShapes]=useState([]),[backboard,setBackboard]=useState(null),[hardware,setHardware]=useState(null),[background,setBackground]=useState(BACKGROUNDS[0][1]),[wallFile,setWallFile]=useState(null),[mood,setMood]=useState("day"),[lightOn,setLightOn]=useState(true),[showRuler,setShowRuler]=useState(true),[calibrating,setCalibrating]=useState(false),[calibrationInches,setCalibrationInches]=useState("50"),[calibrationRatio,setCalibrationRatio]=useState(null),[calibrationWidth,setCalibrationWidth]=useState(295),[calibrationPos,setCalibrationPos]=useState({x:.5,y:.52}),[signPos,setSignPos]=useState({x:.5,y:.5}),[fontSize,setFontSize]=useState(80),[bounds,setBounds]=useState(null),[notification,setNotification]=useState(null),[sharing,setSharing]=useState(false);
   const previewRef=useRef(null),textRef=useRef(null),sharedDesignLoadedRef=useRef(false),sharePromiseRef=useRef(null);
+
+  // On-demand font loading: when active font changes, load it immediately and trigger re-measure
+  useEffect(() => {
+    if (!font) return;
+    let active = true;
+    loadConfiguratorFont(font).then((loaded) => {
+      if (active && loaded) {
+        setFontReadyCount(c => c + 1);
+      }
+    });
+    return () => { active = false; };
+  }, [font]);
 
   // Start fetching share token immediately on mount in parallel with wpConfig!
   useEffect(() => {
@@ -72,7 +85,12 @@ export function ConfiguratorExperience({type="custom_neon"}){
     if (!token) {
       // Normal visit: initialize with WordPress defaults
       sharedDesignLoadedRef.current = true;
-      setFont(fs[0] || null);
+      const defaultFont = fs[0] || null;
+      setFont(defaultFont);
+      if (defaultFont) {
+        loadConfiguratorFont(defaultFont);
+      }
+      loadRemainingFontsProgressive(fs, fontFamily(defaultFont), 2500);
       setSize(prev => {
         const sizes = o.sizes || [];
         if (prev && sizes.find(s => s.id === prev.id)) return prev;
@@ -125,6 +143,7 @@ export function ConfiguratorExperience({type="custom_neon"}){
 
         // 2. Restore font
         const fontKey = d.fontId || d.font;
+        let chosenFont = fs[0] || null;
         if (fontKey) {
           const rawFk = typeof fontKey === 'object' ? (fontKey.id || fontKey.name) : String(fontKey);
           const cleanFk = String(rawFk).toLowerCase().trim().replace(/[\s_-]+/g, '');
@@ -134,13 +153,14 @@ export function ConfiguratorExperience({type="custom_neon"}){
             return fId === cleanFk || fName === cleanFk || f.id === rawFk || f.name?.toLowerCase() === String(rawFk).toLowerCase();
           });
           if (matchedFont) {
-            setFont(matchedFont);
-          } else {
-            setFont(fs[0] || null);
+            chosenFont = matchedFont;
           }
-        } else {
-          setFont(fs[0] || null);
         }
+        setFont(chosenFont);
+        if (chosenFont) {
+          loadConfiguratorFont(chosenFont);
+        }
+        loadRemainingFontsProgressive(fs, fontFamily(chosenFont), 3500);
 
         // 3. Restore size
         const sizeKey = typeof d.size === 'object' ? (d.size?.id || d.size?.name) : d.size;
@@ -349,7 +369,7 @@ export function ConfiguratorExperience({type="custom_neon"}){
    const leftCount=shapes.filter(s=>s.position==="left").length,rightCount=shapes.filter(s=>s.position==="right").length;
    const leftPad=leftCount?(0.6+(leftCount-1)*0.9+0.5):0,rightPad=rightCount?(0.6+(rightCount-1)*0.9+0.5):0;
    probe.style.cssText=`position:fixed;left:-99999px;top:-99999px;visibility:hidden;white-space:pre;display:inline-block;font-family:${JSON.stringify(fontFamily(font))};font-weight:${cs?.fontWeight||"400"};letter-spacing:${cs?.letterSpacing||"normal"};line-height:1.02;padding-left:${leftPad}em;padding-right:${rightPad}em;`;
-   probe.textContent=text||"Preview";document.body.appendChild(probe);const sIdx=options?.sizes?.findIndex(s=>s.id===size?.id);const sizeRatios=[0.75,1.0,1.25,1.5];const ratio=(sIdx!==undefined&&sIdx>=0&&sIdx<sizeRatios.length)?sizeRatios[sIdx]:(physicalHeight(size)?physicalHeight(size)/13:1.0);const lines=String(text||"").split("\n").length;const isDesktop=typeof window!=="undefined"?window.innerWidth>800:true;const hardMaxW=isDesktop?(box.clientWidth*0.68):(box.clientWidth*0.70);const hardMaxH=isDesktop?(box.clientHeight*0.45/lines):(box.clientHeight*0.48/lines);const targetW=Math.min(hardMaxW,Math.max(60,box.clientWidth*(isDesktop?0.48:0.50)*ratio));const targetH=Math.min(hardMaxH,Math.max(28,(box.clientHeight*(isDesktop?0.32:0.34)/lines)*ratio));let low=6,high=200;for(let i=0;i<20;i++){const mid=(low+high)/2;probe.style.fontSize=`${mid}px`;if(probe.scrollWidth<=targetW&&probe.scrollHeight<=targetH)low=mid;else high=mid}setFontSize(Math.max(6,Math.floor(low)));document.body.removeChild(probe)};fit();const ro=new ResizeObserver(fit);ro.observe(box);return()=>ro.disconnect()},[text,font,size,shapes,options]);
+   probe.textContent=text||"Preview";document.body.appendChild(probe);const sIdx=options?.sizes?.findIndex(s=>s.id===size?.id);const sizeRatios=[0.75,1.0,1.25,1.5];const ratio=(sIdx!==undefined&&sIdx>=0&&sIdx<sizeRatios.length)?sizeRatios[sIdx]:(physicalHeight(size)?physicalHeight(size)/13:1.0);const lines=String(text||"").split("\n").length;const isDesktop=typeof window!=="undefined"?window.innerWidth>800:true;const hardMaxW=isDesktop?(box.clientWidth*0.68):(box.clientWidth*0.70);const hardMaxH=isDesktop?(box.clientHeight*0.45/lines):(box.clientHeight*0.48/lines);const targetW=Math.min(hardMaxW,Math.max(60,box.clientWidth*(isDesktop?0.48:0.50)*ratio));const targetH=Math.min(hardMaxH,Math.max(28,(box.clientHeight*(isDesktop?0.32:0.34)/lines)*ratio));let low=6,high=200;for(let i=0;i<20;i++){const mid=(low+high)/2;probe.style.fontSize=`${mid}px`;if(probe.scrollWidth<=targetW&&probe.scrollHeight<=targetH)low=mid;else high=mid}setFontSize(Math.max(6,Math.floor(low)));document.body.removeChild(probe)};fit();const ro=new ResizeObserver(fit);ro.observe(box);return()=>ro.disconnect()},[text,font,size,shapes,options,fontReadyCount]);
   useEffect(()=>{const box=previewRef.current,el=textRef.current;if(!box||!el)return;const update=()=>{const a=box.getBoundingClientRect(),r=el.getBoundingClientRect();setBounds({left:r.left-a.left,top:r.top-a.top,width:r.width,height:r.height})};update();const ro=new ResizeObserver(update);ro.observe(el);ro.observe(box);return()=>ro.disconnect()},[fontSize,text,align,signPos,shapes]);
   useEffect(()=>{if(!wpConfig||!size||!font)return;const design={text:text||"",fontId:font?.id||font?.name,language:"english",size:size?.id||size?.name,textColor:mojo?"#ff007b":(color?.hex||"#fff"),glowStyle:"classic",colors:shapes.map(s=>({id:s.id,name:s.name,hex:s.color?.hex||"#fff",position:s.position})),shapes:shapes.map(s=>({id:s.id,name:s.name,position:s.position,color:s.color?.id||s.color?.name||"white"})),backboard:backboard?.id||backboard?.name,hardware:hardware?.id||hardware?.name};debouncedQuote(design,250)},[type,text,font,size,color,shapes,backboard,hardware,mojo,wpConfig,debouncedQuote]);
   const addShape=s=>setShapes(prev=>{const l=prev.filter(x=>x.position==="left").length,r=prev.filter(x=>x.position==="right").length;return [...prev,{...s,uid:`${s.id}-${Date.now()}-${Math.random()}`,position:l<=r?"left":"right",color:shapeColors[0]||COLORS[0]}]});
@@ -660,26 +680,26 @@ export function ConfiguratorExperience({type="custom_neon"}){
 
   return <main className={`ns-configurator${mojo?" ns-mojo":""}`}>
     {mobileMenuOpen && <MobileMenu close={()=>setMobileMenuOpen(false)} onMouseLeave={()=>setMobileMenuOpen(false)}/>}
-    <div className="ns-builder-sticky-header" style={{position:'sticky',top:0,zIndex:990,background:'#05060a',borderBottom:'1px solid #161a23',padding:'10px 42px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-      <div style={{display:'flex', alignItems:'center', gap:'20px'}}>
+    <div className="ns-builder-sticky-header">
+      <div className="ns-header-left" style={{display:'flex', alignItems:'center', gap:'20px', flexShrink:0}}>
          <button className="btn ns-config-hamburger" onMouseEnter={()=>setMobileMenuOpen(true)} onClick={()=>setMobileMenuOpen(true)} style={{padding:'12px 20px', background:'linear-gradient(#05060a, #05060a) padding-box, linear-gradient(135deg, #752eff, #00ffbc) border-box', border:'1px solid transparent', borderRadius:'8px', color:'#fff', cursor:'pointer', transition:'0.2s', display:'flex', alignItems:'center', justifyContent:'center'}}><Menu size={24}/></button>
          <a href="/"><img src="/images/The Neon Stack Logo SVG.svg" alt="The Neon Stack" style={{height:'54px'}} className="svg-flicker"/></a>
       </div>
       <div className="ns-header-center-tools" style={{display:'flex', alignItems:'center', gap:'24px'}}>
-          <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
-            <button onClick={()=>setMood("night")} style={{padding:'5px 14px', background:'linear-gradient(#05060a, #05060a) padding-box, linear-gradient(90deg, #00ffbc, #8b4cff) border-box', border:'1px solid transparent', borderRadius:'999px', color:mood==="night"?'#fff':'#b8bfd8', fontSize:'11px', display:'flex', alignItems:'center', gap:'6px', cursor:'pointer'}}><Moon size={12}/> Dark Room</button>
-            <button onClick={()=>setMood("evening")} style={{padding:'5px 14px', background:'linear-gradient(#05060a, #05060a) padding-box, linear-gradient(90deg, #00ffbc, #8b4cff) border-box', border:'1px solid transparent', borderRadius:'999px', color:mood==="evening"?'#fff':'#b8bfd8', fontSize:'11px', display:'flex', alignItems:'center', gap:'6px', cursor:'pointer'}}><Sunset size={12}/> Cozy Evening</button>
-            <button onClick={()=>setMood("day")} style={{padding:'5px 14px', background:'linear-gradient(#05060a, #05060a) padding-box, linear-gradient(90deg, #00ffbc, #8b4cff) border-box', border:'1px solid transparent', borderRadius:'999px', color:mood==="day"?'#fff':'#b8bfd8', fontSize:'11px', display:'flex', alignItems:'center', gap:'6px', cursor:'pointer'}}><Sun size={12}/> Daytime</button>
+          <div className="ns-header-mood-group" style={{display:'flex', alignItems:'center', gap:'8px'}}>
+            <button onClick={()=>setMood("night")} title="Dark Room" style={{padding:'5px 14px', background:'linear-gradient(#05060a, #05060a) padding-box, linear-gradient(90deg, #00ffbc, #8b4cff) border-box', border:'1px solid transparent', borderRadius:'999px', color:mood==="night"?'#fff':'#b8bfd8', fontSize:'11px', display:'flex', alignItems:'center', gap:'6px', cursor:'pointer'}}><Moon size={12}/> <span className="ns-tool-label-full">Dark Room</span><span className="ns-tool-label-short">Dark</span></button>
+            <button onClick={()=>setMood("evening")} title="Cozy Evening" style={{padding:'5px 14px', background:'linear-gradient(#05060a, #05060a) padding-box, linear-gradient(90deg, #00ffbc, #8b4cff) border-box', border:'1px solid transparent', borderRadius:'999px', color:mood==="evening"?'#fff':'#b8bfd8', fontSize:'11px', display:'flex', alignItems:'center', gap:'6px', cursor:'pointer'}}><Sunset size={12}/> <span className="ns-tool-label-full">Cozy Evening</span><span className="ns-tool-label-short">Cozy</span></button>
+            <button onClick={()=>setMood("day")} title="Daytime" style={{padding:'5px 14px', background:'linear-gradient(#05060a, #05060a) padding-box, linear-gradient(90deg, #00ffbc, #8b4cff) border-box', border:'1px solid transparent', borderRadius:'999px', color:mood==="day"?'#fff':'#b8bfd8', fontSize:'11px', display:'flex', alignItems:'center', gap:'6px', cursor:'pointer'}}><Sun size={12}/> <span className="ns-tool-label-full">Daytime</span><span className="ns-tool-label-short">Day</span></button>
           </div>
-          <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
-            <button onClick={()=>setLightOn(v=>!v)} style={{padding:'5px 14px', background:'linear-gradient(#05060a, #05060a) padding-box, linear-gradient(90deg, #00ffbc, #8b4cff) border-box', border:'1px solid transparent', borderRadius:'999px', color:lightOn?'#fff':'#b8bfd8', fontSize:'11px', display:'flex', alignItems:'center', gap:'6px', cursor:'pointer'}}>Light {lightOn?'on':'off'}</button>
-            <button onClick={()=>setShowRuler(v=>!v)} style={{padding:'5px 14px', background:'linear-gradient(#05060a, #05060a) padding-box, linear-gradient(90deg, #00ffbc, #8b4cff) border-box', border:'1px solid transparent', borderRadius:'999px', color:showRuler?'#fff':'#b8bfd8', fontSize:'11px', display:'flex', alignItems:'center', gap:'6px', cursor:'pointer'}}><Ruler size={12}/> {showRuler?'Hide':'Show'} ruler</button>
-            <button onClick={handleShare} disabled={sharing} title="Share Design" style={{padding:'5px 14px', background:'linear-gradient(#05060a, #05060a) padding-box, linear-gradient(90deg, #00ffbc, #8b4cff) border-box', border:'1px solid transparent', borderRadius:'999px', color:'#fff', fontSize:'11px', display:'flex', alignItems:'center', gap:'6px', cursor:sharing?'wait':'pointer'}}><Share2 size={12}/> {sharing?'Sharing...':'Share'}</button>
-            <button onClick={reset} title="Reset" style={{padding:'5px 10px', background:'linear-gradient(#05060a, #05060a) padding-box, linear-gradient(90deg, #00ffbc, #8b4cff) border-box', border:'1px solid transparent', borderRadius:'999px', color:'#b8bfd8', fontSize:'11px', display:'flex', alignItems:'center', gap:'6px', cursor:'pointer'}}><RotateCcw size={12}/></button>
+          <div className="ns-header-action-group" style={{display:'flex', alignItems:'center', gap:'8px'}}>
+            <button onClick={()=>setLightOn(v=>!v)} title={`Light ${lightOn?'on':'off'}`} style={{padding:'5px 14px', background:'linear-gradient(#05060a, #05060a) padding-box, linear-gradient(90deg, #00ffbc, #8b4cff) border-box', border:'1px solid transparent', borderRadius:'999px', color:lightOn?'#fff':'#b8bfd8', fontSize:'11px', display:'flex', alignItems:'center', gap:'6px', cursor:'pointer'}}><Zap size={12}/> <span className="ns-tool-label-full">Light {lightOn?'on':'off'}</span><span className="ns-tool-label-short">Light</span></button>
+            <button onClick={()=>setShowRuler(v=>!v)} title={`${showRuler?'Hide':'Show'} ruler`} style={{padding:'5px 14px', background:'linear-gradient(#05060a, #05060a) padding-box, linear-gradient(90deg, #00ffbc, #8b4cff) border-box', border:'1px solid transparent', borderRadius:'999px', color:showRuler?'#fff':'#b8bfd8', fontSize:'11px', display:'flex', alignItems:'center', gap:'6px', cursor:'pointer'}}><Ruler size={12}/> <span className="ns-tool-label-full">{showRuler?'Hide':'Show'} ruler</span><span className="ns-tool-label-short">Ruler</span></button>
+            <button onClick={handleShare} disabled={sharing} title="Share Design" style={{padding:'5px 14px', background:'linear-gradient(#05060a, #05060a) padding-box, linear-gradient(90deg, #00ffbc, #8b4cff) border-box', border:'1px solid transparent', borderRadius:'999px', color:'#fff', fontSize:'11px', display:'flex', alignItems:'center', gap:'6px', cursor:sharing?'wait':'pointer'}}><Share2 size={12}/> <span>{sharing?'Sharing...':'Share'}</span></button>
+            <button onClick={reset} title="Reset Design" style={{padding:'5px 10px', background:'linear-gradient(#05060a, #05060a) padding-box, linear-gradient(90deg, #00ffbc, #8b4cff) border-box', border:'1px solid transparent', borderRadius:'999px', color:'#b8bfd8', fontSize:'11px', display:'flex', alignItems:'center', gap:'6px', cursor:'pointer'}}><RotateCcw size={12}/></button>
           </div>
       </div>
-      <div className="ns-header-right-cart" style={{display:'flex', alignItems:'center', gap:'20px'}}>
-           <div style={{display:'flex', flexDirection:'column', alignItems:'flex-end'}}>
+      <div className="ns-header-right-cart" style={{display:'flex', alignItems:'center', gap:'20px', flexShrink:0}}>
+           <div className="ns-header-price-block" style={{display:'flex', flexDirection:'column', alignItems:'flex-end'}}>
              <span style={{fontSize:'12px', color:'#a6a8b3'}}>{serverPrice ? 'Price' : 'Estimated Price'}</span>
              <strong style={{fontSize:'22px', color:'#00ffbc'}}>{money(displayPrice)}{pricingLoading ? '...' : ''}</strong>
            </div>
@@ -742,13 +762,23 @@ export function ConfiguratorExperience({type="custom_neon"}){
                   <span style={{fontFamily: fontFamily(font), fontSize:'20px', color: '#fff'}}>{font?.name || "Select Font"}</span>
                 <ChevronDown size={18} color="#b8bfd8" style={{transform:'rotate(180deg)'}}/>
                </div>
-              <div className="ns-custom-scroll ns-font-picker-list">
-                   {fonts.map(f => (
-                   <button type="button" key={f.id||f.name} onClick={()=>setFont(f)} style={{background:font?.name===f.name?'#161a23':'#05060a',border:font?.name===f.name?'1px solid #8b4cff':'1px solid #161a23',borderRadius:'4px',padding:'14px 4px',cursor:'pointer',color:font?.name===f.name?'#00ffbc':'#fff',textAlign:'center',transition:'0.2s',display:'flex',alignItems:'center',justifyContent:'center',minHeight:'55px'}}>
-                         <span style={{fontFamily: fontFamily(f), fontSize:'18px'}}>{f.name}</span>
-                      </button>
-                   ))}
-              </div>
+               <div 
+                    className="ns-custom-scroll ns-font-picker-list"
+                    onMouseEnter={() => loadRemainingFontsProgressive(fonts, fontFamily(font), 50)}
+                    onTouchStart={() => loadRemainingFontsProgressive(fonts, fontFamily(font), 50)}
+               >
+                    {fonts.map(f => (
+                    <button 
+                      type="button" 
+                      key={f.id||f.name} 
+                      onPointerEnter={() => loadConfiguratorFont(f)}
+                      onClick={() => { setFont(f); loadConfiguratorFont(f); }} 
+                      style={{background:font?.name===f.name?'#161a23':'#05060a',border:font?.name===f.name?'1px solid #8b4cff':'1px solid #161a23',borderRadius:'4px',padding:'14px 4px',cursor:'pointer',color:font?.name===f.name?'#00ffbc':'#fff',textAlign:'center',transition:'0.2s',display:'flex',alignItems:'center',justifyContent:'center',minHeight:'55px'}}
+                    >
+                          <span style={{fontFamily: fontFamily(f), fontSize:'18px'}}>{f.name}</span>
+                       </button>
+                    ))}
+               </div>
             </div>
             <div className="ns-field"><label>ALIGNMENT</label><div className="ns-align"><button className={align==="left"?"selected":""} onClick={()=>setAlign("left")}><AlignLeft/></button><button className={align==="center"?"selected":""} onClick={()=>setAlign("center")}><AlignCenter/></button><button className={align==="right"?"selected":""} onClick={()=>setAlign("right")}><AlignRight/></button></div></div>
             <button className="btn primary" onClick={()=>setStep(1)} style={{width:'100%', marginTop:20}}>NEXT: SELECT SIZE</button>
@@ -834,8 +864,8 @@ export function ConfiguratorExperience({type="custom_neon"}){
          
          {/* Tools moved to sticky header */}
          
-         <div style={{flex:1, display:'flex', alignItems:'center', justifyContent:'center', position:'relative', padding: '40px'}}>
-             <div className="ns-canvas ns-champ-canvas-inner" ref={previewRef} style={{width: '100%', maxWidth: '60%', maxHeight: '55vh', aspectRatio: '814 / 536', position:'relative', flexShrink:0, overflow:'hidden', boxShadow:'0 20px 40px rgba(0,0,0,0.15)', borderRadius: '4px'}}>
+         <div className="ns-champ-canvas-wrapper" style={{flex:1, display:'flex', alignItems:'center', justifyContent:'center', position:'relative', padding: 'clamp(10px, 2.5vw, 40px)', minWidth:0, minHeight:0}}>
+             <div className="ns-canvas ns-champ-canvas-inner" ref={previewRef} style={{width: '100%', maxWidth: 'min(100%, 840px)', maxHeight: 'min(55vh, 520px)', aspectRatio: '814 / 536', position:'relative', flexShrink:0, overflow:'hidden', boxShadow:'0 20px 40px rgba(0,0,0,0.15)', borderRadius: '4px'}}>
                 <img className="ns-canvas-background" src={background} alt="Room preview" style={{filter:lighting.filter, width:'100%', height:'100%', objectFit:'cover', position:'absolute', inset:0, zIndex:0}}/>
                 
                 {/* Mobile Light ON/OFF Toggle */}

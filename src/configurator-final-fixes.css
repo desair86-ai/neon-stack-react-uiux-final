@@ -137,10 +137,6 @@
   .ns-split-layout {
     grid-template-columns: 1fr !important;
   }
-  .ns-builder-sticky-header {
-    flex-wrap: wrap;
-    gap: 10px;
-  }
 }
 
 /* Accordions */
@@ -211,3 +207,328 @@
   background: #cbd5e1;
   border-radius: 4px;
 }
+
+/* ==========================================================================
+   COMPREHENSIVE ALL-SCREEN RESPONSIVENESS (CUSTOM NEON & MOJO MIX)
+   ========================================================================== */
+
+/* 1. Global Canvas Aspect Ratio Guarantee */
+.ns-configurator .ns-champ-canvas-inner,
+.ns-configurator .ns-canvas.ns-champ-canvas-inner {
+  min-height: 0 !important;
+  height: auto !important;
+  aspect-ratio: 814 / 536 !important;
+  max-width: min(100%, 840px) !important;
+  max-height: min(55vh, 520px) !important;
+  width: 100% !important;
+}
+
+.ns-champ-canvas-wrapper {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  flex: 1 1 auto !important;
+  box-sizing: border-box !important;
+}
+
+/* 2. Base Header Adaptations */
+.ns-builder-sticky-header {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 990 !important;
+  background: #05060a !important;
+  border-bottom: 1px solid #161a23 !important;
+  padding: 10px clamp(14px, 2.5vw, 42px) !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  gap: 12px !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+}
+
+.ns-tool-label-short {
+  display: none !important;
+}
+
+.ns-tool-label-full {
+  display: inline !important;
+}
+
+.ns-header-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: clamp(8px, 1.2vw, 20px) !important;
+  flex-shrink: 0 !important;
+}
+
+.ns-header-center-tools {
+  display: flex !important;
+  align-items: center !important;
+  gap: clamp(8px, 1.5vw, 24px) !important;
+  flex-shrink: 1 !important;
+  min-width: 0 !important;
+}
+
+.ns-header-mood-group,
+.ns-header-action-group {
+  display: flex !important;
+  align-items: center !important;
+  gap: clamp(4px, 0.6vw, 8px) !important;
+  flex-shrink: 1 !important;
+}
+
+.ns-header-center-tools button {
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  transition: all 0.2s ease !important;
+}
+
+.ns-header-right-cart {
+  display: flex !important;
+  align-items: center !important;
+  gap: clamp(10px, 1.5vw, 20px) !important;
+  flex-shrink: 0 !important;
+}
+
+.ns-header-right-cart .ns-add-to-cart-btn {
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+.ns-champ-preview {
+  min-width: 0 !important;
+}
+
+/* 3. Screen Width Breakpoints */
+
+/* Laptops & Standard Desktops (<= 1380px) */
+@media (max-width: 1380px) {
+  .ns-builder-sticky-header {
+    padding: 8px 18px !important;
+    gap: 10px !important;
+  }
+  .ns-builder-sticky-header img.svg-flicker {
+    height: 52px !important;
+  }
+  .ns-header-center-tools {
+    gap: 12px !important;
+  }
+  .ns-header-mood-group,
+  .ns-header-action-group {
+    gap: 6px !important;
+  }
+  .ns-header-center-tools button {
+    padding: 5px 10px !important;
+    font-size: 11px !important;
+  }
+  .ns-header-right-cart {
+    gap: 12px !important;
+  }
+  .ns-add-to-cart-btn {
+    padding: 10px 22px !important;
+    font-size: 13.5px !important;
+  }
+}
+
+/* Intermediate screens & landscape tablets (801px - 1180px) */
+@media (max-width: 1180px) and (min-width: 801px) {
+  .ns-builder-sticky-header {
+    padding: 8px 14px !important;
+    gap: 8px !important;
+  }
+  .ns-builder-sticky-header img.svg-flicker {
+    height: 42px !important;
+  }
+  .ns-config-hamburger {
+    padding: 8px 12px !important;
+  }
+  .ns-header-center-tools {
+    gap: 8px !important;
+  }
+  .ns-header-mood-group,
+  .ns-header-action-group {
+    gap: 4px !important;
+  }
+  .ns-header-center-tools button {
+    padding: 5px 7px !important;
+    font-size: 10.5px !important;
+    gap: 4px !important;
+  }
+  .ns-tool-label-full {
+    display: none !important;
+  }
+  .ns-tool-label-short {
+    display: inline !important;
+  }
+  .ns-header-right-cart {
+    gap: 10px !important;
+  }
+  .ns-header-price-block strong {
+    font-size: 18px !important;
+  }
+  .ns-header-price-block span {
+    font-size: 11px !important;
+  }
+  .ns-add-to-cart-btn {
+    padding: 8px 16px !important;
+    font-size: 12px !important;
+    letter-spacing: 0.5px !important;
+  }
+
+  /* Compact Sidebar & Controls panel on medium desktop */
+  .ns-champ-sidebar {
+    width: 64px !important;
+  }
+  .ns-champ-tab {
+    padding: 14px 2px !important;
+    gap: 6px !important;
+  }
+  .ns-champ-tab span {
+    font-size: 9px !important;
+  }
+  .ns-champ-controls {
+    width: 295px !important;
+    padding: 18px 14px !important;
+  }
+  .ns-champ-bottom-bar {
+    padding: 12px 18px !important;
+  }
+  .ns-champ-bottom-bar strong {
+    font-size: 12px !important;
+  }
+}
+
+/* Compact intermediate screens (801px - 960px) */
+@media (max-width: 960px) and (min-width: 801px) {
+  .ns-builder-sticky-header img.svg-flicker {
+    height: 36px !important;
+  }
+  .ns-tool-label-short {
+    display: none !important;
+  }
+  .ns-header-center-tools button {
+    padding: 6px 8px !important;
+  }
+  .ns-champ-controls {
+    width: 275px !important;
+    padding: 14px 10px !important;
+  }
+  .ns-champ-canvas-wrapper {
+    padding: 12px 10px !important;
+  }
+}
+
+/* Mobile Screens (<= 800px) */
+@media (max-width: 800px) {
+  .ns-builder-sticky-header {
+    background: #05060a !important; 
+    border-bottom: 1px solid #161a23 !important;
+    padding: 8px 12px !important;
+    flex-wrap: nowrap !important;
+  }
+  .ns-builder-sticky-header img.svg-flicker {
+    height: 40px !important;
+  }
+  .ns-header-center-tools {
+    display: none !important;
+  }
+  .ns-header-right-cart {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    background: #05060a !important;
+    padding: 10px 16px !important;
+    justify-content: space-between !important;
+    z-index: 9999 !important;
+    border-top: 1px solid #1c212e !important;
+    box-sizing: border-box !important;
+  }
+  .ns-header-right-cart span {
+    color: #a6a8b3 !important;
+    font-size: 11px !important;
+  }
+  .ns-header-right-cart strong {
+    color: #00ffbc !important;
+    font-size: 20px !important;
+  }
+  .ns-add-to-cart-btn {
+    padding: 10px 22px !important;
+    font-size: 13px !important;
+  }
+
+  /* Mobile container & columns */
+  .ns-champ-container {
+    flex-direction: column !important;
+    height: auto !important;
+    min-height: 100vh !important;
+    padding-bottom: 85px !important; 
+  }
+  .ns-champ-sidebar {
+    width: 100% !important;
+    height: 72px !important;
+    flex-direction: row !important;
+    border-right: none !important;
+    border-bottom: 1px solid #161a23 !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    order: 1 !important;
+    padding: 0 !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .ns-champ-tab {
+    padding: 8px 6px !important;
+    min-width: 76px !important;
+    flex: 1 0 auto !important;
+    border-right: 1px solid #161a23 !important;
+    border-bottom: none !important;
+    justify-content: center !important;
+  }
+  .ns-champ-tab.active {
+    border-right: 1px solid #161a23 !important;
+    border-bottom: 3px solid #00ffbc !important;
+    background: #0a0d14 !important;
+  }
+
+  /* Mobile Preview stage & canvas */
+  .ns-champ-preview {
+    order: 2 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    flex: none !important;
+    width: 100% !important;
+  }
+  .ns-champ-canvas-wrapper {
+    padding: 12px 10px !important;
+    min-height: 0 !important;
+  }
+  .ns-configurator .ns-champ-canvas-inner,
+  .ns-configurator .ns-canvas.ns-champ-canvas-inner {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: 50vh !important;
+    aspect-ratio: 814 / 536 !important;
+  }
+
+  .ns-champ-controls {
+    order: 3 !important;
+    width: 100% !important;
+    border-right: none !important;
+    flex: 1 1 auto !important;
+    padding: 18px 14px !important;
+  }
+
+  .ns-champ-bottom-bar {
+    padding: 12px 14px !important;
+  }
+  .ns-champ-bottom-bar strong {
+    font-size: 12px !important;
+  }
+}
+
