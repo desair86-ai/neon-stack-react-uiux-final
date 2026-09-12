@@ -7,6 +7,7 @@ import { useNeonConfig, useNeonConfigRevision } from "./hooks/useNeonConfig";
 import { useNeonQuote } from "./hooks/useNeonQuote";
 import { uploadNeonScreenshot, createNeonShare, getNeonShare } from "./api/neonStackApi";
 import { loadConfiguratorFont, isFontLoaded, onFontLoaded } from "./ConfiguratorFontLoader";
+import { NeonSiteLoader } from "./NeonSiteLoader";
 const STEPS=["text","size","shapes","color","backboard","hardware"],LABELS={text:"TEXT",size:"SIZE",shapes:"SHAPES",color:"COLOUR",backboard:"BACKBOARD",hardware:"HARDWARE"};
 const COLORS=[{id:"pink",name:"Pink",hex:"#ff2aa8"},{id:"purple",name:"Purple",hex:"#8d3cff"},{id:"blue",name:"Blue",hex:"#198cff"},{id:"cyan",name:"Cyan",hex:"#12dfe5"},{id:"green",name:"Green",hex:"#63df21"},{id:"yellow",name:"Yellow",hex:"#ffd11a"},{id:"orange",name:"Orange",hex:"#ff8618"},{id:"white",name:"White",hex:"#fff"}];
 const BACKGROUNDS=[
@@ -800,7 +801,9 @@ export function ConfiguratorExperience({type="custom_neon"}){
     </div>
   );
 
-  if(loading || shareLoading)return <main className="ns-config-loading">Loading your neon builder…</main>;
+  if(loading || shareLoading) {
+    return <NeonSiteLoader message={shareLoading ? "Restoring your shared design…" : "Loading your neon builder…"} fullScreen={true} />;
+  }
   if(configError)return <main className="ns-config-loading">Unable to load configurator. Please refresh or try again later.</main>;
   if(configDisabled)return <main className="ns-config-loading">This configurator is currently unavailable.</main>;
 

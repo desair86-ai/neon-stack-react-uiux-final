@@ -1256,3 +1256,142 @@ h1,h2,h3,h4,h5,h6{font-family:'Poppins','DM Sans',Arial,sans-serif}
   /* About page logo */
   .ns-about-logo-img { height: 110px !important; }
 }
+
+/* ── Global Neon Site Loader ────────────────────────────────────────────────
+   Displays the official "The Neon Stack Icon SVG .svg" inside an animated
+   neon glowing circle instead of blank/plain loading screens.
+   ─────────────────────────────────────────────────────────────────────────── */
+.ns-site-loader-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  z-index: 999999;
+  background: #05060a;
+  background: radial-gradient(circle at 50% 50%, rgba(117, 46, 255, 0.16) 0%, rgba(0, 255, 188, 0.06) 40%, #05060a 75%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: all;
+  user-select: none;
+}
+
+.ns-site-loader-inline {
+  width: 100%;
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  user-select: none;
+}
+
+.ns-site-loader-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+}
+
+.ns-site-loader-ring-wrap {
+  position: relative;
+  width: 124px;
+  height: 124px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ns-site-loader-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  border-top-color: #00ffbc;
+  border-right-color: #752eff;
+  border-bottom-color: rgba(0, 255, 188, 0.25);
+  border-left-color: rgba(117, 46, 255, 0.25);
+  box-shadow: 0 0 16px rgba(0, 255, 188, 0.45), inset 0 0 16px rgba(117, 46, 255, 0.35);
+  animation: nsSiteLoaderSpin 1.2s cubic-bezier(0.5, 0.1, 0.4, 0.9) infinite;
+}
+
+.ns-site-loader-ring-outer {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 1px dashed rgba(0, 255, 188, 0.3);
+  box-shadow: 0 0 24px rgba(117, 46, 255, 0.2);
+  animation: nsSiteLoaderSpinReverse 6s linear infinite;
+}
+
+.ns-site-loader-icon-wrap {
+  position: relative;
+  z-index: 2;
+  width: 68px;
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ns-site-loader-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 0 10px rgba(0, 255, 188, 0.6)) drop-shadow(0 0 20px rgba(117, 46, 255, 0.5));
+  animation: nsSiteLoaderPulse 2.2s ease-in-out infinite alternate;
+}
+
+.ns-site-loader-label {
+  color: #d1d5db;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-family: inherit;
+  text-align: center;
+  margin: 0;
+  animation: nsSiteLoaderTextPulse 1.8s ease-in-out infinite alternate;
+}
+
+@keyframes nsSiteLoaderSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes nsSiteLoaderSpinReverse {
+  0% { transform: rotate(360deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@keyframes nsSiteLoaderPulse {
+  0% {
+    transform: scale(0.94);
+    filter: drop-shadow(0 0 8px rgba(0, 255, 188, 0.5)) drop-shadow(0 0 16px rgba(117, 46, 255, 0.4));
+  }
+  100% {
+    transform: scale(1.06);
+    filter: drop-shadow(0 0 18px rgba(0, 255, 188, 0.95)) drop-shadow(0 0 32px rgba(117, 46, 255, 0.8));
+  }
+}
+
+@keyframes nsSiteLoaderTextPulse {
+  0% {
+    opacity: 0.65;
+    text-shadow: 0 0 4px rgba(255, 255, 255, 0.2);
+  }
+  100% {
+    opacity: 1;
+    text-shadow: 0 0 12px rgba(0, 255, 188, 0.65), 0 0 22px rgba(117, 46, 255, 0.45);
+  }
+}
+
