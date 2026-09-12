@@ -262,14 +262,14 @@ return (
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: isRight ? 20 : -20, scale: 0.97 }}
             transition={{ duration: 0.22, ease: 'easeOut' }}
-style={{
+            style={{
               position: 'fixed',
-              top: topStyle,
-              transform: 'translateY(-50%)',
-              [isRight ? 'right' : 'left']: '72px',
+              bottom: '20px',
+              top: 'auto',
+              [isRight ? 'right' : 'left']: '84px',
               width: 'clamp(320px, 90vw, 400px)',
-              height: '560px',
-              maxHeight: '80vh',
+              height: 'min(580px, calc(100dvh - 40px))',
+              maxHeight: 'calc(100dvh - 40px)',
               background: '#070910',
               border: '1px solid #752eff',
               borderRadius: '20px',
@@ -277,13 +277,13 @@ style={{
               display: 'flex',
               flexDirection: 'column',
               overflow: 'hidden',
-              zIndex: 999,
+              zIndex: 1001,
               fontFamily: 'sans-serif'
             }}
           >
 
             {/* Header */}
-            <div style={{ background: 'linear-gradient(135deg, #130a1e 0%, #070910 100%)', padding: '15px 20px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ background: 'linear-gradient(135deg, #130a1e 0%, #070910 100%)', padding: '15px 20px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{ width: '38px', height: '38px', borderRadius: '12px', background: 'rgba(0, 255, 188, 0.1)', border: '1px solid rgba(0, 255, 188, 0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00ffbc' }}>
                   <Bot size={20} />
@@ -302,12 +302,12 @@ style={{
             </div>
 
             {/* Verified Badge */}
-            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '8px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '11px', color: '#ff65bf', fontWeight: 700 }}>
+            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '8px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '11px', color: '#ff65bf', fontWeight: 700, flexShrink: 0 }}>
               <ShieldCheck size={14} /> Official Support Assistant
             </div>
 
             {/* Messages Body */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
               {messages.map((msg) => (
                 <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', alignItems: msg.sender === 'user' ? 'flex-end' : 'flex-start', maxWidth: '88%', alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start' }}>
                   <div style={{ background: msg.sender === 'user' ? 'linear-gradient(135deg, #00ffbc, #00d29a)' : 'rgba(255,255,255,0.05)', color: msg.sender === 'user' ? '#070910' : '#fff', padding: '12px 15px', borderRadius: msg.sender === 'user' ? '18px 18px 4px 18px' : '18px 18px 18px 4px', fontSize: '13px', lineHeight: 1.5, fontWeight: msg.sender === 'user' ? 600 : 400, border: msg.sender === 'user' ? 'none' : '1px solid rgba(255,255,255,0.1)' }}>
@@ -335,7 +335,7 @@ style={{
             </div>
 
             {/* Quick Starter Toggle */}
-            <div style={{ padding: '8px 15px 4px 15px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ padding: '8px 15px 4px 15px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
               <span style={{ fontSize: '11px', color: '#888', fontWeight: 600 }}>Suggested</span>
               <button onClick={() => setShowQuickQuestions(!showQuickQuestions)} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: '11px' }}>
                 {showQuickQuestions ? 'Hide' : 'Show'}
@@ -344,7 +344,7 @@ style={{
 
             {/* Quick Starter Chips */}
             {showQuickQuestions && (
-              <div style={{ padding: '5px 15px 10px 15px', display: 'flex', flexWrap: 'wrap', gap: '6px', maxHeight: '100px', overflowY: 'auto' }}>
+              <div style={{ padding: '5px 15px 10px 15px', display: 'flex', flexWrap: 'wrap', gap: '6px', maxHeight: '100px', overflowY: 'auto', flexShrink: 0 }}>
                 {QUICK_QUESTIONS.map((q, index) => (
                   <button key={index} onClick={() => handleSendMessage(q)} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '100px', padding: '6px 12px', color: '#ddd', fontSize: '11px', fontWeight: 600, cursor: 'pointer', transition: '0.2s', textAlign: 'left' }}>
                     {q}
@@ -354,7 +354,7 @@ style={{
             )}
 
             {/* Footer Input */}
-            <div style={{ padding: '12px 15px', background: 'rgba(255,255,255,0.02)', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ padding: '12px 15px', background: 'rgba(255,255,255,0.02)', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
               <input type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyDown={handleKeyDown} placeholder="Ask about custom neons..." style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '10px 14px', color: '#fff', fontSize: '13px', outline: 'none' }} />
               <button onClick={() => handleSendMessage()} disabled={!inputValue.trim() || isTyping} style={{ background: inputValue.trim() ? '#00ffbc' : 'rgba(255,255,255,0.05)', color: inputValue.trim() ? '#070910' : '#666', border: 'none', borderRadius: '12px', width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: inputValue.trim() ? 'pointer' : 'default' }}>
                 <Send size={16} />
