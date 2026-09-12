@@ -1,8 +1,19 @@
 import { NextResponse } from 'next/server';
 import { loginUser } from '../../../../src/lib/auth';
+import { rateLimit } from '../../../../src/lib/rateLimit';
+
+const checkLoginLimit = rateLimit({ windowMs: 5 * 60 * 1000, max: 10, name: 'auth_login' });
 
 export async function POST(req) {
   try {
+    const limiter = checkLoginLimit(req);
+    if (!limiter.success) {
+      return NextResponse.json(
+        { message: 'Too many login attempts. Please wait a few minutes before trying again.' },
+        { status: 429 }
+      );
+    }
+
     const { username, password } = await req.json();
     if (!username || !password) {
       return NextResponse.json({ message: 'Username and password are required' }, { status: 400 });

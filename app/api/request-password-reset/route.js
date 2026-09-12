@@ -1,7 +1,18 @@
 import { NextResponse } from 'next/server';
+import { rateLimit } from '../../../src/lib/rateLimit';
+
+const checkResetLimit = rateLimit({ windowMs: 15 * 60 * 1000, max: 5, name: 'auth_password_reset' });
 
 export async function POST(request) {
   try {
+    const limiter = checkResetLimit(request);
+    if (!limiter.success) {
+      return NextResponse.json(
+        { message: 'Too many password reset requests. Please wait 15 minutes before trying again.' },
+        { status: 429 }
+      );
+    }
+
     const { email } = await request.json();
     if (!email || !String(email).trim()) {
       return NextResponse.json({ message: 'Enter the email address for your account.' }, { status: 400 });

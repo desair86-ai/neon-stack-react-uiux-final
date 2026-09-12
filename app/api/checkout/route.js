@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { rateLimit } from '../../../src/lib/rateLimit';
 
 function getProductId(config) {
   const productIds = [config?.woocommerce?.product_id, config?.product_id];
@@ -21,36 +22,16 @@ async function getConfiguratorProduct(siteUrl, configurator) {
   return getProductId(await response.json());
 }
 
-// In-memory sliding-window checkout rate limiter (prevents automated bot flooding)
-const checkoutRateLimit = new Map();
-const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
-const MAX_CHECKOUTS_PER_WINDOW = 10;
-
-function isCheckoutRateLimited(ip) {
-  const now = Date.now();
-  if (checkoutRateLimit.size > 1000) {
-    for (const [key, record] of checkoutRateLimit.entries()) {
-      if (now - record.firstRequestTime > RATE_LIMIT_WINDOW_MS) {
-        checkoutRateLimit.delete(key);
-      }
-    }
-  }
-
-  const record = checkoutRateLimit.get(ip);
-  if (!record || (now - record.firstRequestTime > RATE_LIMIT_WINDOW_MS)) {
-    checkoutRateLimit.set(ip, { firstRequestTime: now, count: 1 });
-    return false;
-  }
-
-  record.count += 1;
-  return record.count > MAX_CHECKOUTS_PER_WINDOW;
-}
+const checkCheckoutLimit = rateLimit({ windowMs: 10 * 60 * 1000, max: 10, name: 'checkout' });
 
 export async function POST(req) {
   try {
-    const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'unknown';
-    if (isCheckoutRateLimited(clientIp)) {
-      return NextResponse.json({ message: 'Too many checkout attempts. Please wait a few minutes before trying again.' }, { status: 429 });
+    const limiter = checkCheckoutLimit(req);
+    if (!limiter.success) {
+      return NextResponse.json(
+        { message: 'Too many checkout attempts. Please wait a few minutes before trying again.' },
+        { status: 429 }
+      );
     }
 
     const payload = await req.json();
