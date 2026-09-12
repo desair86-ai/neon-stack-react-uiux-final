@@ -74,7 +74,7 @@ function useSubCategories() {
 }
 const allCategories = ['All Neon Signs','Astronaut & Space','Bars','Beauty & Salon','Bollywood','Business','Café & Restaurant','Cricket','Gaming','Gods & Spiritual','Home Decor','Kids','Love & Romance','Music & Studio','Sports & Fitness','Quotes & Words'];
 
-function Logo(){ return <Link className="logo" href="/"><img src="/images/The Neon Stack Logo without icon.svg" alt="The Neon Stack" style={{height:'72px', filter:'drop-shadow(0 0 2px rgba(139,76,255,0.4))'}} className="svg-flicker"/></Link> }
+function Logo(){ return <Link className="logo" href="/"><img src="/images/The Neon Stack Logo SVG.svg" alt="The Neon Stack" style={{height:'72px', filter:'drop-shadow(0 0 2px rgba(139,76,255,0.4))'}} className="svg-flicker"/></Link> }
 function Announcement(){
   const [target, setTarget] = useState(null);
   const [now, setNow] = useState(Date.now());
@@ -157,7 +157,7 @@ export function Header(){
           <Link href="/custom-neon" className={pathname === '/custom-neon' ? 'active' : ''} onMouseEnter={()=>setShop(false)}>Custom Neon</Link>
           <Link href="/mojo-mix" className={pathname === '/mojo-mix' ? 'active' : ''} onMouseEnter={()=>setShop(false)}>Mojo Mix</Link>
           <Link href="/uv-printed" className={pathname === '/uv-printed' ? 'active' : ''} onMouseEnter={()=>setShop(false)}>UV Printed</Link>
-          <Link href="/business-logo" className={pathname === '/business-logo' ? 'active' : ''} onMouseEnter={()=>setShop(false)}>Business Logo</Link>
+          
           <Link href="/category/business" className={pathname === '/category/business' ? 'active' : ''} onMouseEnter={()=>setShop(false)}>Business</Link>
           <Link href="/about" className={pathname === '/about' ? 'active' : ''} onMouseEnter={()=>setShop(false)}>About Us</Link>
           <Link href="/blogs" className={pathname === '/blogs' ? 'active' : ''} onMouseEnter={()=>setShop(false)}>Blogs</Link>

@@ -167,7 +167,7 @@ export function WhatDrivesUs() {
             <p style={{ fontSize: "22px", fontStyle: "italic", fontWeight: 300, marginBottom: "20px", color: "#fff" }}>
               When someone asks, 'Who makes the best neon signs?', we want the answer to be simple—
             </p>
-            <img src="/images/neon-stack-logo.svg" alt="The Neon Stack" style={{ height: "80px", objectFit: "contain" }} />
+            <img src="/images/The Neon Stack Logo SVG.svg" alt="The Neon Stack" className="ns-about-logo-img" style={{ height: "80px", objectFit: "contain" }} />
           </div>
         </div>
       </motion.div>

@@ -45,6 +45,7 @@ export function NeonChatBot() {
   const [dragY, setDragY] = useState(null); // null = use default (50%); number = px offset from top
   const dragState = useRef({ active: false, startY: 0, startDragY: 0 });
   const tabRef = useRef(null);
+  const messagesEndRef = useRef(null);
 
   // Persist side + vertical position preference
   useEffect(() => {

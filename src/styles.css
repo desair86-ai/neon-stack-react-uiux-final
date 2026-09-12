@@ -708,10 +708,10 @@ body{background:radial-gradient(circle at 15% 8%,rgba(103,0,226,.16),transparent
 
 @media (min-width: 801px) { .catalogGrid aside { position: sticky !important; top: 90px !important; } }
 
-.mobAccordion { display: flex; flex-direction: column; } .mobAccBtn { background: transparent; border: none; color: white; display: flex; justify-content: space-between; padding: 19px 0; font-size: 16px; font-weight: 700; text-transform: uppercase; border-bottom: 1px solid var(--line); align-items: center; cursor: pointer; width: 100%; font-family: 'Poppins', 'DM Sans', sans-serif; } .mobAccBtn span { display: flex; align-items: center; gap: 10px; } .mobAccBtn > svg { width: 17px; color: #00ffbc; flex-shrink: 0; } .mobAccContent { background: #070910; display: flex; flex-direction: column; } .mobAccContent a { display: flex; align-items: center; justify-content: space-between; padding: 19px 0 19px 18px; font-size: 16px; font-weight: 700; font-family: 'Poppins', 'DM Sans', sans-serif; text-transform: uppercase; border-bottom: 1px solid var(--line); color: #f6f6fa; } .mobAccContent a svg { width: 17px; color: #00ffbc; flex-shrink: 0; } .mobAccContent .mobAccBtn { padding-left: 18px; font-size: 16px; }
+.mobAccordion { display: flex; flex-direction: column; } .mobAccBtn, .mobileMenu .mobAccBtn { background: transparent; border: none; color: white; display: flex !important; justify-content: space-between; padding: 19px 0; font-size: 16px; font-weight: 700; text-transform: uppercase; border-bottom: 1px solid var(--line); align-items: center; cursor: pointer; width: 100%; font-family: 'Poppins', 'DM Sans', sans-serif; } .mobAccBtn span { display: flex; align-items: center; gap: 10px; } .mobAccBtn > svg { width: 17px; color: #00ffbc; flex-shrink: 0; } .mobAccContent { background: #070910; display: flex; flex-direction: column; } .mobAccContent a { display: flex; align-items: center; justify-content: space-between; padding: 19px 0 19px 18px; font-size: 16px; font-weight: 700; font-family: 'Poppins', 'DM Sans', sans-serif; text-transform: uppercase; border-bottom: 1px solid var(--line); color: #f6f6fa; } .mobAccContent a svg { width: 17px; color: #00ffbc; flex-shrink: 0; } .mobAccContent .mobAccBtn { padding-left: 18px; font-size: 16px; }
 
 /* Footer Accordion & Social Fixes */ 
-.social { display: flex; gap: 12px; align-items: center; } .social a { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--line); background: transparent; transition: all 0.2s; } .social a svg { width: 22px; height: 22px; } .soc-ig { border-color: #e1306c !important; color: #e1306c !important; } .soc-fb { border-color: #1877f2 !important; color: #1877f2 !important; } .soc-yt { border-color: #ff0000 !important; color: #ff0000 !important; } .soc-wa { border-color: #25d366 !important; color: #25d366 !important; } .soc-in { border-color: #0077b5 !important; color: #25d366 !important; } .mobOnlyTitle, .footerCol .mobOnly { display: none; } @media (min-width: 801px) { .mobAccBtn { display: none; } } @media (max-width: 800px) { .footerCol .colLinks { display: none; } .footerCol.open .colLinks { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; } .footerCol h4 { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid var(--line); margin: 0; cursor: pointer; } .footerCol h4 .mobOnlyTitle { display: flex; align-items: center; gap: 12px; font-size: 14px; text-transform: uppercase; color: #fff; } .footerCol h4 .mobOnlyTitle svg { color: #b8bfd8; width: 22px; height: 22px; } .deskOnlyTitle { display: none; } .footerCol .mobOnly { display: block; color: #b8bfd8; width: 18px; } .colLinks a { display: flex; align-items: center; gap: 8px; font-size: 15px !important; } .colLinks a svg { width: 12px; height: 12px; color: #752eff; } }
+.social { display: flex; gap: 12px; align-items: center; } .social a { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--line); background: transparent; transition: all 0.2s; } .social a svg { width: 22px; height: 22px; } .soc-ig { border-color: #e1306c !important; color: #e1306c !important; } .soc-fb { border-color: #1877f2 !important; color: #1877f2 !important; } .soc-yt { border-color: #ff0000 !important; color: #ff0000 !important; } .soc-wa { border-color: #25d366 !important; color: #25d366 !important; } .soc-in { border-color: #0077b5 !important; color: #25d366 !important; } .mobOnlyTitle, .footerCol .mobOnly { display: none; } @media (max-width: 800px) { .footerCol .colLinks { display: none; } .footerCol.open .colLinks { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; } .footerCol h4 { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid var(--line); margin: 0; cursor: pointer; } .footerCol h4 .mobOnlyTitle { display: flex; align-items: center; gap: 12px; font-size: 14px; text-transform: uppercase; color: #fff; } .footerCol h4 .mobOnlyTitle svg { color: #b8bfd8; width: 22px; height: 22px; } .deskOnlyTitle { display: none; } .footerCol .mobOnly { display: block; color: #b8bfd8; width: 18px; } .colLinks a { display: flex; align-items: center; gap: 8px; font-size: 15px !important; } .colLinks a svg { width: 12px; height: 12px; color: #752eff; } }
 
 .footerChat { display: none; } @media (max-width: 800px) { .footerChat { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-top: 20px; align-items: center; } .footerChat > svg { width: 36px; height: 36px; color: #ff65bf; margin-top: 2px; } .footerChat b { display: block; font-size: 16px; color: #fff; margin-bottom: 4px; } .footerChat small { display: block; font-size: 15px; color: #b8bfd8; line-height: 1.4; margin-bottom: 0; } .chatBtn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; border: 1px solid #25d366; border-radius: 6px; padding: 8px 12px; color: #fff; text-decoration: none; font-size: 15px; font-weight: 500; } .chatBtn svg { width: 18px; height: 18px; color: #25d366; } }
 
@@ -1043,6 +1043,9 @@ button, a, input, select, textarea {
   background: #05060a !important;
   overflow-y: auto !important;
 }
+.mobileMenu .mobAccBtn {
+  display: flex !important;
+}
 
 /* Shared site surface and sticky masthead. */
 :root{--site-surface:linear-gradient(180deg,#080a12,#06070d)}
@@ -1237,4 +1240,19 @@ h1,h2,h3,h4,h5,h6{font-family:'Poppins','DM Sans',Arial,sans-serif}
 
 .homeHero {
   min-height: max(570px, calc(100svh - var(--site-header-height))) !important;
+}
+
+/* ── Desktop logo size increase (min-width: 801px) ──────────────────────────
+   Mobile layout is untouched — these rules only fire on screens wider than 800px.
+   !important is required to override the inline height styles on the img elements.
+   ─────────────────────────────────────────────────────────────────────────── */
+@media (min-width: 801px) {
+  /* Main site header logo (Header component) */
+  .logo img { height: 96px !important; }
+
+  /* Configurator sticky header logo */
+  .ns-builder-sticky-header img.svg-flicker { height: 72px !important; }
+
+  /* About page logo */
+  .ns-about-logo-img { height: 110px !important; }
 }

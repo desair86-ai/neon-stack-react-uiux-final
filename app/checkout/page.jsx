@@ -229,7 +229,7 @@ export default function CheckoutPage() {
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#b8bfd8' }}>State <span style={{ color: '#ff65bf' }}>*</span></label>
                 <div className="dark-location-select" onFocus={() => setIsDropdownActive(true)} onBlur={(e) => {
                   if (!e.currentTarget.contains(e.relatedTarget)) {
-                    setIsDropdownActive(false);
+                    setTimeout(() => setIsDropdownActive(false), 120);
                   }
                 }}>
                   <StateSelect 
@@ -248,7 +248,7 @@ export default function CheckoutPage() {
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#b8bfd8' }}>Town / City <span style={{ color: '#ff65bf' }}>*</span></label>
                 <div style={{ opacity: selectedState ? 1 : 0.5, pointerEvents: selectedState ? 'auto' : 'none' }} className="dark-location-select" onFocus={() => setIsDropdownActive(true)} onBlur={(e) => {
                   if (!e.currentTarget.contains(e.relatedTarget)) {
-                    setIsDropdownActive(false);
+                    setTimeout(() => setIsDropdownActive(false), 120);
                   }
                 }}>
                   <CitySelect 
